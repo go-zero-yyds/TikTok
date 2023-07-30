@@ -1,0 +1,119 @@
+syntax = "v1"
+
+info(
+	title: "api"
+	desc: "api"
+	author: "r27153733"
+	email: "r27153733@gmail.com"
+	version: "v1"
+)
+
+import (
+	"apis/user.api"
+	"apis/video.api"
+	"apis/interaction.api"
+	"apis/social.api"
+)
+
+// ==> user v1 <==
+//no need login
+@server(
+	prefix: douyin/user
+	group: user
+)
+service api-api {
+	@doc "register"
+	@handler register
+	post /register (UserRegisterRequest) returns (UserRegisterResponse)
+
+	@doc "login"
+	@handler login
+	post /login (UserLoginRequest) returns (UserLoginResponse)
+}
+
+//need login
+@server(
+	prefix: douyin/user
+	group: user
+)
+service api-api {
+	@doc "info"
+	@handler detail
+	get / (UserRequest) returns (UserResponse)
+}
+
+// ==> video v1 <==
+//no need login
+@server(
+	prefix: douyin
+	group: video
+)
+service api-api {
+	@doc "feed"
+	@handler feed
+	get /feed (FeedRequest) returns (FeedResponse)
+}
+
+//need login
+@server(
+	prefix: douyin/publish
+	group: video
+)
+service api-api {
+	@doc "publishAction"
+	@handler publishAction
+	post /action (PublishActionRequest) returns (PublishActionResponse)
+	@doc "publishList"
+	@handler publishList
+	get /list (PublishListRequest) returns (PublishListResponse)
+}
+
+// ==> interaction v1 <==
+//need login
+@server(
+	prefix: douyin
+	group: interaction
+)
+service api-api {
+	@doc "favoriteAction"
+	@handler favoriteAction
+	post /favorite/action (FavoriteActionRequest) returns (FavoriteActionResponse)
+	@doc "favoriteList"
+	@handler favoriteList
+	get /favorite/list (FavoriteListRequest) returns (FavoriteListResponse)
+
+	@doc "commentAction"
+	@handler commentAction
+	post /comment/action (CommentActionRequest) returns (CommentActionResponse)
+	@doc "commentList"
+	@handler commentList
+	get /comment/list (CommentListRequest) returns (CommentListResponse)
+}
+
+// ==> social v1 <==
+//need login
+@server(
+	prefix: douyin
+	group: social
+)
+service api-api {
+	@doc "relationAction"
+	@handler relationAction
+	post /relation/action (RelationActionRequest) returns (RelationActionResponse)
+	@doc "followList"
+	@handler followList
+	get /relation/follow/list (RelationFollowListRequest) returns (RelationFollowListResponse)
+	@doc "followerList"
+	@handler followerList
+	get /relation/follower/list (RelationFollowerListRequest) returns (RelationFollowerListResponse)
+	@doc "friendList"
+	@handler friendList
+	get /relation/friend/list (RelationFriendListRequest) returns (RelationFriendListResponse)
+
+	@doc "messageChat"
+	@handler messageChat
+	get /message/chat (MessageChatRequest) returns (MessageChatResponse)
+	@doc "messageAction"
+	@handler messageAction
+	post /message/action (MessageActionRequest) returns (MessageActionResponse)
+}

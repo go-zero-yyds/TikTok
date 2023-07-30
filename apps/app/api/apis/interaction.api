@@ -1,0 +1,68 @@
+syntax = "v1"
+
+info(
+    title: "互交服务"
+    desc: "互交服务"
+    author: "r27153733"
+    email: "r27153733@gmail.com"
+    version: "v1"
+)
+
+import "dep.api"
+// - /douyin/favorite/action/ - 赞操作
+type FavoriteActionRequest struct {
+    Token      string `form:"token"`
+    VideoID    int64  `form:"video_id"`
+    ActionType int32  `form:"action_type"`
+}
+
+type FavoriteActionResponse struct {
+    StatusCode int32  `json:"status_code"`
+    StatusMsg  string `json:"status_msg,optional"`
+}
+
+// - /douyin/favorite/list/ - 喜欢列表
+type FavoriteListRequest struct {
+    UserID int64  `form:"user_id"`
+    Token  string `form:"token"`
+}
+
+type FavoriteListResponse struct {
+    StatusCode int32   `json:"status_code"`
+    StatusMsg  string  `json:"status_msg,optional"`
+    VideoList  []Video `json:"video_list"`
+}
+
+// - /douyin/comment/action/ - 评论操作
+type CommentActionRequest struct {
+    Token       string `form:"token"`
+    VideoID     int64  `form:"video_id"`
+    ActionType  int32  `form:"action_type"`
+    CommentText string `form:"comment_text,optional"`
+    CommentID   int64  `form:"comment_id,optional"`
+}
+
+type CommentActionResponse struct {
+    StatusCode int32   `json:"status_code"`
+    StatusMsg  string  `json:"status_msg,optional"`
+    Comment    Comment `json:"comment,optional"`
+}
+
+type Comment struct {
+    ID         int64  `json:"id"`
+    User       User   `json:"user"`
+    Content    string `json:"content"`
+    CreateDate string `json:"create_date"`
+}
+
+// - /douyin/comment/list/ - 视频评论列表
+type CommentListRequest struct {
+    Token   string `form:"token"`
+    VideoID int64  `form:"video_id"`
+}
+
+type CommentListResponse struct {
+    StatusCode int32     `json:"status_code"`
+    StatusMsg  string    `json:"status_msg,optional"`
+    CommentList []Comment `json:"comment_list"`
+}

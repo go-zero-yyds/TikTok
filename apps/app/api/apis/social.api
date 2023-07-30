@@ -1,0 +1,99 @@
+syntax = "v1"
+
+info(
+    title: "社交服务"
+    desc: "社交服务"
+    author: "r27153733"
+    email: "r27153733@gmail.com"
+    version: "v1"
+)
+
+import "dep.api"
+
+// - /douyin/relation/action/ - 关系操作
+type RelationActionRequest struct {
+    Token      string `form:"token"`
+    ToUserID   int64  `form:"to_user_id"`
+    ActionType int32  `form:"action_type"`
+}
+
+type RelationActionResponse struct {
+    StatusCode int32  `json:"status_code"`
+    StatusMsg  string `json:"status_msg,omitempty"`
+}
+
+
+// - /douyin/relatioin/follow/list/ - 用户关注列表
+type RelationFollowListRequest struct {
+    UserID int64  `form:"user_id"`
+    Token  string `form:"token"`
+}
+
+type RelationFollowListResponse struct {
+    StatusCode int32   `json:"status_code"`
+    StatusMsg  string  `json:"status_msg,optional"`
+    UserList   []User  `json:"user_list"`
+}
+
+// - /douyin/relation/follower/list/ - 用户粉丝列表
+type RelationFollowerListRequest struct {
+    UserID int64  `form:"user_id"`
+    Token  string `form:"token"`
+}
+
+type RelationFollowerListResponse struct {
+    StatusCode int32   `json:"status_code"`
+    StatusMsg  string  `json:"status_msg,optional"`
+    UserList   []User  `json:"user_list"`
+}
+
+// - /douyin/relation/friend/list/ - 用户好友列表
+type RelationFriendListRequest struct {
+    UserID int64  `form:"user_id"`
+    Token  string `form:"token"`
+}
+
+type RelationFriendListResponse struct {
+    StatusCode int32         `json:"status_code"`
+    StatusMsg  string        `json:"status_msg,optional"`
+    UserList   []FriendUser  `json:"user_list"`
+}
+
+type FriendUser struct {
+    Message string `json:"message,optional"`
+    MsgType int64  `json:"msgType"`
+}
+
+// - /douyin/message/chat/ - 聊天记录
+type MessageChatRequest struct {
+    Token       string `form:"token"`
+    ToUserID    int64  `form:"to_user_id"`
+    PreMsgTime  int64  `form:"pre_msg_time"`
+}
+
+type MessageChatResponse struct {
+    StatusCode  int32    `json:"status_code"`
+    StatusMsg   string   `json:"status_msg,optional"`
+    MessageList []Message `json:"message_list"`
+}
+
+type Message struct {
+    ID          int64  `json:"id"`
+    ToUserID    int64  `json:"to_user_id"`
+    FromUserID  int64  `json:"from_user_id"`
+    Content     string `json:"content"`
+    CreateTime  string `json:"create_time,optional"`
+}
+
+// - /douyin/message/action/ - 消息操作
+type MessageActionRequest struct {
+    Token      string `form:"token"`
+    ToUserID   int64  `form:"to_user_id"`
+    ActionType int32  `form:"action_type"`
+    Content    string `form:"content"`
+}
+
+type MessageActionResponse struct {
+    StatusCode int32  `json:"status_code"`
+    StatusMsg  string `json:"status_msg,optional"`
+}

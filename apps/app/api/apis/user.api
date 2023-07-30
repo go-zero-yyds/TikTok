@@ -1,0 +1,50 @@
+syntax = "v1"
+
+info(
+    title: "用户服务"
+    desc: "用户服务"
+    author: "r27153733"
+    email: "r27153733@gmail.com"
+    version: "v1"
+)
+
+import "dep.api"
+
+// - /douyin/user/register/ - 用户注册接口
+type UserRegisterRequest struct {
+    Username string `form:"username"`
+    Password string `form:"password"`
+}
+
+type UserRegisterResponse struct {
+    StatusCode int32  `json:"status_code"`
+    StatusMsg  string `json:"status_msg,optional"`
+    UserID     int64  `json:"user_id"`
+    Token      string `json:"token"`
+}
+
+// - /douyin/user/login/ - 用户登录接口
+type UserLoginRequest struct {
+    Username string `form:"username"`
+    Password string `form:"password"`
+}
+
+type UserLoginResponse struct {
+    StatusCode int32  `json:"status_code"`
+    StatusMsg  string `json:"status_msg,optional"`
+    UserID     int64  `json:"user_id"`
+    Token      string `json:"token"`
+}
+
+// - /douyin/user/ - 用户信息
+type UserRequest struct {
+    UserID int64  `form:"user_id"`
+    Token  string `form:"token"`
+}
+
+type UserResponse struct {
+    StatusCode int32 `json:"status_code"`
+    StatusMsg  string `json:"status_msg,optional"`
+    User       User   `json:"user"`
+}
+

@@ -1,0 +1,49 @@
+syntax = "v1"
+
+info(
+    title: "视频服务"
+    desc: "视频服务"
+    author: "r27153733"
+    email: "r27153733@gmail.com"
+    version: "v1"
+)
+
+import "dep.api"
+
+// - /douyin/feed/ - 视频流接口
+type FeedRequest struct {
+    LatestTime int64  `form:"latest_time,optional"`
+    Token      string `form:"token,optional"`
+}
+
+type FeedResponse struct {
+    StatusCode int32   `json:"status_code"`
+    StatusMsg  string  `json:"status_msg,optional"`
+    VideoList  []Video `json:"video_list"`
+    NextTime   int64   `json:"next_time,optional"`
+}
+
+// - /douyin/publish/action/ - 视频投稿
+type PublishActionRequest struct {
+    Token string `form:"token"`
+    Data  []byte `form:"data"`
+    Title string `form:"title"`
+}
+
+type PublishActionResponse struct {
+    StatusCode int32  `json:"status_code"`
+    StatusMsg  string `json:"status_msg,optional"`
+}
+
+// - /douyin/publish/list/ - 发布列表
+
+type PublishListRequest struct {
+    UserID int64  `form:"user_id"`
+    Token  string `form:"token"`
+}
+
+type PublishListResponse struct {
+    StatusCode int32   `json:"status_code"`
+    StatusMsg  string  `json:"status_msg,optional"`
+    VideoList  []Video `json:"video_list"`
+}
