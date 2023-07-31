@@ -38,8 +38,26 @@ message BasicUserInfo {
   string Signature = 5; //个人简介
 }
 
+message SetAvatarReq {
+  int64 UserId = 1; // 需要展示信息用户id
+}
+
+message SetAvatarResp {
+  bool IsSucceed = 1; // true-成功，false-失败
+}
+
+message BackgroundImageReq {
+  int64 UserId = 1; // 需要展示信息用户id
+}
+
+message BackgroundImageResp {
+  bool IsSucceed = 1; // true-成功，false-失败
+}
+
 service User {
   rpc Register(RegisterReq) returns (RegisterResp);
   rpc Login(LoginReq) returns (LoginResp);
   rpc Detail(BasicUserInfoReq) returns (BasicUserInfoResp);
+  rpc SetAvatar(SetAvatarReq) returns (SetAvatarResp);
+  rpc SetBackgroundImage(BackgroundImageReq) returns (BackgroundImageResp);
 }
