@@ -3,37 +3,34 @@ syntax = "proto3";
 package video;
 option go_package="./video";
 
-message  WorkCountByUserIdReq {
-  int64 UserId = 1; // 用户id
-}
-message  WorkCountByUserIdResp {
-  int64 WorkCount = 1; // 发布视频数量
-}
+//message  WorkCountByUserIdReq {
+//  int64 UserId = 1; // 用户id
+//}
+//message  WorkCountByUserIdResp {
+//  int64 WorkCount = 1; // 发布视频数量
+//}
 
-message VideoInfo {
+message BasicVideoInfo {
   int64 Id = 1; // 视频唯一标识
   int64 UserId = 2; // 视频作者信息
   string PlayUrl = 3; // 视频播放地址
   string CoverUrl = 4; // 视频封面地址
-  int64 FavoriteCount = 5; // 视频的点赞总数
-  int64 CommentCount = 6; // 视频的评论总数
-  bool IsFavorite = 7; // true-已点赞，false-未点赞
-  string Title = 8; // 视频标题
+  string Title = 5; // 视频标题
 }
 
 message FeedReq {
   optional int64 LatestTime = 1; // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
-  optional string UserId = 2; // 可选参数，登录用户设置
+  optional int64 TokenUserId = 2; // 可选参数，调用接口的用户id
 }
     
 message FeedResp {
-  repeated VideoInfo VideoList = 1; // 视频列表
+  repeated BasicVideoInfo VideoList = 1; // 视频列表
   optional int64 NextTime = 2; // 本次返回的视频中，发布最早的时间，作为下次请求时的LatestTime
 }
 
 message PublishActionReq {
-  string UserId = 1; // 用户Id
-  bytes Data = 2; // 视频数据
+  int64 TokenUserId = 1; // 调用接口的用户id
+  string Url = 2; // 视频url
   string Title = 3; // 视频标题
 }
 
@@ -46,12 +43,21 @@ message PublishListReq {
 }
     
 message PublishListResp {
-  repeated VideoInfo VideoList = 1; // 用户发布的视频列表
+  repeated BasicVideoInfo VideoList = 1; // 用户发布的视频列表
+}
+
+message BasicVideoInfoReq {
+  int64 VideoId = 1; // 需要展示信息视频id
+}
+
+message BasicVideoInfoResp {
+  BasicVideoInfo Video = 1; // 视频信息
 }
 
 service Video {
-  rpc WorkCountByUserId(WorkCountByUserIdReq) returns (WorkCountByUserIdResp);
+//  rpc WorkCountByUserId(WorkCountByUserIdReq) returns (WorkCountByUserIdResp);
   rpc Deed(FeedReq) returns (FeedResp);
   rpc PublishAction(PublishActionReq) returns (PublishActionResp);
   rpc PublishList(PublishListReq) returns (PublishListResp);
+  rpc Detail(BasicVideoInfoReq) returns (BasicVideoInfoResp);
 }

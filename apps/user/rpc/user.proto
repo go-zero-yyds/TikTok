@@ -22,30 +22,24 @@ message LoginResp {
   int64 UserId = 1; // 用户id
 }
 
-message UserInfoReq {
-  int64 UserId = 1; // 用户id
+message BasicUserInfoReq {
+  int64 UserId = 1; // 需要展示信息用户id
 }
     
-message UserInfoResp {
-  UserInfo User = 1; // 用户信息
+message BasicUserInfoResp {
+  BasicUserInfo User = 1; // 用户信息
 }
     
-message UserInfo {
+message BasicUserInfo {
   int64 Id = 1; // 用户id
   string Name = 2; // 用户名称
-  optional int64 FollowCount = 3; // 关注总数
-  optional int64 FollowerCount = 4; // 粉丝总数
-  bool IsFollow = 5; // true-已关注，false-未关注
-  optional string Avatar = 6; //用户头像
-  optional string BackgroundImage = 7; //用户个人页顶部大图
-  optional string Signature = 8; //个人简介
-  optional int64 TotalFavorited = 9; //获赞数量
-  optional int64 WorkCount = 10; //作品数量
-  optional int64 FavoriteCount = 11; //点赞数量
+  optional string Avatar = 3; //用户头像
+  optional string BackgroundImage = 4; //用户个人页顶部大图
+  string Signature = 5; //个人简介
 }
 
 service User {
   rpc Register(RegisterReq) returns (RegisterResp);
   rpc Login(LoginReq) returns (LoginResp);
-  rpc Detail(UserInfoReq) returns (UserInfoResp);
+  rpc Detail(BasicUserInfoReq) returns (BasicUserInfoResp);
 }
