@@ -1,15 +1,105 @@
 syntax = "proto3";
 
-package stream;
+package social;
 
-message StreamReq {
-  string name = 1;
+option go_package = "./social";
+
+message Message {
+  int64 Id = 1; // 消息id
+  int64 ToUserId = 2; // 该消息接收者的id
+  int64 FromUserId =3; // 该消息发送者的id
+  string Content = 4; // 消息内容
+  optional string CreateTime = 5; // 消息创建时间
+}
+message FriendUser {
+    int64 UserId = 1;
+    optional string Message = 2; // 和该好友的最新聊天消息
+    int64 MsgType = 3; // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
+}
+message RelationActionReq {
+  int64 UserId = 1; // 用户id
+  int64 ToUserId = 2; // 对方用户id
+  int32 ActionType = 3; // 1-关注，2-取消关注
+}
+    
+message RelationActionResp {
+  bool IsSucceed = 1; // true-成功，false-失败
 }
 
-message StreamResp {
-  string greet = 1;
+message RelationFollowListReq {
+  int64 UserId = 1; // 用户id
+}
+    
+message RelationFollowListResp {
+  repeated int64 UserList = 1; // 用户信息列表
 }
 
-service StreamGreeter {
-  rpc greet(StreamReq) returns (StreamResp);
+message RelationFollowerListReq {
+  int64 UserId = 1; // 用户id
+}
+    
+message RelationFollowerListResp {
+  repeated int64 UserList = 1; // 用户列表
+}
+
+message RelationFriendListReq {
+  int64 UserId = 1; // 用户id
+}
+    
+message RelationFriendListResp {
+  repeated FriendUser UserList = 1; // 用户列表
+}
+
+message MessageChatReq {
+  int64 UserId = 1; // 用户id
+  int64 ToUserId = 2; // 对方用户id
+  int64 PreMsgTime = 3;//上次最新消息的时间（新增字段-apk更新中）
+}
+    
+message MessageChatResp {
+  repeated Message messageList = 1; // 消息列表
+}
+
+message MessageActionReq {
+  int64 UserId = 1; // 用户id
+  int64 ToUserId = 2; // 对方用户id
+  int32 ActionType = 3; // 1-发送消息
+  string Content = 4; // 消息内容
+}
+    
+message MessageActionResp {
+  bool IsSucceed = 1; // true-成功，false-失败
+}
+message IsFollowReq {
+  int64 UserId = 1; // 用户id
+  int64 ToUserId = 2; // 对方用户id
+}
+message IsFollowResp {
+  bool IsFollow = 1;
+}
+
+message FollowCountReq {
+  int64 UserId = 1; // 用户id
+}
+
+message FollowCountResp {
+  int64 FollowCount = 1; // 用户关注总数
+}
+message FollowerCountReq {
+  int64 UserId = 1; // 用户id
+}
+
+message FollowerCountResp {
+  int64 FollowerCount = 1; // 用户粉丝总数
+}
+service Social {
+  rpc IsFollow(IsFollowReq) returns (IsFollowResp);
+  rpc GetFollowCount(FollowCountReq) returns (FollowCountResp);
+  rpc GetFollowerCount(FollowerCountReq) returns (FollowerCountResp);
+  rpc SendRelationAction(RelationActionReq) returns (RelationActionResp);
+  rpc GetRelationFollowList(RelationFollowListReq) returns (RelationFollowListResp);
+  rpc GetRelationFollowerList(RelationFollowerListReq) returns (RelationFollowerListResp);
+  rpc GetRelationFriendList(RelationFriendListReq) returns (RelationFriendListResp);
+  rpc GetMessages(MessageChatReq) returns (MessageChatResp);
+  rpc SendMessageAction(MessageActionReq) returns (MessageActionResp);
 }

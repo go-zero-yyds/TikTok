@@ -3,12 +3,12 @@ syntax = "proto3";
 package video;
 option go_package="./video";
 
-//message  WorkCountByUserIdReq {
-//  int64 UserId = 1; // 用户id
-//}
-//message  WorkCountByUserIdResp {
-//  int64 WorkCount = 1; // 发布视频数量
-//}
+message  WorkCountByUserIdReq {
+  int64 UserId = 1; // 用户id
+}
+message  WorkCountByUserIdResp {
+  int64 WorkCount = 1; // 发布视频数量
+}
 
 message BasicVideoInfo {
   int64 Id = 1; // 视频唯一标识
@@ -20,7 +20,7 @@ message BasicVideoInfo {
 
 message FeedReq {
   optional int64 LatestTime = 1; // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
-  optional int64 TokenUserId = 2; // 可选参数，调用接口的用户id
+  optional int64 UserId = 2; // 可选参数，调用接口的用户id
 }
     
 message FeedResp {
@@ -29,7 +29,7 @@ message FeedResp {
 }
 
 message PublishActionReq {
-  int64 TokenUserId = 1; // 调用接口的用户id
+  int64 UserId = 1; // 调用接口的用户id
   string Url = 2; // 视频url
   string Title = 3; // 视频标题
 }
@@ -55,9 +55,9 @@ message BasicVideoInfoResp {
 }
 
 service Video {
-//  rpc WorkCountByUserId(WorkCountByUserIdReq) returns (WorkCountByUserIdResp);
-  rpc Deed(FeedReq) returns (FeedResp);
-  rpc PublishAction(PublishActionReq) returns (PublishActionResp);
-  rpc PublishList(PublishListReq) returns (PublishListResp);
+  rpc GetWorkCountByUserId(WorkCountByUserIdReq) returns (WorkCountByUserIdResp);
+  rpc GetFeed(FeedReq) returns (FeedResp);
+  rpc SendPublishAction(PublishActionReq) returns (PublishActionResp);
+  rpc GetPublishList(PublishListReq) returns (PublishListResp);
   rpc Detail(BasicVideoInfoReq) returns (BasicVideoInfoResp);
 }
