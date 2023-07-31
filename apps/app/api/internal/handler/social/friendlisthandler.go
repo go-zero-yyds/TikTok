@@ -3,10 +3,10 @@ package social
 import (
 	"net/http"
 
+	"TikTok/apps/app/api/internal/logic/social"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"rpc/apps/app/api/internal/logic/social"
-	"rpc/apps/app/api/internal/svc"
-	"rpc/apps/app/api/internal/types"
 )
 
 func FriendListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {

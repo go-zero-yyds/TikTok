@@ -3,8 +3,8 @@ package interaction
 import (
 	"context"
 
-	"rpc/apps/app/api/internal/svc"
-	"rpc/apps/app/api/internal/types"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

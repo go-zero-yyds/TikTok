@@ -6,7 +6,7 @@ package interactionclient
 import (
 	"context"
 
-	"rpc/apps/interaction/rpc/interaction"
+	"TikTok/apps/interaction/rpc/interaction"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

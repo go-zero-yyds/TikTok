@@ -6,9 +6,9 @@ package server
 import (
 	"context"
 
-	"rpc/apps/user/rpc/internal/logic"
-	"rpc/apps/user/rpc/internal/svc"
-	"rpc/apps/user/rpc/user"
+	"TikTok/apps/user/rpc/internal/logic"
+	"TikTok/apps/user/rpc/internal/svc"
+	"TikTok/apps/user/rpc/user"
 )
 
 type UserServer struct {

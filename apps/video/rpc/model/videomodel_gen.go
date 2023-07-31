@@ -41,8 +41,8 @@ type (
 	Video struct {
 		VideoId    int64     `db:"video_id"`    // 唯一视频ID，使用雪花算法生成
 		UserId     int64     `db:"user_id"`     // 视频作者用户ID
-		PlayUrl    string    `db:"play_url"`    // 视频播放地址
-		CoverUrl   string    `db:"cover_url"`   // 视频封面地址
+		PlayUrl    string    `db:"play_url"`    // 视频播放地址, key
+		CoverUrl   string    `db:"cover_url"`   // 视频封面地址, key
 		Title      string    `db:"title"`       // 视频标题
 		CreateTime time.Time `db:"create_time"` // 创建时间
 	}

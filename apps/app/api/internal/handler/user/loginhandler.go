@@ -3,10 +3,10 @@ package user
 import (
 	"net/http"
 
+	"TikTok/apps/app/api/internal/logic/user"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"rpc/apps/app/api/internal/logic/user"
-	"rpc/apps/app/api/internal/svc"
-	"rpc/apps/app/api/internal/types"
 )
 
 func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {

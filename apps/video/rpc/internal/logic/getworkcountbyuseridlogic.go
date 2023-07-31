@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"rpc/apps/video/rpc/internal/svc"
-	"rpc/apps/video/rpc/video"
+	"TikTok/apps/video/rpc/internal/svc"
+	"TikTok/apps/video/rpc/video"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

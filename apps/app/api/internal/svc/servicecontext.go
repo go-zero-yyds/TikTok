@@ -1,7 +1,7 @@
 package svc
 
 import (
-	"rpc/apps/app/api/internal/config"
+	"TikTok/apps/app/api/internal/config"
 )
 
 type ServiceContext struct {

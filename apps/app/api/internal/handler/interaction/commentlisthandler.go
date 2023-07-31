@@ -3,10 +3,10 @@ package interaction
 import (
 	"net/http"
 
+	"TikTok/apps/app/api/internal/logic/interaction"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"rpc/apps/app/api/internal/logic/interaction"
-	"rpc/apps/app/api/internal/svc"
-	"rpc/apps/app/api/internal/types"
 )
 
 func CommentListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {

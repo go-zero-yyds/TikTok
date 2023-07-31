@@ -4,11 +4,11 @@ package handler
 import (
 	"net/http"
 
-	interaction "rpc/apps/app/api/internal/handler/interaction"
-	social "rpc/apps/app/api/internal/handler/social"
-	user "rpc/apps/app/api/internal/handler/user"
-	video "rpc/apps/app/api/internal/handler/video"
-	"rpc/apps/app/api/internal/svc"
+	interaction "TikTok/apps/app/api/internal/handler/interaction"
+	social "TikTok/apps/app/api/internal/handler/social"
+	user "TikTok/apps/app/api/internal/handler/user"
+	video "TikTok/apps/app/api/internal/handler/video"
+	"TikTok/apps/app/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )

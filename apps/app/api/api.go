@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 
-	"rpc/apps/app/api/internal/config"
-	"rpc/apps/app/api/internal/handler"
-	"rpc/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/config"
+	"TikTok/apps/app/api/internal/handler"
+	"TikTok/apps/app/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"

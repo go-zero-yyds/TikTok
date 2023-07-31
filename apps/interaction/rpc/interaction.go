@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 
-	"rpc/apps/interaction/rpc/interaction"
-	"rpc/apps/interaction/rpc/internal/config"
-	"rpc/apps/interaction/rpc/internal/server"
-	"rpc/apps/interaction/rpc/internal/svc"
+	"TikTok/apps/interaction/rpc/interaction"
+	"TikTok/apps/interaction/rpc/internal/config"
+	"TikTok/apps/interaction/rpc/internal/server"
+	"TikTok/apps/interaction/rpc/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
