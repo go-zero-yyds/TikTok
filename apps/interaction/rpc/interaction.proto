@@ -1,15 +1,76 @@
 syntax = "proto3";
 
-package stream;
+package interaction;
 
-message StreamReq {
-  string name = 1;
+option go_package = "./interaction";
+
+message FavoriteCountByUserIdReq {
+  int64 UserId = 1; // 用户id
 }
 
-message StreamResp {
-  string greet = 1;
+message FavoriteCountByUserIdResp {
+  int64 FavoriteCount = 1; // 用户点赞数量
 }
 
-service StreamGreeter {
-  rpc greet(StreamReq) returns (StreamResp);
+message FavoriteCountByVideoIdReq {
+  int64 VideoId = 1; // 视频id
+}
+
+message FavoriteCountByVideoIdResp {
+  int64 FavoriteCount = 1; // 视频获赞数量
+}
+
+message FavoriteActionReq {
+  int64 TokenUserId = 1; // 调用接口的用户id
+  int64 VideoId = 2; // 视频id
+  int32 ActionType = 3; // 1-点赞，2-取消点赞
+}
+
+message FavoriteActionResp {
+  bool IsSucceed = 1; // true-成功，false-失败
+}
+
+message FavoriteListReq {
+  int64 TokenUserId = 1; // 调用接口的用户id
+}
+
+message FavoriteListResp {
+  repeated int64 VideoList = 1; // 用户点赞视频列表
+}
+
+message CommentActionReq {
+  int64 TokenUserId = 1; // 调用接口的用户id
+  int64 VideoId = 2; // 视频id
+  int32 ActionType = 3; // 1-发布评论，2-删除评论
+  optional string CommentText = 4; // 用户填写的评论内容，在action_type=1的时候使用
+  optional int64 CommentId = 5; // 要删除的评论id，在action_type=2的时候使用
+}
+
+message CommentActionResp {
+  optional Comment Comment = 1;
+}
+
+message Comment {
+  int64 Id = 1; // 视频评论id
+  int64 UserId = 2; // 评论用户id
+  string Content = 3; // 评论内容
+  string CreateDate = 4; // 评论发布日期，格式 mm-dd
+}
+
+message CommentListReq {
+  int64 TokenUserId = 1; // 调用接口的用户id
+  int64 VideoId = 2; // 视频id
+}
+
+message CommentListResp {
+  repeated Comment CommentList = 1; // 评论列表
+}
+
+service interaction {
+  rpc FavoriteCountByUserId(FavoriteCountByUserIdReq) returns (FavoriteCountByUserIdResp);
+  rpc FavoriteCountByVideoId(FavoriteCountByVideoIdReq) returns (FavoriteCountByVideoIdResp);
+  rpc FavoriteAction(FavoriteActionReq) returns (FavoriteActionResp);
+  rpc FavoriteList(FavoriteListReq) returns (FavoriteListResp);
+  rpc CommentAction(CommentActionReq) returns (CommentActionResp);
+  rpc CommentList(CommentListReq) returns (CommentListResp);
 }
