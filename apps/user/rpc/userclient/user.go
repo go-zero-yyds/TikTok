@@ -6,7 +6,7 @@ package userclient
 import (
 	"context"
 
-	"rpc/apps/user/rpc/user"
+	"TikTok/apps/user/rpc/user"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

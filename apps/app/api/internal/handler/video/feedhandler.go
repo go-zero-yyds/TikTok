@@ -3,10 +3,10 @@ package video
 import (
 	"net/http"
 
+	"TikTok/apps/app/api/internal/logic/video"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"rpc/apps/app/api/internal/logic/video"
-	"rpc/apps/app/api/internal/svc"
-	"rpc/apps/app/api/internal/types"
 )
 
 func FeedHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {

@@ -1,6 +1,6 @@
 package svc
 
-import "rpc/apps/social/rpc/internal/config"
+import "TikTok/apps/social/rpc/internal/config"
 
 type ServiceContext struct {
 	Config config.Config

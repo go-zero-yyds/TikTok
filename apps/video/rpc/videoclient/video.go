@@ -6,7 +6,7 @@ package videoclient
 import (
 	"context"
 
-	"rpc/apps/video/rpc/video"
+	"TikTok/apps/video/rpc/video"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

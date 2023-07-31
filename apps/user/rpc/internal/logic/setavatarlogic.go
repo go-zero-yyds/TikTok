@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"rpc/apps/user/rpc/internal/svc"
-	"rpc/apps/user/rpc/user"
+	"TikTok/apps/user/rpc/internal/svc"
+	"TikTok/apps/user/rpc/user"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

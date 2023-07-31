@@ -6,7 +6,7 @@ package socialclient
 import (
 	"context"
 
-	"rpc/apps/social/rpc/social"
+	"TikTok/apps/social/rpc/social"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

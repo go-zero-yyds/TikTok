@@ -1,8 +1,8 @@
 package svc
 
 import (
-	"rpc/apps/video/model"
-	"rpc/apps/video/rpc/internal/config"
+	"TikTok/apps/video/rpc/internal/config"
+	"TikTok/apps/video/rpc/model"
 
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
