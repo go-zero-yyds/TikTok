@@ -60,6 +60,7 @@ type RelationFriendListResponse struct {
 }
 
 type FriendUser struct {
+    User
     Message string `json:"message,optional"`
     MsgType int64  `json:"msgType"`
 }
