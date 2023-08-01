@@ -24,7 +24,6 @@ func NewDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetailLogi
 }
 
 func (l *DetailLogic) Detail(in *video.BasicVideoInfoReq) (*video.BasicVideoInfoResp, error) {
-	// todo: add your logic here and delete this line
 	videoId := in.VideoId
 	videoInfo, err := l.svcCtx.Model.FindOne(l.ctx, videoId)
 	if err != nil {
