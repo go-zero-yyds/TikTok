@@ -35,7 +35,9 @@ func (j *JwtAuth) ParseToken(tokenString string) (int64, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.AccessSecret, nil
 	})
-
+	if err != nil {
+		return -1, err
+	}
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 		//fmt.Printf("%v %v", claims.ID, claims.RegisteredClaims.Issuer)
 		return claims.ID, nil
