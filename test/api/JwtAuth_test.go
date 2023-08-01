@@ -63,3 +63,20 @@ func TestJwtAuthExpiredToken(t *testing.T) {
 	assert.Error(t, err, "Token should have expired")
 	assert.Equal(t, int64(-1), parsedTokenID, "Parsed token ID should be -1 (invalid)")
 }
+
+func TestJwtAuthInvalidToken(t *testing.T) {
+	jwtAuth := utils.JwtAuth{
+		AccessSecret: []byte("secret_key"),
+		AccessExpire: 3600, // 1 hour in seconds
+	}
+
+	// A fake or invalid token string
+	fakeTokenString := "invalid_token_string"
+
+	// Call the function being tested
+	parsedTokenID, err := jwtAuth.ParseToken(fakeTokenString)
+
+	// Assertions
+	assert.Error(t, err, "Token should be invalid")
+	assert.Equal(t, int64(-1), parsedTokenID, "Parsed token ID should be -1 (invalid)")
+}
