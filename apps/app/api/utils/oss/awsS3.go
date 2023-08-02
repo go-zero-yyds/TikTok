@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
+	"github.com/zeromicro/go-zero/core/logc"
 	"io"
-	"log"
 	"path/filepath"
 	"time"
 )
@@ -46,7 +46,7 @@ func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessK
 		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
-		log.Fatalln("error:", err)
+		return nil, err
 	}
 	res.client = s3.NewFromConfig(cfg)
 	_, err = res.bucketExists()
@@ -109,16 +109,16 @@ func (s *S3) bucketExists() (bool, error) {
 			var notFound *types.NotFound
 			switch {
 			case errors.As(apiError, &notFound):
-				log.Printf("Bucket %v is available.\n", s.Bucket)
+				logc.Debugf(s.ctx, "Bucket %v is available.\n", s.Bucket)
 				exists = false
 				err = nil
 			default:
-				log.Printf("Either you don't have access to bucket %v or another error occurred. "+
+				logc.Debugf(s.ctx, "Either you don't have access to bucket %v or another error occurred. "+
 					"Here's what happened: %v\n", s.Bucket, err)
 			}
 		}
 	} else {
-		log.Printf("Bucket %v exists and you already own it.", s.Bucket)
+		logc.Debugf(s.ctx, "Bucket %v exists and you already own it.", s.Bucket)
 	}
 
 	return exists, err
@@ -138,16 +138,16 @@ func (s *S3) FileExists(key ...string) (bool, error) {
 			var notFound *types.NotFound
 			switch {
 			case errors.As(apiError, &notFound):
-				log.Printf("Bucket %v is available.\n", s.Bucket)
+				logc.Debugf(s.ctx, "Bucket %v is available.\n", s.Bucket)
 				exists = false
 				err = nil
 			default:
-				log.Printf("Either you don't have access to bucket %v or another error occurred. "+
+				logc.Debugf(s.ctx, "Either you don't have access to bucket %v or another error occurred. "+
 					"Here's what happened: %v\n", s.Bucket, err)
 			}
 		}
 	} else {
-		log.Printf("Bucket %v exists and you already own it.", s.Bucket)
+		logc.Debugf(s.ctx, "Bucket %v exists and you already own it.", s.Bucket)
 	}
 
 	return exists, err
