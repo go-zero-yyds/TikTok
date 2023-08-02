@@ -13,8 +13,8 @@ import (
 func TestSend(t *testing.T) {
 
 	req := &video.PublishActionReq{
-		UserId:   123456,
-		PlayUrl:  "test2Purl",
+		UserId:   12345678,
+		PlayUrl:  "12345678",
 		CoverUrl: "testCurl",
 		Title:    "testtitel",
 	}

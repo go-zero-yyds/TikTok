@@ -31,8 +31,6 @@ type (
 		FindOne(ctx context.Context, videoId int64) (*Video, error)
 		Update(ctx context.Context, data *Video) error
 		Delete(ctx context.Context, videoId int64) error
-		CountByUserId(ctx context.Context, userId int64) (int64, error) 
-		VideoListByUserId(ctx context.Context, userId int64) ([]*Video, error)
 	}
 
 	defaultVideoModel struct {
@@ -117,27 +115,7 @@ func (m *defaultVideoModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn,
 	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
-func (m *defaultVideoModel) CountByUserId(ctx context.Context, userId int64) (int64, error) {
-  	var count int64
-  	query := fmt.Sprintf("SELECT count(*) FROM %s WHERE user_id = ?", m.table)
-	err:= m.QueryRowNoCache(&count,query,userId)
-  	if err != nil {
-    	return 0, err
- 	}
 
-  	return count, nil
-}
-
-func (m *defaultVideoModel) VideoListByUserId(ctx context.Context, userId int64) ([]*Video, error) {
-	var videoList []*Video
-	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = ?",m.table)
-	err := m.QueryRowsNoCacheCtx(ctx,&videoList,query,userId)
-	fmt.Println(videoList)
-	if err!=nil {
-		return nil,err
-	}
-	return videoList,nil
-}
 
 func (m *defaultVideoModel) tableName() string {
 	return m.table

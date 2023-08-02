@@ -26,20 +26,20 @@ func NewGetPublishListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 }
 
 func (l *GetPublishListLogic) GetPublishList(in *video.PublishListReq) (*video.PublishListResp, error) {
-	var publishListResp *video.PublishListResp
+	publishListResp := &video.PublishListResp{}
 	mvideoList, err := l.svcCtx.Model.VideoListByUserId(context.Background(), in.UserId)
 	if err != nil {
 		fmt.Println("err", err)
 		return nil, err
 	}
-	for i, v := range mvideoList {
-		publishListResp.VideoList[i] = convertToBasic(v)
+
+	for _, v := range mvideoList {
+		publishListResp.VideoList = append(publishListResp.VideoList, convertToBasic(v))
 	}
 	return publishListResp, nil
 }
 
 func convertToBasic(mvideo *model.Video) *video.BasicVideoInfo {
-
 	basic := &video.BasicVideoInfo{
 		Id:       mvideo.VideoId,
 		UserId:   mvideo.UserId,

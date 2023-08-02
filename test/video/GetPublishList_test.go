@@ -12,7 +12,7 @@ import (
 func TestGetPublishList(t *testing.T) {
 
 	req := &video.PublishListReq{
-		UserId: 123456,
+		UserId: 12345678,
 	}
 
 	res, err := client.GetPublishList(context.Background(), req)
