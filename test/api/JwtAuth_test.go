@@ -1,14 +1,14 @@
 package test
 
 import (
-	"TikTok/apps/app/api/utils"
+	"TikTok/apps/app/api/utils/auth"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestJwtAuthCreateToken(t *testing.T) {
-	jwtAuth := utils.JwtAuth{
+	jwtAuth := auth.JwtAuth{
 		AccessSecret: []byte("secret_key"),
 		AccessExpire: 3600, // 1 hour in seconds
 	}
@@ -24,7 +24,7 @@ func TestJwtAuthCreateToken(t *testing.T) {
 }
 
 func TestJwtAuthParseToken(t *testing.T) {
-	jwtAuth := utils.JwtAuth{
+	jwtAuth := auth.JwtAuth{
 		AccessSecret: []byte("secret_key"),
 		AccessExpire: 3600, // 1 hour in seconds
 	}
@@ -43,7 +43,7 @@ func TestJwtAuthParseToken(t *testing.T) {
 }
 
 func TestJwtAuthExpiredToken(t *testing.T) {
-	jwtAuth := utils.JwtAuth{
+	jwtAuth := auth.JwtAuth{
 		AccessSecret: []byte("secret_key"),
 		AccessExpire: 1, // 1 second (expired token)
 	}
@@ -65,7 +65,7 @@ func TestJwtAuthExpiredToken(t *testing.T) {
 }
 
 func TestJwtAuthInvalidToken(t *testing.T) {
-	jwtAuth := utils.JwtAuth{
+	jwtAuth := auth.JwtAuth{
 		AccessSecret: []byte("secret_key"),
 		AccessExpire: 3600, // 1 hour in seconds
 	}
