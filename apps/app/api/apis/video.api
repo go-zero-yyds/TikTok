@@ -17,8 +17,7 @@ type FeedRequest struct {
 }
 
 type FeedResponse struct {
-    StatusCode int32   `json:"status_code"`
-    StatusMsg  string  `json:"status_msg,optional"`
+    RespStatus
     VideoList  []Video `json:"video_list"`
     NextTime   int64   `json:"next_time,optional"`
 }
@@ -31,19 +30,17 @@ type PublishActionRequest struct {
 }
 
 type PublishActionResponse struct {
-    StatusCode int32  `json:"status_code"`
-    StatusMsg  string `json:"status_msg,optional"`
+    RespStatus
 }
 
 // - /douyin/publish/list/ - 发布列表
 
 type PublishListRequest struct {
-    UserID int64  `form:"user_id"`
+    UserID int64  `form:"user_id,range=[0:]"`
     Token  string `form:"token"`
 }
 
 type PublishListResponse struct {
-    StatusCode int32   `json:"status_code"`
-    StatusMsg  string  `json:"status_msg,optional"`
+    RespStatus
     VideoList  []Video `json:"video_list"`
 }

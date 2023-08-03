@@ -1,3 +1,38 @@
 Name: api-api
 Host: 0.0.0.0
 Port: 8888
+MaxBytes: 104857600 # 100MIB
+
+# RPC
+UserRPC:
+  Endpoints:
+    - 127.0.0.1:8001
+  NonBlock: true
+
+VideoRPC:
+  Endpoints:
+    - 127.0.0.1:8002
+  NonBlock: true
+
+InteractionRPC:
+  Endpoints:
+    - 127.0.0.1:8003
+  NonBlock: true
+
+SocialRPC:
+  Endpoints:
+    - 127.0.0.1:8004
+  NonBlock: true
+
+# Jwt
+JwtAuth:
+  AccessSecret: 9dDvxR8LiINVDh9cst9GRBwz46A
+  AccessExpire: 86400
+
+AwsS3:
+  Endpoint: http://minio-host:9000
+  AccessKeyID:
+  AccessKeySecret:
+  Region:
+  Prefix: /upload/
+  BucketName: TikTok
