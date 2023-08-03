@@ -9,13 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetPublishList(t *testing.T) {
+func TestGetFeed(t *testing.T) {
 
-	req := &video.PublishListReq{
-		UserId: 123456,
+	//lastTime := time.Now().Unix()
+	lastTime2 := int64(1690900577)
+	req := &video.FeedReq{
+		LatestTime: &lastTime2,
 	}
 
-	res, err := client.GetPublishList(context.Background(), req)
+	res, err := client.GetFeed(context.Background(), req)
 	if err != nil {
 		log.Fatalln("err :", err)
 	}
