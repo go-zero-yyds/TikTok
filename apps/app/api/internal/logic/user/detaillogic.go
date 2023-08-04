@@ -36,14 +36,33 @@ func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, 
 	if err != nil {
 		return nil, err
 	}
-	return GetUserInfo(tokenID, req.UserID, l.svcCtx, l.ctx)
+	userInfo, err := TryGetUserInfo(tokenID, req.UserID, l.svcCtx, l.ctx)
+
+	if err == apiVars.SomeDataErr {
+		return &types.UserResponse{
+			RespStatus: types.RespStatus(apiVars.SomeDataErr),
+			User:       *userInfo,
+		}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return &types.UserResponse{
+		RespStatus: types.RespStatus(apiVars.Success),
+		User:       *userInfo,
+	}, nil
 }
 
-func GetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx context.Context) (resp *types.UserResponse, err error) {
+// TryGetUserInfo 尝试获取全部用户信息
+// 部分非必要信息未获取到时，返回 apiVars.SomeDataErr
+func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx context.Context) (resp *types.User, err error) {
 	res, err := GetBasicUserInfo(svcCtx, ctx, toUserId)
 	if err != nil {
 		return nil, err
 	}
+
+	var e *apiVars.RespErr
 
 	// 启动goroutines并发调用五个函数
 	var wg sync.WaitGroup
@@ -52,40 +71,53 @@ func GetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx contex
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
 		// 错误降级, 不影响获取user的基本信息。
-		isFollow, _ := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
-		res.User.IsFollow = isFollow
+		isFollow, err := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
+		if err != nil {
+			e = &apiVars.SomeDataErr
+			return
+		}
+		res.IsFollow = isFollow
 	})
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
-		// 错误降级, 不影响获取user的基本信息。
-		followCount, _ := GetFollowCount(svcCtx, ctx, toUserId)
-		res.User.FollowCount = followCount
+		followCount, err := GetFollowCount(svcCtx, ctx, toUserId)
+		if err != nil {
+			e = &apiVars.SomeDataErr
+			return
+		}
+		res.FollowCount = followCount
 
 	})
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
-		// 错误降级, 不影响获取user的基本信息。
-		followerCount, _ := GetFollowerCount(svcCtx, ctx, toUserId)
-		res.User.FollowerCount = followerCount
+		followerCount, err := GetFollowerCount(svcCtx, ctx, toUserId)
+		if err != nil {
+			e = &apiVars.SomeDataErr
+			return
+		}
+		res.FollowerCount = followerCount
 	})
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
-		// 错误降级, 不影响获取user的基本信息。
-		favoriteCount, _ := GetFavoriteCount(svcCtx, ctx, toUserId)
-		res.User.FavoriteCount = favoriteCount
+		favoriteCount, err := GetFavoriteCount(svcCtx, ctx, toUserId)
+		if err != nil {
+			e = &apiVars.SomeDataErr
+			return
+		}
+		res.FavoriteCount = favoriteCount
 	})
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
 		videoList, err := GetPublishList(svcCtx, ctx, toUserId)
-		// 错误降级, 不影响获取user的基本信息。
 		if err != nil {
+			e = &apiVars.SomeDataErr
 			return
 		}
-		res.User.WorkCount = int64(len(videoList))
+		res.WorkCount = int64(len(videoList))
 		totalFavorited, err := mr.MapReduce(func(source chan<- int64) {
 			for _, info := range videoList {
 				source <- info.Id
@@ -94,6 +126,7 @@ func GetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx contex
 			videoFavoriteCount, err := svcCtx.InteractionRPC.GetFavoriteCountByVideoId(
 				ctx, &interaction.FavoriteCountByVideoIdReq{VideoId: item})
 			if err != nil {
+				e = &apiVars.SomeDataErr
 				logc.Errorf(ctx, "获取视频点赞数失败: %v", err)
 				cancel(err)
 				return
@@ -106,11 +139,15 @@ func GetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx contex
 			}
 			writer.Write(sum)
 		})
-		res.User.TotalFavorited = totalFavorited
+		if err != nil {
+			e = &apiVars.SomeDataErr
+			return
+		}
+		res.TotalFavorited = totalFavorited
 	})
 	wg.Wait()
 
-	return res, nil
+	return res, *e
 
 }
 
@@ -122,7 +159,7 @@ func GetPublishList(svcCtx *svc.ServiceContext, ctx context.Context, toUserId in
 		logc.Errorf(ctx, "获取被获赞数失败: %v", err)
 		return nil, err
 	}
-	return videoList.GetVideoList(), nil
+	return videoList.VideoList, nil
 }
 
 // GetFavoriteCount 点赞数量
@@ -133,7 +170,7 @@ func GetFavoriteCount(svcCtx *svc.ServiceContext, ctx context.Context, toUserId 
 		logc.Errorf(ctx, "获取点赞数失败: %v", err)
 		return 0, err
 	}
-	return favoriteCount.GetFavoriteCount(), nil
+	return favoriteCount.FavoriteCount, nil
 }
 
 func GetFollowerCount(svcCtx *svc.ServiceContext, ctx context.Context, toUserId int64) (int64, error) {
@@ -142,7 +179,7 @@ func GetFollowerCount(svcCtx *svc.ServiceContext, ctx context.Context, toUserId 
 		logc.Errorf(ctx, "获取被关注数失败: %v", err)
 		return 0, err
 	}
-	return followerCount.GetFollowerCount(), nil
+	return followerCount.FollowerCount, nil
 }
 
 // GetFollowCount 获取关注数
@@ -152,7 +189,7 @@ func GetFollowCount(svcCtx *svc.ServiceContext, ctx context.Context, toUserId in
 		logc.Errorf(ctx, "获取关注数失败: %v", err)
 		return 0, err
 	}
-	return followCount.GetFollowCount(), nil
+	return followCount.FollowCount, nil
 }
 
 // GetIsFollow 是否关注
@@ -166,25 +203,22 @@ func GetIsFollow(svcCtx *svc.ServiceContext, ctx context.Context, tokenID int64,
 		logc.Errorf(ctx, "获取是否关注失败: %v", err)
 		return false, err
 	}
-	return isFollow.GetIsFollow(), nil
+	return isFollow.IsFollow, nil
 }
 
 // GetBasicUserInfo 获取用户基本信息
-func GetBasicUserInfo(svcCtx *svc.ServiceContext, ctx context.Context, toUserId int64) (*types.UserResponse, error) {
+func GetBasicUserInfo(svcCtx *svc.ServiceContext, ctx context.Context, toUserId int64) (*types.User, error) {
 	basicUserInfo, err := svcCtx.UserRPC.Detail(ctx, &user.BasicUserInfoReq{UserId: toUserId})
 	if err != nil {
 		return nil, err
 	}
 
-	res := &types.UserResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
-		User: types.User{
-			ID:              basicUserInfo.GetUser().GetId(),
-			Name:            basicUserInfo.GetUser().Name,
-			Avatar:          basicUserInfo.GetUser().GetAvatar(),
-			BackgroundImage: basicUserInfo.GetUser().GetBackgroundImage(),
-			Signature:       basicUserInfo.GetUser().GetSignature(),
-		},
+	res := &types.User{
+		ID:              basicUserInfo.User.Id,
+		Name:            basicUserInfo.User.Name,
+		Avatar:          basicUserInfo.User.GetAvatar(),
+		BackgroundImage: basicUserInfo.User.GetBackgroundImage(),
+		Signature:       basicUserInfo.User.Signature,
 	}
 	return res, nil
 }
