@@ -12,7 +12,8 @@ import (
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/mr"
-	"github.com/zeromicro/go-zero/core/threading"
+	"github.com/zeromicro/go-zero/core/rescue"
+	"sync"
 )
 
 type DetailLogic struct {
@@ -45,66 +46,44 @@ func GetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx contex
 		return nil, err
 	}
 
-	chIsFollow := make(chan bool)
-	chFollowCount := make(chan int64)
-	chFollowerCount := make(chan int64)
-	chFavoriteCount := make(chan int64)
-	chWorkCount := make(chan int64)
-	chTotalFavorited := make(chan int64)
+	var wg sync.WaitGroup
+	wg.Add(5)
 
-	threading.GoSafe(func() {
-		isFollow, err := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
+	go RunSafeWg(&wg, func() {
 		// 错误降级, 不影响获取user的基本信息。
-		if err != nil {
-			chIsFollow <- false
-		} else {
-			chIsFollow <- isFollow
-		}
+		isFollow, _ := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
 
+		res.User.IsFollow = isFollow
 	})
 
-	threading.GoSafe(func() {
-		followCount, err := GetFollowCount(svcCtx, ctx, toUserId)
+	go RunSafeWg(&wg, func() {
 		// 错误降级, 不影响获取user的基本信息。
-		if err != nil {
-			chFollowCount <- 0
-		} else {
-			chFollowCount <- followCount
-		}
+		followCount, _ := GetFollowCount(svcCtx, ctx, toUserId)
+
+		res.User.FollowCount = followCount
 
 	})
 
-	threading.GoSafe(func() {
-		followerCount, err := GetFollowerCount(svcCtx, ctx, toUserId)
+	go RunSafeWg(&wg, func() {
 		// 错误降级, 不影响获取user的基本信息。
-		if err != nil {
-			chFollowerCount <- 0
-		} else {
-			chFollowerCount <- followerCount
-		}
+		followerCount, _ := GetFollowerCount(svcCtx, ctx, toUserId)
 
+		res.User.FollowerCount = followerCount
 	})
 
-	threading.GoSafe(func() {
-		favoriteCount, err := GetFavoriteCount(svcCtx, ctx, toUserId)
-		// 错误降级, 可选字段，不影响获取user的基本信息。
-		if err != nil {
-			chFavoriteCount <- 0
-		} else {
-			chFavoriteCount <- favoriteCount
-		}
-
+	go RunSafeWg(&wg, func() {
+		// 错误降级, 不影响获取user的基本信息。
+		favoriteCount, _ := GetFavoriteCount(svcCtx, ctx, toUserId)
+		res.User.FavoriteCount = favoriteCount
 	})
 
-	threading.GoSafe(func() {
+	go RunSafeWg(&wg, func() {
 		videoList, err := GetPublishList(svcCtx, ctx, toUserId)
-		// 错误降级, 可选字段，不影响获取user的基本信息。
+		// 错误降级, 不影响获取user的基本信息。
 		if err != nil {
-			chWorkCount <- 0
-			chTotalFavorited <- 0
 			return
 		}
-		chWorkCount <- int64(len(videoList))
+		res.User.WorkCount = int64(len(videoList))
 
 		totalFavorited, err := mr.MapReduce(func(source chan<- int64) {
 			for _, info := range videoList {
@@ -126,26 +105,10 @@ func GetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx contex
 			}
 			writer.Write(sum)
 		})
-		if err != nil {
-			chTotalFavorited <- 0
-		} else {
-			chTotalFavorited <- totalFavorited
-		}
-
+		res.User.TotalFavorited = totalFavorited
 	})
+	wg.Wait()
 
-	res.User.IsFollow = <-chIsFollow
-	res.User.FollowCount = <-chFollowCount
-	res.User.FollowerCount = <-chFollowerCount
-	res.User.FavoriteCount = <-chFavoriteCount
-	res.User.WorkCount = <-chWorkCount
-	res.User.TotalFavorited = <-chTotalFavorited
-	close(chIsFollow)
-	close(chFollowCount)
-	close(chFollowerCount)
-	close(chFavoriteCount)
-	close(chWorkCount)
-	close(chTotalFavorited)
 	return res, nil
 
 }
@@ -223,4 +186,11 @@ func GetBasicUserInfo(svcCtx *svc.ServiceContext, ctx context.Context, toUserId 
 		},
 	}
 	return res, nil
+}
+
+// RunSafeWg runs the given fn, recovers if fn panics.
+func RunSafeWg(wg *sync.WaitGroup, fn func()) {
+	defer wg.Done()
+	defer rescue.Recover()
+	fn()
 }
