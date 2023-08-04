@@ -2,6 +2,7 @@ package video
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
@@ -95,7 +96,17 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 
 	// 启动goroutines并发调用四个函数
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(4)
+
+	threading.GoSafeCtx(ctx, func() {
+		defer wg.Done()
+		author, err := user.TryGetUserInfo(0, basicVideo.UserId, svcCtx, ctx)
+		res.Author = *author
+		if err != nil {
+			e = &apiVars.SomeDataErr
+			return
+		}
+	})
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
