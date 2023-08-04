@@ -31,7 +31,6 @@ func NewFeedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *FeedLogic {
 }
 
 func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err error) {
-	// todo: add your logic here and delete this line
 	respStatus := apiVars.Success
 	var feedReq video.FeedReq
 	if req.LatestTime != 0 {
@@ -48,32 +47,61 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 		return nil, err
 	}
 
+	feedList, err := GetVideoInfoList(&feedBasicList.VideoList, feedReq.UserId, l.svcCtx, l.ctx)
+
+	if err == apiVars.SomeDataErr {
+		return &types.FeedResponse{
+			RespStatus: types.RespStatus(apiVars.SomeDataErr),
+			VideoList:  *feedList,
+			NextTime:   0,
+		}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.FeedResponse{
+		RespStatus: types.RespStatus(respStatus),
+		VideoList:  *feedList,
+		NextTime:   0,
+	}, nil
+}
+
+func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo, userID *int64, svcCtx *svc.ServiceContext, ctx context.Context) (*[]types.Video, error) {
+	if feedBasicList == nil {
+		return nil, apiVars.InternalError
+	}
+	var e *apiVars.RespErr
+
 	feedList, err := mr.MapReduce(func(source chan<- *video.BasicVideoInfo) {
-		for _, bv := range feedBasicList.VideoList {
+		for _, bv := range *feedBasicList {
 			source <- bv
 		}
 	}, func(item *video.BasicVideoInfo, writer mr.Writer[*types.Video], cancel func(error)) {
-		videoInfo, err := TryGetVideoInfo(feedReq.UserId, item, l.svcCtx, l.ctx)
+		videoInfo, err := TryGetVideoInfo(userID, item, svcCtx, ctx)
 		if err != nil {
-			respStatus = apiVars.SomeDataErr
+			e = &apiVars.SomeDataErr
 			if err != apiVars.SomeDataErr {
 				return
 			}
 		}
 		writer.Write(videoInfo)
-	}, func(pipe <-chan *types.Video, writer mr.Writer[[]types.Video], cancel func(error)) {
+	}, func(pipe <-chan *types.Video, writer mr.Writer[*[]types.Video], cancel func(error)) {
 		var vs []types.Video
 		for item := range pipe {
 			v := item
 			vs = append(vs, *v)
 		}
-		writer.Write(vs)
+		writer.Write(&vs)
 	})
-	return &types.FeedResponse{
-		RespStatus: types.RespStatus(respStatus),
-		VideoList:  feedList,
-		NextTime:   0,
-	}, nil
+
+	if err != nil {
+		logc.Errorf(ctx, "转换视频列表失败: %v", err)
+		return nil, err
+	}
+
+	return feedList, *e
 }
 
 func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *svc.ServiceContext, ctx context.Context) (resp *types.Video, err error) {
@@ -175,7 +203,7 @@ func GetIsFavorite(svcCtx *svc.ServiceContext, ctx context.Context, tokenID int6
 		VideoId: toVideoId,
 	})
 	if err != nil {
-		logc.Errorf(ctx, "获取是否关注失败: %v", err)
+		logc.Errorf(ctx, "获取是否点赞失败: %v", err)
 		return false, err
 	}
 	return isFavorite.IsFavorite, nil
