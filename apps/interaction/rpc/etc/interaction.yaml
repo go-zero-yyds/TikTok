@@ -1,6 +1,7 @@
 Name: interaction.rpc
-ListenOn: 0.0.0.0:8080
-Etcd:
-  Hosts:
-  - 127.0.0.1:2379
-  Key: interaction.rpc
+ListenOn: 127.0.0.1:8080
+DBsource: "root:mengxingqy1122.@tcp(127.0.0.1:3306)/tiktok?charset=utf8mb4&parseTime=True&loc=Local"
+# Etcd:
+#   Hosts:
+#   - 127.0.0.1:2379
+#   Key: interaction.rpc

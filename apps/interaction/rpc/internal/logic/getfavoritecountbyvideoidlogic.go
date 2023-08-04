@@ -23,8 +23,14 @@ func NewGetFavoriteCountByVideoIdLogic(ctx context.Context, svcCtx *svc.ServiceC
 	}
 }
 
+//调用dB接口中函数，获取视频点赞数量
+//只有在底层数据库出现未知错误会返回err
 func (l *GetFavoriteCountByVideoIdLogic) GetFavoriteCountByVideoId(in *interaction.FavoriteCountByVideoIdReq) (*interaction.FavoriteCountByVideoIdResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &interaction.FavoriteCountByVideoIdResp{}, nil
+	count , err := l.svcCtx.DBact.FavoriteCountByVideoId(in.VideoId)
+	if err != nil{
+		return nil , err;
+	}
+	return &interaction.FavoriteCountByVideoIdResp{
+		FavoriteCount: count,
+	}, nil
 }

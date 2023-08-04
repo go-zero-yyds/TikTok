@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 
@@ -10,6 +11,8 @@ import (
 	"TikTok/apps/interaction/rpc/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
+	"github.com/zeromicro/go-zero/core/logc"
+	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
@@ -19,11 +22,21 @@ import (
 var configFile = flag.String("f", "etc/interaction.yaml", "the config file")
 
 func main() {
+	var cfg logx.LogConf
+	_ = conf.FillDefault(&cfg)
+	cfg.Mode = "file"
+	logc.MustSetup(cfg)
+	defer logc.Close()
+	
 	flag.Parse()
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	ctx := svc.NewServiceContext(c)
+	ctx , err := svc.NewServiceContext(c)
+	if err != nil{
+		logc.Error(context.Background() , "loading svc error")
+		return 
+	}
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		interaction.RegisterInteractionServer(grpcServer, server.NewInteractionServer(ctx))

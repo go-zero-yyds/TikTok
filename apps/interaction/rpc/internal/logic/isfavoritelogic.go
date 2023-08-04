@@ -23,8 +23,14 @@ func NewIsFavoriteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsFavo
 	}
 }
 
+//调用dB接口中函数，获取用户是否给某个视频点赞
+//只有在底层数据库出现未知错误会返回err
 func (l *IsFavoriteLogic) IsFavorite(in *interaction.IsFavoriteReq) (*interaction.IsFavoriteResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &interaction.IsFavoriteResp{}, nil
+	exist , err := l.svcCtx.DBact.IsFavorite(in.UserId, in.VideoId)
+	if err != nil {
+		return nil , err
+	}
+	return &interaction.IsFavoriteResp{
+		IsFavorite: exist,
+	}, nil
 }
