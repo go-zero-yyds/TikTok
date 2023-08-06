@@ -1,18 +1,17 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-
 	"TikTok/apps/app/api/internal/config"
 	"TikTok/apps/app/api/internal/handler"
 	"TikTok/apps/app/api/internal/svc"
+	"flag"
+	"fmt"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
 )
 
-var configFile = flag.String("f", "etc/api-api.yaml", "the config file")
+var configFile = flag.String("f", "apps/app/api/etc/api-api.yaml", "the config file")
 
 func main() {
 	flag.Parse()
