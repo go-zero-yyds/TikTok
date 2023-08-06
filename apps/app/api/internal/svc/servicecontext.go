@@ -3,6 +3,7 @@ package svc
 import (
 	"TikTok/apps/app/api/internal/config"
 	"TikTok/apps/app/api/utils/auth"
+	"TikTok/apps/app/api/utils/oss"
 	"TikTok/apps/interaction/rpc/interactionclient"
 	"TikTok/apps/social/rpc/socialclient"
 	"TikTok/apps/user/rpc/userclient"
@@ -17,6 +18,7 @@ type ServiceContext struct {
 	InteractionRPC interactionclient.Interaction
 	SocialRPC      socialclient.Social
 	JwtAuth        auth.JwtAuth
+	OSS            *oss.S3
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -30,5 +32,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			AccessSecret: []byte(c.JwtAuth.AccessSecret),
 			AccessExpire: c.JwtAuth.AccessExpire,
 		},
+		OSS: oss.NewS3(c.OSS.Endpoint, c.OSS.Bucket, c.OSS.AccessKeyID, c.OSS.AccessKeySecret),
 	}
 }

@@ -17,4 +17,11 @@ type Config struct {
 		AccessSecret string
 		AccessExpire int64
 	}
+	OSS struct {
+		Endpoint        string
+		AccessKeyID     string
+		AccessKeySecret string
+		Prefix          string
+		Bucket          string
+	}
 }

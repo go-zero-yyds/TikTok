@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -22,10 +23,10 @@ type S3 struct {
 	ctx    context.Context
 }
 
-func NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe string) (*S3, error) {
-	return NewS3Ctx(context.TODO(), URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe)
+func NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessSecret string) *S3 {
+	return NewS3Ctx(context.TODO(), URL, Bucket, AwsAccessKeyId, AwsSecretAccessSecret)
 }
-func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe string) (*S3, error) {
+func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe string) *S3 {
 	var res S3
 	res.ctx = ctx
 	res.Bucket = Bucket
@@ -46,14 +47,14 @@ func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessK
 		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	res.client = s3.NewFromConfig(cfg)
 	_, err = res.bucketExists()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &res, nil
+	return &res
 }
 
 // Upload 上传文件, 可覆盖
@@ -62,7 +63,9 @@ func (s *S3) Upload(file io.Reader, key ...string) (*s3.PutObjectOutput, error) 
 		Bucket: aws.String(s.Bucket),
 		Key:    aws.String(filepath.Join(key...)),
 		Body:   file,
-	})
+	}, s3.WithAPIOptions(
+		v4.SwapComputePayloadSHA256ForUnsignedPayloadMiddleware,
+	))
 	if err != nil {
 		return nil, err
 	}

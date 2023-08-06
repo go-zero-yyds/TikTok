@@ -68,7 +68,10 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 	}, nil
 }
 
-func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo, userID *int64, svcCtx *svc.ServiceContext, ctx context.Context) (*[]types.Video, error) {
+// GetVideoInfoList 批量补充 video.BasicVideoInfo 切片的信息，转换为 types.Video 切片。
+func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo,
+	userID *int64, svcCtx *svc.ServiceContext, ctx context.Context) (*[]types.Video, error) {
+
 	if feedBasicList == nil {
 		return nil, apiVars.InternalError
 	}
@@ -104,6 +107,7 @@ func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo, userID *int64, svc
 	return feedList, *e
 }
 
+// TryGetVideoInfo 补充 video.BasicVideoInfo 的信息，转换为 types.Video
 func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *svc.ServiceContext, ctx context.Context) (resp *types.Video, err error) {
 	if basicVideo == nil {
 		return nil, apiVars.InternalError
@@ -168,6 +172,7 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		}
 		res.IsFavorite = isFavorite
 	})
+
 	wg.Wait()
 	return &res, *e
 
