@@ -23,8 +23,8 @@ func NewSendRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
+// SendRelationAction 执行关注/取关操作
 func (l *SendRelationActionLogic) SendRelationAction(in *social.RelationActionReq) (*social.RelationActionResp, error) {
-	// todo: add your logic here and delete this line
 
 	return &social.RelationActionResp{}, nil
 }

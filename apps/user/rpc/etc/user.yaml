@@ -1,5 +1,6 @@
 Name: user.rpc
-ListenOn: 0.0.0.0:8080
+ListenOn: 127.0.0.1:8081
+DataSourse: "root:123456@tcp(127.0.0.1:3306)/tiktok_social?charset=utf8mb4&parseTime=True&loc=Local"
 Etcd:
   Hosts:
   - 127.0.0.1:2379

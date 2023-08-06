@@ -50,26 +50,32 @@ message RelationFriendListResp {
   repeated FriendUser UserList = 1; // 用户列表
 }
 
+// 由user分支负责人负责
 message MessageChatReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id
   int64 PreMsgTime = 3;//上次最新消息的时间（新增字段-apk更新中）
 }
-    
+
+// 由user分支负责人负责
 message MessageChatResp {
   repeated Message messageList = 1; // 消息列表
 }
 
+// 由user分支负责人负责
 message MessageActionReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id
   int32 ActionType = 3; // 1-发送消息
   string Content = 4; // 消息内容
 }
-    
+
+// 由user分支负责人负责
 message MessageActionResp {
   bool IsSucceed = 1; // true-成功，false-失败
 }
+
+//todo
 message IsFollowReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id
@@ -100,6 +106,6 @@ service Social {
   rpc GetRelationFollowList(RelationFollowListReq) returns (RelationFollowListResp);
   rpc GetRelationFollowerList(RelationFollowerListReq) returns (RelationFollowerListResp);
   rpc GetRelationFriendList(RelationFriendListReq) returns (RelationFriendListResp);
-  rpc GetMessages(MessageChatReq) returns (MessageChatResp);
-  rpc SendMessageAction(MessageActionReq) returns (MessageActionResp);
+  rpc GetMessages(MessageChatReq) returns (MessageChatResp);  // 由user分支负责人负责
+  rpc SendMessageAction(MessageActionReq) returns (MessageActionResp);  // 由user分支负责人负责
 }
