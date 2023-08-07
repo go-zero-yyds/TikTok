@@ -76,7 +76,6 @@ type FeedResponse struct {
 
 type PublishActionRequest struct {
 	Token string `form:"token"`
-	Data  []byte `form:"data"`
 	Title string `form:"title"`
 }
 

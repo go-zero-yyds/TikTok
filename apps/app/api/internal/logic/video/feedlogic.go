@@ -52,7 +52,7 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 	if err == apiVars.SomeDataErr {
 		return &types.FeedResponse{
 			RespStatus: types.RespStatus(apiVars.SomeDataErr),
-			VideoList:  *feedList,
+			VideoList:  feedList,
 			NextTime:   0,
 		}, nil
 	}
@@ -63,14 +63,14 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 
 	return &types.FeedResponse{
 		RespStatus: types.RespStatus(respStatus),
-		VideoList:  *feedList,
+		VideoList:  feedList,
 		NextTime:   0,
 	}, nil
 }
 
 // GetVideoInfoList 批量补充 video.BasicVideoInfo 切片的信息，转换为 types.Video 切片。
 func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo,
-	userID *int64, svcCtx *svc.ServiceContext, ctx context.Context) (*[]types.Video, error) {
+	userID *int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.Video, error) {
 
 	if feedBasicList == nil {
 		return nil, apiVars.InternalError
@@ -90,13 +90,13 @@ func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo,
 			}
 		}
 		writer.Write(videoInfo)
-	}, func(pipe <-chan *types.Video, writer mr.Writer[*[]types.Video], cancel func(error)) {
+	}, func(pipe <-chan *types.Video, writer mr.Writer[[]types.Video], cancel func(error)) {
 		var vs []types.Video
 		for item := range pipe {
 			v := item
 			vs = append(vs, *v)
 		}
-		writer.Write(&vs)
+		writer.Write(vs)
 	})
 
 	if err != nil {
@@ -173,6 +173,17 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		res.IsFavorite = isFavorite
 	})
 
+	playLink, err := svcCtx.OSS.GetDownloadLink(basicVideo.PlayUrl)
+	if err != nil {
+		return nil, err
+	}
+	res.PlayURL = playLink
+
+	coverLink, err := svcCtx.OSS.GetDownloadLink(basicVideo.CoverUrl)
+	if err != nil {
+		return nil, err
+	}
+	res.CoverURL = coverLink
 	wg.Wait()
 	return &res, *e
 

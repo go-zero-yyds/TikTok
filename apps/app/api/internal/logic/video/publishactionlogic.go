@@ -14,6 +14,7 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"github.com/zeromicro/go-zero/core/logx"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -45,7 +46,7 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 	if err != nil {
 		return nil, err
 	}
-	mime := mimetype.Detect(*file)
+	mime := mimetype.Detect(file)
 
 	if !strings.HasPrefix(mime.String(), "video/") {
 		return nil, errors.New("不是视频")
@@ -72,14 +73,14 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 	}, nil
 }
 
-func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file *[]byte) error {
+func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byte) error {
 
-	_, err := l.svcCtx.OSS.Upload(bytes.NewReader(*file), l.svcCtx.Config.OSS.Prefix, "video", name+extension)
+	_, err := l.svcCtx.OSS.Upload(bytes.NewReader(file), l.svcCtx.Config.OSS.Prefix, "video", name+extension)
 	if err != nil {
 		return err
 	}
 
-	img, err := ExampleReadFrameAsJpeg(bytes.NewReader(*file), 1)
+	img, err := ExampleReadFrameAsJpeg(bytes.NewReader(file), 1)
 	if err != nil {
 		return err
 	}
@@ -92,13 +93,16 @@ func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file *[]by
 }
 
 const maxFileSize = 10 << 20 // 10 MB
-func (l *PublishActionLogic) Upload(r *http.Request, key string) (*[]byte, error) {
+func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error) {
 	_ = r.ParseMultipartForm(maxFileSize)
 	file, handler, err := r.FormFile(key)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func(file multipart.File) {
+		_ = file.Close()
+
+	}(file)
 	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
 	fmt.Printf("File Size: %+v\n", handler.Size)
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
@@ -108,7 +112,7 @@ func (l *PublishActionLogic) Upload(r *http.Request, key string) (*[]byte, error
 		return nil, err
 	}
 	res := buf.Bytes()
-	return &res, nil
+	return res, nil
 }
 
 // ExampleReadFrameAsJpeg 获取视频略缩图
@@ -124,5 +128,6 @@ func ExampleReadFrameAsJpeg(inFile io.Reader, frameNum int) (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return buf, nil
 }
