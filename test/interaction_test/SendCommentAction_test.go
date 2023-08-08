@@ -44,7 +44,7 @@ func TestSendCommentAction(t *testing.T) {
 				CommentId: &tmp,
 				
 			})
-			assert.Equal(t, err, nil)
+			assert.Equal(t, nil , err)
 			assert.NotEqual(t, resp.Comment.Id , tmp)
 		}
 	}

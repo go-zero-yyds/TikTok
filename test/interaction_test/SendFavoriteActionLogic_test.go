@@ -34,7 +34,7 @@ func TestSendFavoriteActionLogic(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	if !resp.IsSucceed {
-		t.Fatalf("Expected IsSucceed to be false, but got true")
+		t.Fatalf("Expected IsSucceed to be true, but got false")
 	}
 	// 测试场景3：取消操作
 
@@ -48,6 +48,6 @@ func TestSendFavoriteActionLogic(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	if !resp.IsSucceed {
-		t.Fatalf("Expected IsSucceed to be false, but got true")
+		t.Fatalf("Expected IsSucceed to be true, but got false")
 	}
 }
