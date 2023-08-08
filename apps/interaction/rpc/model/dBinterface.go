@@ -1,24 +1,26 @@
-package dB
+package model
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/zeromicro/go-zero/core/logc"
+	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
-type DBaction struct{
+type DBaction struct {
 	favorite FavoriteModel
-	comment CommentModel
+	comment  CommentModel
 }
 
 // 初始化数据库信息
-func  NewDBaction(conn sqlx.SqlConn) *DBaction{
-	return &DBaction{
-		favorite: newFavoriteModel(conn),//创建点赞表的接口
-		comment: newCommentModel(conn),//创建评论表的接口
-	} 
+func NewDBaction(conn sqlx.SqlConn, c cache.ClusterConf) *DBaction {
+	ret := &DBaction{
+		favorite: newFavoriteModel(conn, c), //创建点赞表的接口
+		comment:  newCommentModel(conn, c),  //创建评论表的接口
+	}
+	return ret
 }
 
 // 调用favorite对数据库查询函数,查询是否点赞
@@ -44,7 +46,7 @@ func (d *DBaction) FavoriteCountByUserId(userId int64) (int64, error) {
 }
 
 // 调用favorite对数据库查询，视频 点赞数量
-func(d *DBaction)  FavoriteCountByVideoId(videoId int64) (int64, error) {
+func (d *DBaction) FavoriteCountByVideoId(videoId int64) (int64, error) {
 	count, err := d.favorite.userORvideoCount(context.Background(), videoId, false)
 	if err != nil && err != ErrNotFound {
 		logc.Error(context.Background(), videoId)
@@ -64,7 +66,7 @@ func (d *DBaction) CommentCountByVideoId(videoId int64) (int64, error) {
 }
 
 // 调用favorite对数据库查询用户是否点赞过
-// 并对数据库安装actionType操作
+// 并对数据库actionType操作
 // 只有出现未知错误是false否则都是true
 func (d *DBaction) FavoriteAction(userId, videoId int64, actionType int32) (bool, error) {
 	exist, err := d.favorite.IsExist(context.Background(), userId, videoId)
@@ -104,9 +106,10 @@ func (d *DBaction) FavoriteList(userId int64) ([]int64, error) {
 	}
 	return ret, nil
 }
-//执行评论/取消操作 
-//成功返回comment结构体，（评论成功 赋值，取消成功 初始值）
-//如果用户可选参数没有赋值，将会返回地址错误
+
+// 执行评论/取消操作
+// 成功返回comment结构体，（评论成功 查询结果，取消成功 初始值）
+// 如果用户可选参数没有赋值，将会返回地址错误
 func (d *DBaction) CommentAction(userId, videoId int64, actionType int32, commentText *string, commentId *int64) (*Comment, error) {
 	var ret *Comment
 	var err error
@@ -122,23 +125,23 @@ func (d *DBaction) CommentAction(userId, videoId int64, actionType int32, commen
 	}
 
 	if err != nil && err != ErrNotFound {
-		logc.Error(context.Background() , commentId , actionType)
-		return nil , err
+		logc.Error(context.Background(), commentId, actionType)
+		return nil, err
 	}
-	ret , err = d.comment.FindOne(context.Background() , *commentId)
+	ret, err = d.comment.FindOne(context.Background(), *commentId)
 
-	if err != nil && err != ErrNotFound{
-		logc.Error(context.Background() , commentId , actionType)
-		return nil , err
+	if err != nil && err != ErrNotFound {
+		logc.Error(context.Background(), commentId, actionType)
+		return nil, err
 	}
 	return ret, nil
 }
 
-func (d *DBaction) CommentList(userId , videoId int64)([]*Comment , error){
-	ret , err := d.comment.CommentList(context.Background() , videoId)
-	if err != nil && err != ErrNotFound{
-		fmt.Println("error " , err)
-		return nil , err
+func (d *DBaction) CommentList(userId, videoId int64) ([]*Comment, error) {
+	ret, err := d.comment.CommentList(context.Background(), videoId)
+	if err != nil && err != ErrNotFound {
+		fmt.Println("error ", err)
+		return nil, err
 	}
-	return ret , nil
+	return ret, nil
 }
