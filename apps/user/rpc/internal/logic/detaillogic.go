@@ -36,6 +36,13 @@ func (l *DetailLogic) Detail(in *user.BasicUserInfoReq) (*user.BasicUserInfoResp
 	}
 
 	return &user.BasicUserInfoResp{
-		User: res,
+		// User: res,
+		User: &user.BasicUserInfo{
+			Id:              res.UserId,
+			Name:            res.Username,
+			Avatar:          &res.Avatar,
+			BackgroundImage: &res.BackgroundImage,
+			Signature:       res.Signature,
+		},
 	}, nil
 }
