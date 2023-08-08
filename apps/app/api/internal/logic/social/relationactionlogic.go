@@ -1,6 +1,8 @@
 package social
 
 import (
+	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/social/rpc/social"
 	"context"
 
 	"TikTok/apps/app/api/internal/svc"
@@ -25,6 +27,20 @@ func NewRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Re
 
 func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (resp *types.RelationActionResponse, err error) {
 	// todo: add your logic here and delete this line
+	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
+	if err != nil {
+		return nil, err
+	}
+	_, err = l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
+		UserId:     tokenID,
+		ToUserId:   req.ToUserID,
+		ActionType: req.ActionType,
+	})
 
-	return
+	if err != nil {
+		return nil, err
+	}
+	return &types.RelationActionResponse{
+		RespStatus: types.RespStatus(apiVars.Success),
+	}, nil
 }
