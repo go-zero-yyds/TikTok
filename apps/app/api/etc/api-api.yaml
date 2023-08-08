@@ -1,6 +1,6 @@
 Name: api-api
 Host: 0.0.0.0
-Port: 8888
+Port: 8080
 MaxBytes: 104857600 # 100MIB
 
 # RPC
@@ -26,13 +26,13 @@ SocialRPC:
 
 # Jwt
 JwtAuth:
-  AccessSecret: 9dDvxR8LiINVDh9cst9GRBwz46A
+  AccessSecret: secret_key
   AccessExpire: 86400
 
-AwsS3:
-  Endpoint: http://minio-host:9000
-  AccessKeyID:
-  AccessKeySecret:
+OSS:
+  Endpoint: http://127.0.0.1:9000
+  AccessKeyID: AccessKeyID
+  AccessKeySecret: AccessKeySecret
   Region:
   Prefix: /upload/
-  BucketName: TikTok
+  Bucket: tiktok
