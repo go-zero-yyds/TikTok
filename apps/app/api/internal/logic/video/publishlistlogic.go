@@ -34,12 +34,12 @@ func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *typ
 	}
 	publishList, err := l.svcCtx.VideoRPC.GetPublishList(l.ctx, &video.PublishListReq{UserId: req.UserID})
 
-	videoInfoList, err := GetVideoInfoList(&publishList.VideoList, &tokenID, l.svcCtx, l.ctx)
+	videoInfoList, err := GetVideoInfoList(publishList.VideoList, &tokenID, l.svcCtx, l.ctx)
 
 	if err == apiVars.SomeDataErr {
 		return &types.PublishListResponse{
 			RespStatus: types.RespStatus(apiVars.SomeDataErr),
-			VideoList:  *videoInfoList,
+			VideoList:  videoInfoList,
 		}, nil
 	}
 
@@ -49,6 +49,6 @@ func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *typ
 
 	return &types.PublishListResponse{
 		RespStatus: types.RespStatus(apiVars.SomeDataErr),
-		VideoList:  *videoInfoList,
+		VideoList:  videoInfoList,
 	}, nil
 }

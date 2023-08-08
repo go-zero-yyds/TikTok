@@ -47,7 +47,7 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 		return nil, err
 	}
 
-	feedList, err := GetVideoInfoList(&feedBasicList.VideoList, feedReq.UserId, l.svcCtx, l.ctx)
+	feedList, err := GetVideoInfoList(feedBasicList.VideoList, feedReq.UserId, l.svcCtx, l.ctx)
 
 	if err == apiVars.SomeDataErr {
 		return &types.FeedResponse{
@@ -69,7 +69,7 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 }
 
 // GetVideoInfoList 批量补充 video.BasicVideoInfo 切片的信息，转换为 types.Video 切片。
-func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo,
+func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 	userID *int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.Video, error) {
 
 	if feedBasicList == nil {
@@ -78,7 +78,7 @@ func GetVideoInfoList(feedBasicList *[]*video.BasicVideoInfo,
 	var e *apiVars.RespErr
 
 	feedList, err := mr.MapReduce(func(source chan<- *video.BasicVideoInfo) {
-		for _, bv := range *feedBasicList {
+		for _, bv := range feedBasicList {
 			source <- bv
 		}
 	}, func(item *video.BasicVideoInfo, writer mr.Writer[*types.Video], cancel func(error)) {
