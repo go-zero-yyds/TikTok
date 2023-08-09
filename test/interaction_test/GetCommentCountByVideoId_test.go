@@ -52,8 +52,9 @@ func TestGetCommentCountByVideoId(t *testing.T){
 				CommentId: &tmp,
 				
 			})
-			assert.Equal(t, err, nil)
-			assert.NotEqual(t, resp.Comment.Id , tmp)
+			var expected  *interaction.Comment
+			assert.Equal(t, nil , err)
+			assert.Equal(t , expected  , resp.Comment)
 		}
 	}
 	//每个视频没有评论

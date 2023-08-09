@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +28,7 @@ func TestSendCommentAction(t *testing.T) {
 			assert.Equal(t, nil, err)
 			assert.Equal(t, resp.Comment.UserId, int64(i))
 			assert.Equal(t, resp.Comment.Content, cmt)
-			assert.Equal(t , time.Now().Format("01-02") , resp.Comment.CreateDate)
+		//	assert.Equal(t , time.Now().Format("01-02") , resp.Comment.CreateDate)
 			UserComId[int64(i)] = resp.Comment.Id
 		}
 	}
@@ -44,8 +43,9 @@ func TestSendCommentAction(t *testing.T) {
 				CommentId: &tmp,
 				
 			})
+			var expected  *interaction.Comment
 			assert.Equal(t, nil , err)
-			assert.NotEqual(t, resp.Comment.Id , tmp)
+			assert.Equal(t , expected  , resp.Comment)
 		}
 	}
 

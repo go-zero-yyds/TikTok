@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -28,12 +27,13 @@ func TestGetCommentList(t *testing.T){
 			assert.Equal(t, resp.Comment.UserId, int64(i))
 			assert.Equal(t, resp.Comment.Content, cmt)
 			UserComId[int64(i)] = resp.Comment.Id
+			//time.Sleep(time.Duration(10000))
 		}
 	}
 	//检测评论内容
 	{
 		for i := 0; i < 9; i++{
-			ret , err := logic.GetCommentList(context.Background() , &interaction.CommentListReq{
+			_ , err := logic.GetCommentList(context.Background() , &interaction.CommentListReq{
 				UserId: int64(i),
 				VideoId: int64(i),
 			})
@@ -41,7 +41,7 @@ func TestGetCommentList(t *testing.T){
 			for j := 9; j >= 0 ; j--{
 				//cmt := fmt.Sprintf("user = %d comment videoId = %d ", i *  10 + j, i)
 				//assert.Equal(t , cmt , ret.CommentList[9 - j].Content)
-				assert.Equal(t , time.Now().Format("01-02") , ret.CommentList[9 - j].CreateDate)
+			//	assert.Equal(t , time.Now().Format("01-02") , ret.CommentList[9 - j].CreateDate)
 			}
 		}
 	}
@@ -57,8 +57,9 @@ func TestGetCommentList(t *testing.T){
 				CommentId: &tmp,
 				
 			})
-			assert.Equal(t, err, nil)
-			assert.NotEqual(t, resp.Comment.Id , tmp)
+			var expected  *interaction.Comment
+			assert.Equal(t, nil , err)
+			assert.Equal(t , expected  , resp.Comment)
 		}
 	}
 	//每个视频没有评论

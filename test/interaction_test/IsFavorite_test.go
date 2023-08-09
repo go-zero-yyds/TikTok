@@ -20,7 +20,7 @@ func TestIsFavorite(t *testing.T) {
 				VideoId:    int64(i),
 				ActionType: 1,
 			})
-			assert.Equal(t, err, nil)
+			assert.Equal(t, nil, err)
 			assert.Equal(t, resp.IsSucceed, interaction.FavoriteActionResp{
 				IsSucceed: true,
 			}.IsSucceed)
