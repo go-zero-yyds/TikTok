@@ -62,7 +62,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		return nil, err
 	}
 
-	var e apiVars.RespErr
+	var e *apiVars.RespErr
 
 	// 启动goroutines并发调用五个函数
 	var wg sync.WaitGroup
@@ -73,7 +73,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		// 错误降级, 不影响获取user的基本信息。
 		isFollow, err := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
 		if err != nil {
-			e = apiVars.SomeDataErr
+			e = &apiVars.SomeDataErr
 			return
 		}
 		res.IsFollow = isFollow
@@ -83,7 +83,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		followCount, err := GetFollowCount(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = apiVars.SomeDataErr
+			e = &apiVars.SomeDataErr
 			return
 		}
 		res.FollowCount = followCount
@@ -94,7 +94,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		followerCount, err := GetFollowerCount(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = apiVars.SomeDataErr
+			e = &apiVars.SomeDataErr
 			return
 		}
 		res.FollowerCount = followerCount
@@ -104,7 +104,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		favoriteCount, err := GetFavoriteCount(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = apiVars.SomeDataErr
+			e = &apiVars.SomeDataErr
 			return
 		}
 		res.FavoriteCount = favoriteCount
@@ -114,7 +114,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		videoList, err := GetPublishList(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = apiVars.SomeDataErr
+			e = &apiVars.SomeDataErr
 			return
 		}
 		res.WorkCount = int64(len(videoList))
@@ -126,7 +126,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 			videoFavoriteCount, err := svcCtx.InteractionRPC.GetFavoriteCountByVideoId(
 				ctx, &interaction.FavoriteCountByVideoIdReq{VideoId: item})
 			if err != nil {
-				e = apiVars.SomeDataErr
+				e = &apiVars.SomeDataErr
 				logc.Errorf(ctx, "获取视频点赞数失败: %v", err)
 				cancel(err)
 				return
@@ -140,14 +140,16 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 			writer.Write(sum)
 		})
 		if err != nil {
-			e = apiVars.SomeDataErr
+			e = &apiVars.SomeDataErr
 			return
 		}
 		res.TotalFavorited = totalFavorited
 	})
 	wg.Wait()
-
-	return res, e
+	if e != nil {
+		return res, *e
+	}
+	return res, nil
 
 }
 
