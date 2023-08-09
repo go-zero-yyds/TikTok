@@ -156,14 +156,22 @@ func TestUserDetail(t *testing.T) {
 		{
 			Id:       1,
 			UserId:   114,
-			PlayUrl:  "1",
-			CoverUrl: "1",
+			PlayUrl:  "",
+			CoverUrl: "",
 			Title:    "1",
+		},
+		{
+			Id:       2,
+			UserId:   114,
+			PlayUrl:  "",
+			CoverUrl: "",
+			Title:    "2",
 		},
 	}}, nil)
 
 	interactionMock := mock.NewMockInteraction(ctl)
 	interactionMock.EXPECT().GetFavoriteCountByUserId(gomock.Any(), gomock.Any()).Return(&interaction.FavoriteCountByUserIdResp{FavoriteCount: 514}, nil)
+	interactionMock.EXPECT().GetFavoriteCountByVideoId(gomock.Any(), gomock.Any()).Return(&interaction.FavoriteCountByVideoIdResp{FavoriteCount: 5}, nil)
 	interactionMock.EXPECT().GetFavoriteCountByVideoId(gomock.Any(), gomock.Any()).Return(&interaction.FavoriteCountByVideoIdResp{FavoriteCount: 5}, nil)
 
 	socialMock := mock.NewMockSocial(ctl)
@@ -201,8 +209,8 @@ func TestUserDetail(t *testing.T) {
 			Avatar:          "",
 			BackgroundImage: "",
 			Signature:       "1919",
-			TotalFavorited:  5,
-			WorkCount:       1,
+			TotalFavorited:  10,
+			WorkCount:       2,
 			FavoriteCount:   514,
 		},
 	}, res)
