@@ -17,16 +17,16 @@ import (
 var (
 	followFieldNames          = builder.RawFieldNames(&Follow{})
 	followRows                = strings.Join(followFieldNames, ",")
-	followRowsExpectAutoSet   = strings.Join(stringx.Remove(followFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
-	followRowsWithPlaceHolder = strings.Join(stringx.Remove(followFieldNames, "`user_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+	followRowsExpectAutoSet   = strings.Join(stringx.Remove(followFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
+	followRowsWithPlaceHolder = strings.Join(stringx.Remove(followFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
 )
 
 type (
 	followModel interface {
 		Insert(ctx context.Context, data *Follow) (sql.Result, error)
-		FindOne(ctx context.Context, userId int64) (*Follow, error)
+		FindOne(ctx context.Context, id int64) (*Follow, error)
 		Update(ctx context.Context, data *Follow) error
-		Delete(ctx context.Context, userId int64) error
+		Delete(ctx context.Context, id int64) error
 	}
 
 	defaultFollowModel struct {
@@ -35,9 +35,10 @@ type (
 	}
 
 	Follow struct {
+		Id       int64 `db:"id"`         // 字段ID
 		UserId   int64 `db:"user_id"`    // 用户ID
 		ToUserId int64 `db:"to_user_id"` // 关注者ID
-		Status   byte  `db:"status"`     // 关注状态 0=>没关注 1=>关注
+		Status   []uint8  `db:"status"`     // 关注状态 0=>没关注 1=>关注
 	}
 )
 
@@ -48,16 +49,16 @@ func newFollowModel(conn sqlx.SqlConn) *defaultFollowModel {
 	}
 }
 
-func (m *defaultFollowModel) Delete(ctx context.Context, userId int64) error {
-	query := fmt.Sprintf("delete from %s where `user_id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, userId)
+func (m *defaultFollowModel) Delete(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultFollowModel) FindOne(ctx context.Context, userId int64) (*Follow, error) {
-	query := fmt.Sprintf("select %s from %s where `user_id` = ? limit 1", followRows, m.table)
+func (m *defaultFollowModel) FindOne(ctx context.Context, id int64) (*Follow, error) {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", followRows, m.table)
 	var resp Follow
-	err := m.conn.QueryRowCtx(ctx, &resp, query, userId)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -75,8 +76,8 @@ func (m *defaultFollowModel) Insert(ctx context.Context, data *Follow) (sql.Resu
 }
 
 func (m *defaultFollowModel) Update(ctx context.Context, data *Follow) error {
-	query := fmt.Sprintf("update %s set %s where `user_id` = ?", m.table, followRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.ToUserId, data.Status, data.UserId)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, followRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status, data.Id)
 	return err
 }
 

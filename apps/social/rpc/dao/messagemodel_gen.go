@@ -36,11 +36,11 @@ type (
 	}
 
 	Message struct {
-		Id         int64     `db:"id"`           // 消息ID，由雪花算法生成
-		ToUserId   int64     `db:"to_user_id"`   // 消息接收者ID
-		FromUserId int64     `db:"from_user_id"` // 消息发生着ID
-		Content    string    `db:"content"`      // 消息内容
-		CreateTime time.Time `db:"create_time"`  // 消息创建时间
+		Id          int64     `db:"id"`           // 消息ID，由雪花算法生成
+		ToUserId    int64     `db:"to_user_id"`   // 消息接收者ID
+		FromUserId  int64     `db:"from_user_id"` // 消息发生者ID
+		Content     string    `db:"content"`      // 消息内容
+		CreatedTime time.Time `db:"created_time"` // 消息创建时间
 	}
 )
 
@@ -72,14 +72,14 @@ func (m *defaultMessageModel) FindOne(ctx context.Context, id int64) (*Message, 
 }
 
 func (m *defaultMessageModel) Insert(ctx context.Context, data *Message) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, messageRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.ToUserId, data.FromUserId, data.Content)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, messageRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.ToUserId, data.FromUserId, data.Content, data.CreatedTime)
 	return ret, err
 }
 
 func (m *defaultMessageModel) Update(ctx context.Context, data *Message) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, messageRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.ToUserId, data.FromUserId, data.Content, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.ToUserId, data.FromUserId, data.Content, data.CreatedTime, data.Id)
 	return err
 }
 

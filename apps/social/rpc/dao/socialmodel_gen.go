@@ -17,16 +17,16 @@ import (
 var (
 	socialFieldNames          = builder.RawFieldNames(&Social{})
 	socialRows                = strings.Join(socialFieldNames, ",")
-	socialRowsExpectAutoSet   = strings.Join(stringx.Remove(socialFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
-	socialRowsWithPlaceHolder = strings.Join(stringx.Remove(socialFieldNames, "`user_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+	socialRowsExpectAutoSet   = strings.Join(stringx.Remove(socialFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
+	socialRowsWithPlaceHolder = strings.Join(stringx.Remove(socialFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
 )
 
 type (
 	socialModel interface {
 		Insert(ctx context.Context, data *Social) (sql.Result, error)
-		FindOne(ctx context.Context, userId int64) (*Social, error)
+		FindOne(ctx context.Context, id int64) (*Social, error)
 		Update(ctx context.Context, data *Social) error
-		Delete(ctx context.Context, userId int64) error
+		Delete(ctx context.Context, id int64) error
 	}
 
 	defaultSocialModel struct {
@@ -35,10 +35,10 @@ type (
 	}
 
 	Social struct {
+		Id             int64  `db:"id"`              // 字段ID
 		UserId         int64  `db:"user_id"`         // 用户ID，由雪花算法生成
 		FollowCount    string `db:"follow_count"`    // 关注总数
 		FollowerCount  string `db:"follower_count"`  // 粉丝总数粉丝总数粉丝总数
-		IsFollow       string `db:"is_follow"`       // 是否关注
 		TotalFavorited string `db:"total_favorited"` // 获赞数量
 		WorkCount      string `db:"work_count"`      // 作品数
 		FavoriteCount  string `db:"favorite_count"`  // 喜欢数
@@ -52,16 +52,16 @@ func newSocialModel(conn sqlx.SqlConn) *defaultSocialModel {
 	}
 }
 
-func (m *defaultSocialModel) Delete(ctx context.Context, userId int64) error {
-	query := fmt.Sprintf("delete from %s where `user_id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, userId)
+func (m *defaultSocialModel) Delete(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultSocialModel) FindOne(ctx context.Context, userId int64) (*Social, error) {
-	query := fmt.Sprintf("select %s from %s where `user_id` = ? limit 1", socialRows, m.table)
+func (m *defaultSocialModel) FindOne(ctx context.Context, id int64) (*Social, error) {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", socialRows, m.table)
 	var resp Social
-	err := m.conn.QueryRowCtx(ctx, &resp, query, userId)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -73,14 +73,14 @@ func (m *defaultSocialModel) FindOne(ctx context.Context, userId int64) (*Social
 }
 
 func (m *defaultSocialModel) Insert(ctx context.Context, data *Social) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, socialRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.FollowCount, data.FollowerCount, data.IsFollow, data.TotalFavorited, data.WorkCount, data.FavoriteCount)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?)", m.table, socialRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.FollowCount, data.FollowerCount, data.TotalFavorited, data.WorkCount, data.FavoriteCount)
 	return ret, err
 }
 
 func (m *defaultSocialModel) Update(ctx context.Context, data *Social) error {
-	query := fmt.Sprintf("update %s set %s where `user_id` = ?", m.table, socialRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.FollowCount, data.FollowerCount, data.IsFollow, data.TotalFavorited, data.WorkCount, data.FavoriteCount, data.UserId)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, socialRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.FollowCount, data.FollowerCount, data.TotalFavorited, data.WorkCount, data.FavoriteCount, data.Id)
 	return err
 }
 
