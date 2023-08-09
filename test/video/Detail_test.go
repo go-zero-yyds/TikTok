@@ -12,7 +12,7 @@ import (
 )
 
 func TestDetail(t *testing.T) {
-	videoId := 1686274172445003776
+	videoId := 1689126061691899904
 	req := &video.BasicVideoInfoReq{
 		VideoId: int64(videoId),
 	}

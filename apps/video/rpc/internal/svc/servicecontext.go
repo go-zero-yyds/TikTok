@@ -15,7 +15,7 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
-	node, err := snowflake.NewNode(1)
+	node, err := snowflake.NewNode(c.Node)
 	if err != nil {
 		return nil, err
 	}

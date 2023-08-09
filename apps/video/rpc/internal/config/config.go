@@ -9,4 +9,5 @@ type Config struct {
 	zrpc.RpcServerConf
 	DataSourse string
 	Cache      cache.CacheConf
+	Node       int64
 }
