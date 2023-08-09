@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"fmt"
 
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/internal/svc"
@@ -24,7 +25,7 @@ func NewGetCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 }
 // 查看视频的所有评论，按发布时间倒序
 func (l *GetCommentListLogic) GetCommentList(in *interaction.CommentListReq) (*interaction.CommentListResp, error) {
-	commentlist , err := l.svcCtx.DBact.CommentList(in.UserId , in.VideoId)
+	commentlist , err := l.svcCtx.DBact.CommentList(l.ctx , in.UserId , in.VideoId)
 	if err != nil{
 		return nil , err
 	}
@@ -34,7 +35,7 @@ func (l *GetCommentListLogic) GetCommentList(in *interaction.CommentListReq) (*i
 			Id: v.CommentId,
 			UserId: v.UserId,
 			Content: v.Content,
-			CreateDate: v.CreateDate.Format("01-02"),
+			CreateDate: fmt.Sprintf("%v", v.CreateDate.Unix()),
 		})
 	}
 	return &interaction.CommentListResp{

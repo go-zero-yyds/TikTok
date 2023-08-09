@@ -9,4 +9,5 @@ type Config struct {
 	zrpc.RpcServerConf
 	DBsource string
 	Cache cache.CacheConf
+	SnowflakeNode int
 }

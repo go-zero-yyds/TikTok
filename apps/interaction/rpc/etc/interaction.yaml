@@ -8,3 +8,4 @@ DBsource: "root:mengxingqy1122.@tcp(127.0.0.1:3306)/tiktok?charset=utf8mb4&parse
 Cache:
   - Host: 127.0.0.1:6379
     Type: node
+SnowflakeNode: 1

@@ -25,7 +25,7 @@ func NewGetFavoriteCountByUserIdLogic(ctx context.Context, svcCtx *svc.ServiceCo
 //调用dB接口中函数，获取用户点赞数量
 //只有在底层数据库出现未知错误会返回err
 func (l *GetFavoriteCountByUserIdLogic) GetFavoriteCountByUserId(in *interaction.FavoriteCountByUserIdReq) (*interaction.FavoriteCountByUserIdResp, error) {
-	count , err := l.svcCtx.DBact.FavoriteCountByUserId(in.UserId)
+	count , err := l.svcCtx.DBact.FavoriteCountByUserId(l.ctx , in.UserId)
 	if err != nil{
 		return nil , err;
 	}

@@ -26,7 +26,7 @@ func NewGetFavoriteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 //调用dB接口中函数，获取用户点赞视频列表
 //只有在底层数据库出现未知错误会返回err
 func (l *GetFavoriteListLogic) GetFavoriteList(in *interaction.FavoriteListReq) (*interaction.FavoriteListResp, error) {
-	videolist , err := l.svcCtx.DBact.FavoriteList(in.UserId)
+	videolist , err := l.svcCtx.DBact.FavoriteList(l.ctx , in.UserId)
 	if err != nil{
 		return nil ,err
 	}
