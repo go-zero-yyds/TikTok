@@ -35,13 +35,12 @@ type (
 	}
 
 	Social struct {
-		Id             int64  `db:"id"`              // 字段ID
-		UserId         int64  `db:"user_id"`         // 用户ID，由雪花算法生成
-		FollowCount    string `db:"follow_count"`    // 关注总数
-		FollowerCount  string `db:"follower_count"`  // 粉丝总数粉丝总数粉丝总数
-		TotalFavorited string `db:"total_favorited"` // 获赞数量
-		WorkCount      string `db:"work_count"`      // 作品数
-		FavoriteCount  string `db:"favorite_count"`  // 喜欢数
+		Id             int64 `db:"id"`              // 字段ID
+		UserId         int64 `db:"user_id"`         // 用户ID，由雪花算法生成
+		FollowCount    int64 `db:"follow_count"`    // 关注总数
+		FollowerCount  int64 `db:"follower_count"`  // 粉丝总数粉丝总数粉丝总数
+		TotalFavorited int64 `db:"total_favorited"` // 获赞数量
+		FavoriteCount  int64 `db:"favorite_count"`  // 喜欢数
 	}
 )
 
@@ -73,14 +72,14 @@ func (m *defaultSocialModel) FindOne(ctx context.Context, id int64) (*Social, er
 }
 
 func (m *defaultSocialModel) Insert(ctx context.Context, data *Social) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?)", m.table, socialRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.FollowCount, data.FollowerCount, data.TotalFavorited, data.WorkCount, data.FavoriteCount)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, socialRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.FollowCount, data.FollowerCount, data.TotalFavorited, data.FavoriteCount)
 	return ret, err
 }
 
 func (m *defaultSocialModel) Update(ctx context.Context, data *Social) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, socialRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.FollowCount, data.FollowerCount, data.TotalFavorited, data.WorkCount, data.FavoriteCount, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.FollowCount, data.FollowerCount, data.TotalFavorited, data.FavoriteCount, data.Id)
 	return err
 }
 
