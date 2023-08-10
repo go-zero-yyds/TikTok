@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 
+	"TikTok/apps/interaction/rpc/cron"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/internal/config"
 	"TikTok/apps/interaction/rpc/internal/server"
@@ -45,6 +46,9 @@ func main() {
 			reflection.Register(grpcServer)
 		}
 	})
+	//启动定时任务
+	cron.InitCron(context.Background() , ctx , c.CleanTime)
+
 	defer s.Stop()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)

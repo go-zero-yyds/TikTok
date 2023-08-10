@@ -9,3 +9,4 @@ Cache:
   - Host: 127.0.0.1:6379
     Type: node
 SnowflakeNode: 1
+CleanTime: "3 4 * * *"

@@ -87,7 +87,7 @@ func (d *DBaction) FavoriteAction(ctx context.Context, userId, videoId int64, ac
 	if f.Behavior == "1" {
 		f.Behavior = "2"
 		err = d.favorite.IndirectUpdate(ctx, f)
-	}else if f.Behavior == "2"{
+	}else if f.Behavior == "2"{//有可能不在表中
 		f.Behavior = "1"
 		err = d.favorite.IndirectUpdate(ctx, f)
 	}else {//不在表中
@@ -147,4 +147,12 @@ func (d *DBaction) CommentList(ctx context.Context, userId, videoId int64) ([]*C
 		return nil, err
 	}
 	return ret, nil
+}
+//定时清楚favorite中无用数据
+func (d *DBaction) CleanUnusedFavorite(ctx context.Context )(error){
+	err := d.favorite.FlushAndClean(ctx)
+	if err != nil{
+		logc.Error(ctx)
+	}
+	return err;
 }

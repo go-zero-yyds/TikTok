@@ -25,11 +25,12 @@ type (
 	// and implement the added methods in customFavoriteModel.
 	FavoriteModel interface {
 		favoriteModel
-		FindOneById(ctx context.Context, userId, videoId int64) (*Favorite, error)        //检查用户是否给视频点赞
+		FindOneById(ctx context.Context, userId, videoId int64) (*Favorite, error)       //检查用户是否给视频点赞
 		userORvideoCount(ctx context.Context, Id int64, userORvideo bool) (int64, error) //用户/视频点赞数量
 		FindVideos(ctx context.Context, userId int64) ([]int64, error)                   //用户点赞视频id列表
-		IndirectUpdate(ctx context.Context, data *Favorite) (error)						 //管理增加缓存删除
-		IndirectInsert(ctx context.Context, data *Favorite) (sql.Result, error)			 //管理更新缓存删除
+		IndirectUpdate(ctx context.Context, data *Favorite) error                        //管理增加缓存删除
+		IndirectInsert(ctx context.Context, data *Favorite) (sql.Result, error)          //管理更新缓存删除
+		FlushAndClean(ctx context.Context) error                                         //特定时间重置数据，删除没用数据
 	}
 
 	customFavoriteModel struct {
@@ -99,21 +100,45 @@ func (m *defaultFavoriteModel) userORvideoCount(ctx context.Context, Id int64, u
 	}
 }
 
-// 管理缓存删除
+// 管理insert缓存删除
 func (m *defaultFavoriteModel) IndirectInsert(ctx context.Context, data *Favorite) (sql.Result, error) {
 	tiktokFavoriteUserIdVIdeoIdKey := fmt.Sprintf("%s%v%s%v", cacheTiktokFavoriteUserIdPrefix, data.UserId, cacheTiktokFavoriteVideoIdsuffix, data.VideoId)
 	tiktokFavoriteUserIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteUserId, data.UserId)
 	tiktokFavoriteVideoIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteVideoId, data.VideoId)
 	//删除缓存
-	m.DelCacheCtx(ctx ,tiktokFavoriteUserIdVIdeoIdKey ,  tiktokFavoriteUserIdKey , tiktokFavoriteVideoIdKey)
-	return m.Insert(ctx , data)
+	m.DelCacheCtx(ctx, tiktokFavoriteUserIdVIdeoIdKey, tiktokFavoriteUserIdKey, tiktokFavoriteVideoIdKey)
+	return m.Insert(ctx, data)
 }
 
-func (m *defaultFavoriteModel) IndirectUpdate(ctx context.Context, data *Favorite) (error) {
+func (m *defaultFavoriteModel) IndirectUpdate(ctx context.Context, data *Favorite) error {
 	tiktokFavoriteUserIdVIdeoIdKey := fmt.Sprintf("%s%v%s%v", cacheTiktokFavoriteUserIdPrefix, data.UserId, cacheTiktokFavoriteVideoIdsuffix, data.VideoId)
 	tiktokFavoriteUserIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteUserId, data.UserId)
 	tiktokFavoriteVideoIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteVideoId, data.VideoId)
 	//删除缓存
-	m.DelCacheCtx(ctx ,tiktokFavoriteUserIdVIdeoIdKey ,  tiktokFavoriteUserIdKey , tiktokFavoriteVideoIdKey)
-	return m.Update(ctx , data)
+	m.DelCacheCtx(ctx, tiktokFavoriteUserIdVIdeoIdKey, tiktokFavoriteUserIdKey, tiktokFavoriteVideoIdKey)
+	
+	//只有 未点赞 -> 点赞会处理 处理定时删除时的数据一致性
+	//-------------------------后续可能还可以优化一下...
+	if data.Behavior == "1" {
+		//查询是否在表中,在表中更新，否则增加
+		var resp Favorite
+		query := fmt.Sprintf("select * from  %s  where favoriteId = ? ", m.table)
+		err := m.QueryRowNoCacheCtx(ctx, &resp, query, data.FavoriteId)
+		if err != nil && err != ErrNotFound {
+			return err
+		}
+		if err == ErrNotFound {
+			_, err := m.Insert(ctx, data)
+			return err
+		}
+	}
+	return m.Update(ctx, data)
+}
+
+// 删除数据库中所有behavior为2的值，减少冗余
+func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
+	//这里不删除缓存中数据
+	query := fmt.Sprintf("delete from %s where behavior = '2' ", m.table)
+	_, err := m.ExecNoCache(query)
+	return err
 }
