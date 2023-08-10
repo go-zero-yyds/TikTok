@@ -68,16 +68,20 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 	var wg sync.WaitGroup
 	wg.Add(5)
 
-	threading.GoSafeCtx(ctx, func() {
-		defer wg.Done()
-		// 错误降级, 不影响获取user的基本信息。
-		isFollow, err := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
-		if err != nil {
-			e = &apiVars.SomeDataErr
-			return
-		}
-		res.IsFollow = isFollow
-	})
+	if tokenID != 0 {
+		threading.GoSafeCtx(ctx, func() {
+			defer wg.Done()
+			// 错误降级, 不影响获取user的基本信息。
+			isFollow, err := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
+			if err != nil {
+				e = &apiVars.SomeDataErr
+				return
+			}
+			res.IsFollow = isFollow
+		})
+	} else {
+		wg.Done()
+	}
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()

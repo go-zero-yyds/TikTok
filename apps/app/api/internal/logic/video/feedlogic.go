@@ -70,7 +70,7 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 
 // GetVideoInfoList 批量补充 video.BasicVideoInfo 切片的信息，转换为 types.Video 切片。
 func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
-	userID *int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.Video, error) {
+	tokenID *int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.Video, error) {
 
 	if feedBasicList == nil {
 		return nil, apiVars.InternalError
@@ -82,7 +82,7 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 			source <- bv
 		}
 	}, func(item *video.BasicVideoInfo, writer mr.Writer[*types.Video], cancel func(error)) {
-		videoInfo, err := TryGetVideoInfo(userID, item, svcCtx, ctx)
+		videoInfo, err := TryGetVideoInfo(tokenID, item, svcCtx, ctx)
 		if err != nil {
 			e = &apiVars.SomeDataErr
 			if err != apiVars.SomeDataErr {
@@ -91,7 +91,7 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 		}
 		writer.Write(videoInfo)
 	}, func(pipe <-chan *types.Video, writer mr.Writer[[]types.Video], cancel func(error)) {
-		var vs []types.Video
+		vs := make([]types.Video, 0)
 		for item := range pipe {
 			v := item
 			vs = append(vs, *v)
@@ -103,8 +103,10 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 		logc.Errorf(ctx, "转换视频列表失败: %v", err)
 		return nil, err
 	}
-
-	return feedList, *e
+	if e != nil {
+		return feedList, *e
+	}
+	return feedList, nil
 }
 
 // TryGetVideoInfo 补充 video.BasicVideoInfo 的信息，转换为 types.Video
@@ -132,7 +134,11 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
-		author, err := user.TryGetUserInfo(0, basicVideo.UserId, svcCtx, ctx)
+		ID := int64(0)
+		if tokenID != nil {
+			ID = *tokenID
+		}
+		author, err := user.TryGetUserInfo(ID, basicVideo.UserId, svcCtx, ctx)
 		res.Author = *author
 		if err != nil {
 			e = &apiVars.SomeDataErr
@@ -185,7 +191,10 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 	}
 	res.CoverURL = coverLink
 	wg.Wait()
-	return &res, *e
+	if e != nil {
+		return &res, *e
+	}
+	return &res, nil
 
 }
 
