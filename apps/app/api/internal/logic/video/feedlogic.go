@@ -64,7 +64,7 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 	return &types.FeedResponse{
 		RespStatus: types.RespStatus(respStatus),
 		VideoList:  feedList,
-		NextTime:   0,
+		NextTime:   feedBasicList.GetNextTime(),
 	}, nil
 }
 
@@ -173,13 +173,13 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		res.IsFavorite = isFavorite
 	})
 
-	playLink, err := svcCtx.OSS.GetDownloadLink(basicVideo.PlayUrl)
+	playLink, err := svcCtx.FS.GetDownloadLink(basicVideo.PlayUrl)
 	if err != nil {
 		return nil, err
 	}
 	res.PlayURL = playLink
 
-	coverLink, err := svcCtx.OSS.GetDownloadLink(basicVideo.CoverUrl)
+	coverLink, err := svcCtx.FS.GetDownloadLink(basicVideo.CoverUrl)
 	if err != nil {
 		return nil, err
 	}

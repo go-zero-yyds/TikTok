@@ -29,10 +29,11 @@ JwtAuth:
   AccessSecret: secret_key
   AccessExpire: 86400
 
-OSS:
+FS:
+  Type: awsS3
   Endpoint: http://127.0.0.1:9000
-  AccessKeyID: AccessKeyID
-  AccessKeySecret: AccessKeySecret
+  AccessKeyID:
+  AccessKeySecret:
   Region:
   Prefix: /upload/
   Bucket: tiktok

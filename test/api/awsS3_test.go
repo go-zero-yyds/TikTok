@@ -1,7 +1,7 @@
 package test
 
 import (
-	"TikTok/apps/app/api/utils/oss"
+	"TikTok/pkg/FileSystem"
 	"bytes"
 	"io"
 	"net/http"
@@ -16,14 +16,14 @@ func TestS3Utility(t *testing.T) {
 	AwsSecretAccessKey := "zaB97osHgENMqdc970FfOL9PGiA1UTiosa7CBLQ8"
 
 	// Create a new S3 client for testing
-	s3Client := oss.NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessKey)
+	s3Client := FileSystem.NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessKey)
 
 	// Test Upload and GetDownloadLink
 	data := []byte("This is a test data.")
 	key := "testfile.txt"
 
 	// Upload the data to S3
-	_, err := s3Client.Upload(bytes.NewReader(data), key)
+	err := s3Client.Upload(bytes.NewReader(data), key)
 	if err != nil {
 		t.Fatalf("Failed to upload file to S3: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestS3Utility(t *testing.T) {
 	}
 
 	// Test Delete
-	_, err = s3Client.Delete(key)
+	err = s3Client.Delete(key)
 	if err != nil {
 		t.Fatalf("Failed to delete file: %v", err)
 	}

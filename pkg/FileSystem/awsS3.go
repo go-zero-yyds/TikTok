@@ -1,4 +1,4 @@
-package oss
+package FileSystem
 
 import (
 	"context"
@@ -58,8 +58,8 @@ func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessK
 }
 
 // Upload 上传文件, 可覆盖
-func (s *S3) Upload(file io.Reader, key ...string) (*s3.PutObjectOutput, error) {
-	result, err := s.client.PutObject(s.ctx, &s3.PutObjectInput{
+func (s *S3) Upload(file io.Reader, key ...string) error {
+	_, err := s.client.PutObject(s.ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.Bucket),
 		Key:    aws.String(filepath.Join(key...)),
 		Body:   file,
@@ -67,10 +67,10 @@ func (s *S3) Upload(file io.Reader, key ...string) (*s3.PutObjectOutput, error) 
 		v4.SwapComputePayloadSHA256ForUnsignedPayloadMiddleware,
 	))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return nil
 }
 
 // GetDownloadLink 获取文件下载链接
@@ -89,15 +89,15 @@ func (s *S3) GetDownloadLink(key ...string) (string, error) {
 }
 
 // Delete 删除文件
-func (s *S3) Delete(key ...string) (*s3.DeleteObjectOutput, error) {
-	res, err := s.client.DeleteObject(s.ctx, &s3.DeleteObjectInput{
+func (s *S3) Delete(key ...string) error {
+	_, err := s.client.DeleteObject(s.ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.Bucket),
 		Key:    aws.String(filepath.Join(key...)),
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return res, nil
+	return nil
 }
 
 // bucketExists 检查是否存在桶

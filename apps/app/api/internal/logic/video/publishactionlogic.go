@@ -60,8 +60,8 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 
 	_, err = l.svcCtx.VideoRPC.SendPublishAction(l.ctx, &video.PublishActionReq{
 		UserId:   tokenID,
-		PlayUrl:  filepath.Join(l.svcCtx.Config.OSS.Prefix, "video", name+mime.Extension()),
-		CoverUrl: filepath.Join(l.svcCtx.Config.OSS.Prefix, "img", name+".jpeg"),
+		PlayUrl:  filepath.Join(l.svcCtx.Config.FS.Prefix, "video", name+mime.Extension()),
+		CoverUrl: filepath.Join(l.svcCtx.Config.FS.Prefix, "img", name+".jpeg"),
 		Title:    req.Title,
 	})
 	if err != nil {
@@ -75,7 +75,7 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 
 func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byte) error {
 
-	_, err := l.svcCtx.OSS.Upload(bytes.NewReader(file), l.svcCtx.Config.OSS.Prefix, "video", name+extension)
+	err := l.svcCtx.FS.Upload(bytes.NewReader(file), l.svcCtx.Config.FS.Prefix, "video", name+extension)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byt
 		return err
 	}
 
-	_, err = l.svcCtx.OSS.Upload(img, l.svcCtx.Config.OSS.Prefix, "img", name+".jpeg")
+	err = l.svcCtx.FS.Upload(img, l.svcCtx.Config.FS.Prefix, "img", name+".jpeg")
 	if err != nil {
 		return err
 	}
