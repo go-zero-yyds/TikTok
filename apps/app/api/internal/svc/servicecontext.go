@@ -25,6 +25,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	var fs FileSystem.FileSystem
 	if c.FS.AwsS3.Endpoint != "" {
 		fs = FileSystem.NewS3(c.FS.AwsS3.Endpoint, c.FS.AwsS3.Bucket, c.FS.Prefix, c.FS.AwsS3.AccessKeyID, c.FS.AwsS3.AccessKeySecret)
+	} else {
+		fs = FileSystem.New(c.FS.Webdav.URL, c.FS.Webdav.User, c.FS.Webdav.Password, c.FS.Prefix, c.FS.Webdav.DownloadLinkPrefix)
 	}
 	return &ServiceContext{
 		Config:         c,

@@ -33,6 +33,11 @@ FS:
   Prefix: /upload/
   AwsS3:
     Endpoint: http://127.0.0.1:9000
-    AccessKeyID:
-    AccessKeySecret:
+    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
+    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
     Bucket: tiktok
+  Webdav:
+    URL:
+    User:
+    Password:
+    DownloadLinkPrefix:

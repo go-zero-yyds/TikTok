@@ -24,6 +24,12 @@ type Config struct {
 			AccessKeySecret string
 			Bucket          string
 		} `json:",optional"`
+		Webdav struct {
+			URL                string
+			User               string
+			Password           string
+			DownloadLinkPrefix string
+		} `json:",optional"`
 		Prefix string
 	}
 }
