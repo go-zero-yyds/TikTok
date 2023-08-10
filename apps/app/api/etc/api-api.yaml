@@ -30,10 +30,9 @@ JwtAuth:
   AccessExpire: 86400
 
 FS:
-  Type: awsS3
-  Endpoint: http://127.0.0.1:9000
-  AccessKeyID:
-  AccessKeySecret:
-  Region:
   Prefix: /upload/
-  Bucket: tiktok
+  AwsS3:
+    Endpoint: http://127.0.0.1:9000
+    AccessKeyID:
+    AccessKeySecret:
+    Bucket: tiktok

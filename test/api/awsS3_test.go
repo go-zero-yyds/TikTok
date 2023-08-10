@@ -16,7 +16,7 @@ func TestS3Utility(t *testing.T) {
 	AwsSecretAccessKey := "zaB97osHgENMqdc970FfOL9PGiA1UTiosa7CBLQ8"
 
 	// Create a new S3 client for testing
-	s3Client := FileSystem.NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessKey)
+	s3Client := FileSystem.NewS3(URL, Bucket, "", AwsAccessKeyId, AwsSecretAccessKey)
 
 	// Test Upload and GetDownloadLink
 	data := []byte("This is a test data.")

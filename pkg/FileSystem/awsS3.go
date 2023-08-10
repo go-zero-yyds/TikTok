@@ -19,17 +19,19 @@ import (
 type S3 struct {
 	URL    string
 	Bucket string
+	Prefix string
 	client *s3.Client
 	ctx    context.Context
 }
 
-func NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessSecret string) *S3 {
-	return NewS3Ctx(context.TODO(), URL, Bucket, AwsAccessKeyId, AwsSecretAccessSecret)
+func NewS3(URL, Bucket, Prefix, AwsAccessKeyId, AwsSecretAccessSecret string) *S3 {
+	return NewS3Ctx(context.TODO(), URL, Bucket, Prefix, AwsAccessKeyId, AwsSecretAccessSecret)
 }
-func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe string) *S3 {
+func NewS3Ctx(ctx context.Context, URL, Bucket, Prefix, AwsAccessKeyId, AwsSecretAccessKe string) *S3 {
 	var res S3
 	res.ctx = ctx
 	res.Bucket = Bucket
+	res.Prefix = Prefix
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			PartitionID:       "",

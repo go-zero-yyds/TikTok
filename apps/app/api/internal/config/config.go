@@ -18,11 +18,12 @@ type Config struct {
 		AccessExpire int64
 	}
 	FS struct {
-		Type            string
-		Endpoint        string
-		AccessKeyID     string
-		AccessKeySecret string
-		Prefix          string
-		Bucket          string
+		AwsS3 struct {
+			Endpoint        string
+			AccessKeyID     string
+			AccessKeySecret string
+			Bucket          string
+		} `json:",optional"`
+		Prefix string
 	}
 }
