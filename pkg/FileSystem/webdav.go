@@ -23,7 +23,7 @@ func New(URL, user, password, prefix, downloadLinkPrefix string) *Webdav {
 
 // Upload 上传文件, 可覆盖
 func (s *Webdav) Upload(file io.Reader, key ...string) error {
-	dirPath := key[len(key)-1:]
+	dirPath := key[:len(key)-1]
 	err := s.client.MkdirAll(filepath.Join(s.prefix, filepath.Join(dirPath...)), 0644)
 	if err != nil {
 		return err

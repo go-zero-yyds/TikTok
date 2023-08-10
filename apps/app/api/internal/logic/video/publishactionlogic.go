@@ -75,7 +75,7 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 
 func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byte) error {
 
-	err := l.svcCtx.FS.Upload(bytes.NewReader(file), l.svcCtx.Config.FS.Prefix, "video", name+extension)
+	err := l.svcCtx.FS.Upload(bytes.NewReader(file), "video", name+extension)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byt
 		return err
 	}
 
-	err = l.svcCtx.FS.Upload(img, l.svcCtx.Config.FS.Prefix, "img", name+".jpeg")
+	err = l.svcCtx.FS.Upload(img, "img", name+".jpeg")
 	if err != nil {
 		return err
 	}
