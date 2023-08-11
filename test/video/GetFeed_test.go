@@ -12,7 +12,7 @@ import (
 func TestGetFeed(t *testing.T) {
 
 	//lastTime := time.Now().Unix()
-	lastTime2 := int64(1690900577)
+	lastTime2 := int64(3093515672355000)
 	req := &video.FeedReq{
 		LatestTime: &lastTime2,
 	}

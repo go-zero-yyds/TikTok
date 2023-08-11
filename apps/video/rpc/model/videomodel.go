@@ -57,13 +57,12 @@ func (m *customVideoModel) VideoListByUserId(ctx context.Context, userId int64) 
 
 func (m *customVideoModel) VideoFeedByLastTime(ctx context.Context, lastTime int64) ([]*Video, error) {
 	var videoList []*Video
-	lastTimeAsTime := time.Unix(lastTime, 0)
+	lastTimeAsTime := time.UnixMilli(lastTime)
 	query := fmt.Sprintf("SELECT * FROM %s WHERE create_time < ? ORDER BY  create_time  DESC LIMIT 30", m.table)
 	err := m.QueryRowsNoCacheCtx(ctx, &videoList, query, lastTimeAsTime)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("videoList = ", videoList)
 
 	return videoList, nil
 }

@@ -10,6 +10,9 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
+const minYear = 1
+const maxYear = 9999
+
 type GetFeedLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
@@ -26,15 +29,17 @@ func NewGetFeedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetFeedLo
 
 func (l *GetFeedLogic) GetFeed(in *video.FeedReq) (*video.FeedResp, error) {
 	// todo: add your logic here and delete this line
+	lastYear := time.UnixMilli(*in.LatestTime).Year()
 	var nowTime int64
-	if in.LatestTime == nil {
-		nowTime = time.Now().Unix()
+	if in.LatestTime == nil || (lastYear < minYear || lastYear > maxYear) {
+		nowTime = time.Now().UnixMilli()
 	} else {
 		nowTime = *in.LatestTime
 	}
+
 	mvideoList, err := l.svcCtx.Model.VideoFeedByLastTime(l.ctx, nowTime)
 	if err != nil {
-		return nil, err
+		return &video.FeedResp{}, err
 	}
 
 	publishListResp := make([]*video.BasicVideoInfo, 0, 30)
@@ -42,8 +47,12 @@ func (l *GetFeedLogic) GetFeed(in *video.FeedReq) (*video.FeedResp, error) {
 		publishListResp = append(publishListResp, convertToBasic(v))
 	}
 
-	lastIndex := len(publishListResp) - 1
-	nextTime := mvideoList[lastIndex].CreateTime.Unix()
+	lastIndex := -1
+	nextTime := int64(0)
+	if len(publishListResp) > 0 {
+		lastIndex = len(publishListResp) - 1
+		nextTime = mvideoList[lastIndex].CreateTime.UnixMilli()
+	}
 
 	return &video.FeedResp{
 		VideoList: publishListResp,
