@@ -50,19 +50,16 @@ message RelationFriendListResp {
   repeated FriendUser UserList = 1; // 用户列表
 }
 
-// 由user分支负责人负责
 message MessageChatReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id
   int64 PreMsgTime = 3;//上次最新消息的时间（新增字段-apk更新中）
 }
 
-// 由user分支负责人负责
 message MessageChatResp {
   repeated Message messageList = 1; // 消息列表
 }
 
-// 由user分支负责人负责
 message MessageActionReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id
@@ -70,12 +67,10 @@ message MessageActionReq {
   string Content = 4; // 消息内容
 }
 
-// 由user分支负责人负责
 message MessageActionResp {
   bool IsSucceed = 1; // true-成功，false-失败
 }
 
-//todo
 message IsFollowReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id

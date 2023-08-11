@@ -6,9 +6,8 @@ import (
 	"TikTok/apps/social/rpc/social"
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
-	"log"
-
 	"github.com/zeromicro/go-zero/core/logx"
+	"log"
 )
 
 type GetRelationFriendListLogic struct {
@@ -27,8 +26,8 @@ func NewGetRelationFriendListLogic(ctx context.Context, svcCtx *svc.ServiceConte
 
 // GetRelationFriendList 获取好友列表（只要双方互相关注了自动变成好友）
 func (l *GetRelationFriendListLogic) GetRelationFriendList(in *social.RelationFriendListReq) (*social.RelationFriendListResp, error) {
-	//查询 social 表中是否有该 user_id
-	exist, err := l.svcCtx.CustomDB.QueryUserIdExistsInSocial(l.ctx, in.UserId)
+	//查询 social 表中是否有该用户
+	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 
 	//如果不存在则直接返回空
 	if exist == false || err != nil {
@@ -36,15 +35,38 @@ func (l *GetRelationFriendListLogic) GetRelationFriendList(in *social.RelationFr
 		return &social.RelationFriendListResp{UserList: nil}, nil
 	}
 
-	//查询 friend 表中 userId 对应的 toUserId 的 social 数据
-	socialsList, err := l.svcCtx.CustomDB.QueryUsersOfFriendListByUserId(l.ctx, in.UserId)
+	//查询 friend 表中 userId/toUserId 对应的 userId/toUserId
+	friendIdList, err := l.svcCtx.CustomDB.QueryFriendIdListByUserIdInFriend(l.ctx, in.UserId)
 	if err != nil {
 		logc.Error(l.ctx, errors.RecordNotFound, in.UserId)
 		return &social.RelationFriendListResp{UserList: nil}, nil
 	}
-	log.Println(socialsList)
-	//获取最新消息
+
+	//获取到每条消息
+	messageList, err := l.svcCtx.CustomDB.QueryMessageByUserIdAndUserListInMessage(l.ctx, in.UserId, friendIdList)
+	if err != nil {
+		return &social.RelationFriendListResp{UserList: nil}, nil
+	}
+
+	log.Println(messageList)
+	//拼接friendUserList
+	FriendUserList := make([]*social.FriendUser, len(messageList))
+	for i, v := range messageList {
+		FriendUserList[i] = &social.FriendUser{}
+		//拼接userId和消息类型
+		if v.FromUserId != in.UserId {
+			FriendUserList[i].UserId = v.FromUserId
+			FriendUserList[i].MsgType = 0
+		} else {
+			FriendUserList[i].UserId = v.ToUserId
+			FriendUserList[i].MsgType = 1
+		}
+
+		//拼接content
+		FriendUserList[i].Message = v.Content
+
+	}
 
 	//获取到social
-	return &social.RelationFriendListResp{UserList: nil}, nil
+	return &social.RelationFriendListResp{UserList: FriendUserList}, nil
 }

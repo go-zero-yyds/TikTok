@@ -7,7 +7,6 @@ import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
-	"strconv"
 )
 
 type GetFollowCountLogic struct {
@@ -26,7 +25,7 @@ func NewGetFollowCountLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 
 func (l *GetFollowCountLogic) GetFollowCount(in *social.FollowCountReq) (*social.FollowCountResp, error) {
 	//查询 social 表中是否有该 user_id
-	exist, err := l.svcCtx.CustomDB.QueryUserIdExistsInSocial(l.ctx, in.UserId)
+	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 
 	//如果不存在则直接返回失败
 	if exist == false || err != nil {
@@ -41,8 +40,5 @@ func (l *GetFollowCountLogic) GetFollowCount(in *social.FollowCountReq) (*social
 		return &social.FollowCountResp{FollowCount: -1}, nil
 	}
 
-	//string转int64
-	followCount, _ := strconv.ParseInt(socialStruct.FollowCount, 10, 64)
-
-	return &social.FollowCountResp{FollowCount: followCount}, nil
+	return &social.FollowCountResp{FollowCount: socialStruct.FollowCount}, nil
 }

@@ -2,12 +2,10 @@ package logic
 
 import (
 	"TikTok/apps/social/rpc/internal/errors"
-	"context"
-	"github.com/zeromicro/go-zero/core/logc"
-	"strconv"
-
 	"TikTok/apps/social/rpc/internal/svc"
 	"TikTok/apps/social/rpc/social"
+	"context"
+	"github.com/zeromicro/go-zero/core/logc"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,7 +26,7 @@ func NewGetFollowerCountLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 
 func (l *GetFollowerCountLogic) GetFollowerCount(in *social.FollowerCountReq) (*social.FollowerCountResp, error) {
 	//查询 social 表中是否有该 user_id
-	exist, err := l.svcCtx.CustomDB.QueryUserIdExistsInSocial(l.ctx, in.UserId)
+	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 
 	//如果不存在则直接返回失败
 	if exist == false || err != nil {
@@ -43,8 +41,5 @@ func (l *GetFollowerCountLogic) GetFollowerCount(in *social.FollowerCountReq) (*
 		return &social.FollowerCountResp{FollowerCount: -1}, nil
 	}
 
-	//string转int64
-	followerCount, _ := strconv.ParseInt(socialStruct.FollowerCount, 10, 64)
-
-	return &social.FollowerCountResp{FollowerCount: followerCount}, nil
+	return &social.FollowerCountResp{FollowerCount: socialStruct.FollowerCount}, nil
 }

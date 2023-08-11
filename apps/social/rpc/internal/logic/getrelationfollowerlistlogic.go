@@ -27,7 +27,7 @@ func NewGetRelationFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceCon
 
 func (l *GetRelationFollowerListLogic) GetRelationFollowerList(in *social.RelationFollowerListReq) (*social.RelationFollowerListResp, error) {
 	//查询 social 表中是否有该 user_id
-	exist, err := l.svcCtx.CustomDB.QueryUserIdExistsInSocial(l.ctx, in.UserId)
+	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 
 	//如果不存在则直接返回空
 	if exist == false || err != nil {

@@ -19,7 +19,7 @@ type (
 	}
 )
 
-// NewVideoModel returns a dao for the database table.
+// NewVideoModel returns a model for the database table.
 func NewVideoModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) VideoModel {
 	return &customVideoModel{
 		defaultVideoModel: newVideoModel(conn, c, opts...),

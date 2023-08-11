@@ -105,7 +105,7 @@ type FriendUser struct {
 	unknownFields protoimpl.UnknownFields
 
 	UserId  int64   `protobuf:"varint,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
-	Message *string `protobuf:"bytes,2,opt,name=Message,proto3,oneof" json:"Message,omitempty"` // 和该好友的最新聊天消息
+	Message string `protobuf:"bytes,2,opt,name=Message,proto3,oneof" json:"Message,omitempty"` // 和该好友的最新聊天消息
 	MsgType int64   `protobuf:"varint,3,opt,name=MsgType,proto3" json:"MsgType,omitempty"`      // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
 }
 
@@ -149,8 +149,8 @@ func (x *FriendUser) GetUserId() int64 {
 }
 
 func (x *FriendUser) GetMessage() string {
-	if x != nil && x.Message != nil {
-		return *x.Message
+	if x != nil{
+		return x.Message
 	}
 	return ""
 }

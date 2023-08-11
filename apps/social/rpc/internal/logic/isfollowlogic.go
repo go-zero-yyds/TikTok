@@ -7,7 +7,6 @@ import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
-	"log"
 )
 
 type IsFollowLogic struct {
@@ -27,8 +26,8 @@ func NewIsFollowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsFollow
 // IsFollow 是否关注
 func (l *IsFollowLogic) IsFollow(in *social.IsFollowReq) (*social.IsFollowResp, error) {
 	//查询 social 表中是否有这两个用户
-	UserIdExist, err := l.svcCtx.CustomDB.QueryUserIdExistsInSocial(l.ctx, in.UserId)
-	ToUserIdExist, err := l.svcCtx.CustomDB.QueryUserIdExistsInSocial(l.ctx, in.ToUserId)
+	UserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
+	ToUserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.ToUserId)
 
 	//如果不存在则直接返回失败
 	if UserIdExist == false || ToUserIdExist == false || err != nil {
@@ -38,10 +37,8 @@ func (l *IsFollowLogic) IsFollow(in *social.IsFollowReq) (*social.IsFollowResp, 
 
 	//查询 user 在 follow 表中的字段
 	followStruct, err := l.svcCtx.CustomDB.QueryRecordByUserIdAndToUserIdInFollow(l.ctx, in.UserId, in.ToUserId)
-	log.Println("insert::", followStruct)
 	//如果 id 为 0 说明没查到
 	if followStruct.Id == 0 {
-		//todo 会执行两次插入（bug）20230809
 		//插入该字段
 		err = l.svcCtx.CustomDB.InsertRecordByUserIdAndToUserIdInFollow(l.ctx, in.UserId, in.ToUserId)
 		//直接返回未关注

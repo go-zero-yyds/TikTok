@@ -1,7 +1,6 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS `friend`;
 CREATE TABLE `friend`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '字段ID',
   `user_id` bigint NOT NULL COMMENT '用户ID',

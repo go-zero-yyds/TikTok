@@ -19,7 +19,7 @@ type (
 	}
 )
 
-// NewUserModel returns a dao for the database table.
+// NewUserModel returns a model for the database table.
 func NewUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) UserModel {
 	return &customUserModel{
 		defaultUserModel: newUserModel(conn, c, opts...),
