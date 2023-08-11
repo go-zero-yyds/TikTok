@@ -19,7 +19,7 @@ import (
 type S3 struct {
 	URL    string
 	Bucket string
-	Prefix string
+	prefix string
 	client *s3.Client
 	ctx    context.Context
 }
@@ -31,7 +31,7 @@ func NewS3Ctx(ctx context.Context, URL, Bucket, Prefix, AwsAccessKeyId, AwsSecre
 	var res S3
 	res.ctx = ctx
 	res.Bucket = Bucket
-	res.Prefix = Prefix
+	res.prefix = Prefix
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			PartitionID:       "",
@@ -63,7 +63,7 @@ func NewS3Ctx(ctx context.Context, URL, Bucket, Prefix, AwsAccessKeyId, AwsSecre
 func (s *S3) Upload(file io.Reader, key ...string) error {
 	_, err := s.client.PutObject(s.ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(filepath.Join(key...)),
+		Key:    aws.String(filepath.Join(s.prefix, filepath.Join(key...))),
 		Body:   file,
 	}, s3.WithAPIOptions(
 		v4.SwapComputePayloadSHA256ForUnsignedPayloadMiddleware,
@@ -81,7 +81,7 @@ func (s *S3) GetDownloadLink(key ...string) (string, error) {
 	presignedUrl, err := presignClient.PresignGetObject(context.Background(),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.Bucket),
-			Key:    aws.String(filepath.Join(key...)),
+			Key:    aws.String(filepath.Join(s.prefix, filepath.Join(key...))),
 		},
 		s3.WithPresignExpires(time.Minute*15))
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *S3) GetDownloadLink(key ...string) (string, error) {
 func (s *S3) Delete(key ...string) error {
 	_, err := s.client.DeleteObject(s.ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(filepath.Join(key...)),
+		Key:    aws.String(filepath.Join(s.prefix, filepath.Join(key...))),
 	})
 	if err != nil {
 		return err

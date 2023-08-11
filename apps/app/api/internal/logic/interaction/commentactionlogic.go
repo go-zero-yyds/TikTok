@@ -47,29 +47,48 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	if err != nil {
 		return nil, err
 	}
+
+	apiResp := apiVars.Success
+
 	var commentInfo *types.Comment
 	if req.CommentID == 0 {
 		commentInfo, err = GetCommentInfo(sendCommentAction.Comment, tokenID, l.svcCtx, l.ctx)
-		if err != nil {
+
+		if err == apiVars.SomeDataErr {
+			return &types.CommentActionResponse{
+				RespStatus: types.RespStatus(apiResp),
+				Comment:    *commentInfo,
+			}, nil
+		}
+
+		if err != nil && err != apiVars.SomeDataErr {
 			return nil, err
 		}
-	}
 
+		return &types.CommentActionResponse{
+			RespStatus: types.RespStatus(apiResp),
+			Comment:    *commentInfo,
+		}, nil
+	}
 	return &types.CommentActionResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
-		Comment:    *commentInfo,
+		RespStatus: types.RespStatus(apiResp),
 	}, nil
+
 }
 
-func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *svc.ServiceContext, ctx context.Context) (res *types.Comment, err error) {
-
+func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *svc.ServiceContext, ctx context.Context) (*types.Comment, error) {
+	res := &types.Comment{}
 	res.CreateDate = comment.CreateDate
 	res.ID = comment.Id
 	res.Content = comment.Content
 	userInfo, err := user.TryGetUserInfo(tokenID, comment.UserId, svcCtx, ctx)
-	if err != nil {
+	if err != nil && err != apiVars.SomeDataErr {
 		return nil, err
 	}
 	res.User = *userInfo
+	if err == apiVars.SomeDataErr {
+		return res, apiVars.SomeDataErr
+	}
+
 	return res, nil
 }

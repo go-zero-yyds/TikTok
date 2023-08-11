@@ -53,7 +53,7 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 		return &types.FeedResponse{
 			RespStatus: types.RespStatus(apiVars.SomeDataErr),
 			VideoList:  feedList,
-			NextTime:   0,
+			NextTime:   feedBasicList.GetNextTime(),
 		}, nil
 	}
 

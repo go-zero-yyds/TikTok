@@ -60,8 +60,8 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 
 	_, err = l.svcCtx.VideoRPC.SendPublishAction(l.ctx, &video.PublishActionReq{
 		UserId:   tokenID,
-		PlayUrl:  filepath.Join(l.svcCtx.Config.FS.Prefix, "video", name+mime.Extension()),
-		CoverUrl: filepath.Join(l.svcCtx.Config.FS.Prefix, "img", name+".jpeg"),
+		PlayUrl:  filepath.Join("video", name+mime.Extension()),
+		CoverUrl: filepath.Join("img", name+".jpeg"),
 		Title:    req.Title,
 	})
 	if err != nil {
@@ -92,9 +92,10 @@ func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byt
 	return nil
 }
 
-const maxFileSize = 10 << 20 // 10 MB
+//const maxFileSize = 10 << 20 // 10 MB
+
 func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error) {
-	_ = r.ParseMultipartForm(maxFileSize)
+	//_ = r.ParseMultipartForm(maxFileSize)
 	file, handler, err := r.FormFile(key)
 	if err != nil {
 		return nil, err
