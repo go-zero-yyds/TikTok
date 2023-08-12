@@ -3,8 +3,8 @@ module TikTok
 go 1.20
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
-	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
 	github.com/zeromicro/go-zero v1.5.4
 	golang.org/x/crypto v0.11.0
