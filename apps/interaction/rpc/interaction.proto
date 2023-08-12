@@ -53,7 +53,7 @@ message FavoriteListReq {
 message FavoriteListResp {
   repeated int64 VideoList = 1; // 用户点赞视频列表
 }
-
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 message CommentActionReq {
   int64 UserId = 1; // 调用接口的用户id
   int64 VideoId = 2; // 视频id
