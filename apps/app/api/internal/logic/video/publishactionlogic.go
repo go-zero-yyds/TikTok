@@ -80,7 +80,7 @@ func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byt
 		return err
 	}
 
-	img, err := ExampleReadFrameAsJpeg(bytes.NewReader(file), 1)
+	img, err := ExampleReadFrameAsJpeg(bytes.NewReader(file))
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error)
 }
 
 // ExampleReadFrameAsJpeg 获取视频略缩图，随机截取关键帧。
-func ExampleReadFrameAsJpeg(inFile io.Reader, frameNum int) (io.Reader, error) {
+func ExampleReadFrameAsJpeg(inFile io.Reader) (io.Reader, error) {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input("pipe:0").
 		Filter("select", ffmpeg.Args{"eq(pict_type\\,I)"}).
