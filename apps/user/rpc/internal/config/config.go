@@ -11,4 +11,5 @@ type Config struct {
 		DataSource string
 	}
 	Cache cache.CacheConf
+	Node  int64
 }

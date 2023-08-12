@@ -30,25 +30,27 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 	_, err := l.svcCtx.UserModel.FindOneByUsername(l.ctx, in.Username)
 	// 用户已注册
 	if err == nil {
-		return nil, status.Error(100, "该用户已存在")
+		return nil, status.Error(100, "用户已存在")
 	} else if err != model.ErrNotFound { // 错误
 		return nil, err
 	} else { // 注册
-		pwdHash, err := tool.HashAndSalt(in.Password) // 加盐加密
+		snowId := l.svcCtx.Snowflake.Generate().Int64() // 雪花算法生成id
+		pwdHash, err := tool.HashAndSalt(in.Password)   // 加盐加密
 		if err != nil {
 			return nil, err
 		}
-		result, err := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
+
+		_, errinsert := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
+			UserId:   snowId,
 			Username: in.Username,
 			Password: pwdHash,
 		})
-		if err != nil {
+
+		if errinsert != nil {
 			return nil, err
 		}
-		userId, _ := result.LastInsertId()
 		return &user.RegisterResp{
-			UserId: int64(userId),
+			UserId: snowId,
 		}, nil
 	}
-	return &user.RegisterResp{}, nil
 }
