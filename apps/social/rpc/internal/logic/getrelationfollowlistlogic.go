@@ -25,6 +25,7 @@ func NewGetRelationFollowListLogic(ctx context.Context, svcCtx *svc.ServiceConte
 	}
 }
 
+// GetRelationFollowList 获取关注的人的ID
 func (l *GetRelationFollowListLogic) GetRelationFollowList(in *social.RelationFollowListReq) (*social.RelationFollowListResp, error) {
 	//查询 social 表中是否有该 user_id
 	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)

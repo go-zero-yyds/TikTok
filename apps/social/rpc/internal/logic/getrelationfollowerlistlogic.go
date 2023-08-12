@@ -25,6 +25,7 @@ func NewGetRelationFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceCon
 	}
 }
 
+// GetRelationFollowerList 获取粉丝们的用户ID
 func (l *GetRelationFollowerListLogic) GetRelationFollowerList(in *social.RelationFollowerListReq) (*social.RelationFollowerListResp, error) {
 	//查询 social 表中是否有该 user_id
 	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)

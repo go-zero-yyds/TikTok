@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
+	"log"
 )
 
 type SendRelationActionLogic struct {
@@ -23,7 +24,7 @@ func NewSendRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
-// SendRelationAction 执行关注/取关操作
+// SendRelationAction 执行关注/取关操作（好友相关：只要双方互相关注了自动变成好友，否则一方取关则自动解除好友）
 func (l *SendRelationActionLogic) SendRelationAction(in *social.RelationActionReq) (*social.RelationActionResp, error) {
 	isSucceed := false
 	//查询 social 表中是否有这两个用户
@@ -75,6 +76,8 @@ func (l *SendRelationActionLogic) SendRelationAction(in *social.RelationActionRe
 			logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
 		}
 	}
+
+	log.Println("result::", isSucceed)
 
 	if err != nil {
 		logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)

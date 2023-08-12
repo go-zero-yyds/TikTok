@@ -16,6 +16,7 @@ message FriendUser {
     optional string Message = 2; // 和该好友的最新聊天消息
     int64 MsgType = 3; // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
 }
+
 message RelationActionReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id
@@ -101,6 +102,6 @@ service Social {
   rpc GetRelationFollowList(RelationFollowListReq) returns (RelationFollowListResp);
   rpc GetRelationFollowerList(RelationFollowerListReq) returns (RelationFollowerListResp);
   rpc GetRelationFriendList(RelationFriendListReq) returns (RelationFriendListResp);
-  rpc GetMessages(MessageChatReq) returns (MessageChatResp);  // 由user分支负责人负责
-  rpc SendMessageAction(MessageActionReq) returns (MessageActionResp);  // 由user分支负责人负责
+  rpc GetMessages(MessageChatReq) returns (MessageChatResp);
+  rpc SendMessageAction(MessageActionReq) returns (MessageActionResp);
 }

@@ -62,7 +62,3 @@ func (s *SocialServer) GetMessages(ctx context.Context, in *social.MessageChatRe
 	return l.GetMessages(in)
 }
 
-func (s *SocialServer) SendMessageAction(ctx context.Context, in *social.MessageActionReq) (*social.MessageActionResp, error) {
-	l := logic.NewSendMessageActionLogic(ctx, s.svcCtx)
-	return l.SendMessageAction(in)
-}

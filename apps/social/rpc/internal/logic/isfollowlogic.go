@@ -25,6 +25,14 @@ func NewIsFollowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsFollow
 
 // IsFollow 是否关注
 func (l *IsFollowLogic) IsFollow(in *social.IsFollowReq) (*social.IsFollowResp, error) {
+
+	////校验参数是否合规
+	//ok, err2 := utils.MatchUID(in.UserId)
+	//if err2 != nil || ok != true {
+	//	logc.Error(l.ctx, errors.ParamsError, in.UserId, in.ToUserId)
+	//	return &social.IsFollowResp{IsFollow: false}, nil
+	//}
+
 	//查询 social 表中是否有这两个用户
 	UserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 	ToUserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.ToUserId)
@@ -47,10 +55,11 @@ func (l *IsFollowLogic) IsFollow(in *social.IsFollowReq) (*social.IsFollowResp, 
 	if err != nil {
 		logc.Error(l.ctx, errors.RecordNotFound, in.UserId, in.ToUserId)
 	}
+
 	//返回关注状态
 	followStatus := false
-	switch followStruct.Status[0] {
-	case 1:
+
+	if followStruct.Status[0] == 1 {
 		followStatus = true
 	}
 	return &social.IsFollowResp{IsFollow: followStatus}, nil

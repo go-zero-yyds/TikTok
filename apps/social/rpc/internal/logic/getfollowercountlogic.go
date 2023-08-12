@@ -24,6 +24,7 @@ func NewGetFollowerCountLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 	}
 }
 
+// GetFollowerCount 获取用户粉丝数量
 func (l *GetFollowerCountLogic) GetFollowerCount(in *social.FollowerCountReq) (*social.FollowerCountResp, error) {
 	//查询 social 表中是否有该 user_id
 	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)

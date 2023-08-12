@@ -27,15 +27,15 @@ func NewCustomDB(conn sqlx.SqlConn) *CustomDB {
 	}
 }
 
-// QueryMessageByUserIdAndToUserIdInMessage query：userId & toUserId ==> message
-func (db *CustomDB) QueryMessageByUserIdAndToUserIdInMessage(ctx context.Context, userId int64, toUserId int64, time string) (message social.Message, err error) {
+// QueryMessageByUserIdAndToUserIdInMessage query：userId & toUserId & (<time) ==> message
+func (db *CustomDB) QueryMessageByUserIdAndToUserIdInMessage(ctx context.Context, userId int64, toUserId int64, time string) (messageList []*social.Message, err error) {
 	tableName := "message"
-	query := fmt.Sprintf("SELECT id, from_user_id, to_user_id, content, created_time FROM %s WHERE ((from_user_id = ? AND to_user_id = ?) OR (to_user_id = ? AND from_user_id = ?)) AND created_time = ( SELECT MAX(?) FROM message WHERE (to_user_id = 111 = ? AND from_user_id = ?) OR (from_user_id = ? AND to_user_id = ?));", tableName)
-	err = db.conn.QueryRowPartialCtx(ctx, &message, query, userId, toUserId, userId, toUserId, time, userId, toUserId, userId, toUserId)
+	query := fmt.Sprintf("SELECT id, from_user_id, to_user_id, content, created_time FROM %s WHERE ((from_user_id = ? AND to_user_id = ?) OR (to_user_id = ? AND from_user_id = ?)) AND created_time <= ? ORDER BY created_time DESC;", tableName)
+	err = db.conn.QueryRowsPartialCtx(ctx, &messageList, query, userId, toUserId, userId, toUserId, time)
 	if err != nil {
-		logc.Error(ctx, err, message, userId, toUserId, userId, toUserId, time)
+		logc.Error(ctx, err, messageList, query, userId, toUserId, userId, toUserId, time)
 	}
-	return message, err
+	return messageList, err
 }
 
 // QueryMessageByUserIdAndUserListInMessage query：userId in (userList) ==> message

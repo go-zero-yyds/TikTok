@@ -24,6 +24,7 @@ func NewSendMessageActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 	}
 }
 
+// SendMessageAction 发送消息
 func (l *SendMessageActionLogic) SendMessageAction(in *social.MessageActionReq) (*social.MessageActionResp, error) {
 	//查询 social 表中是否有这两个用户
 	UserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
