@@ -2,8 +2,10 @@ package logic
 
 import (
 	"context"
+	"errors"
 
 	"TikTok/apps/video/rpc/internal/svc"
+	"TikTok/apps/video/rpc/model"
 	"TikTok/apps/video/rpc/video"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -26,6 +28,9 @@ func NewDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetailLogi
 func (l *DetailLogic) Detail(in *video.BasicVideoInfoReq) (*video.BasicVideoInfoResp, error) {
 	videoId := in.VideoId
 	videoInfo, err := l.svcCtx.Model.FindOne(l.ctx, videoId)
+	if errors.Is(err, model.ErrNotFound) {
+		return nil, model.ErrVideoNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
