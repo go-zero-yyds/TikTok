@@ -15,7 +15,7 @@ func TestSend(t *testing.T) {
 	req := &video.PublishActionReq{
 		UserId:   12345678,
 		PlayUrl:  "12345678",
-		CoverUrl: "testCurl",
+		CoverUrl: "testCurlfornewsnow2",
 		Title:    "testtitel",
 	}
 

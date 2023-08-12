@@ -9,5 +9,10 @@ type Config struct {
 	zrpc.RpcServerConf
 	DataSourse string
 	Cache      cache.CacheConf
-	Node       int64
+	Snow       SnowConf
+}
+
+type SnowConf struct {
+	StartTime string
+	Node      int64
 }

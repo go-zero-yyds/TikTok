@@ -12,7 +12,7 @@ import (
 )
 
 func TestDetail(t *testing.T) {
-	videoId := 1689126061691899904
+	videoId := 1686298818955448320
 	req := &video.BasicVideoInfoReq{
 		VideoId: int64(videoId),
 	}
@@ -28,7 +28,7 @@ func TestDetail(t *testing.T) {
 			UserId:   123456,
 			PlayUrl:  "testPurl",
 			CoverUrl: "testCurl",
-			Title:    "啦啦啦",
+			Title:    "testtitel",
 		},
 	}
 	log.Println(res.Video)

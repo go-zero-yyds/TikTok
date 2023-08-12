@@ -23,7 +23,7 @@ func TestGetWork(t *testing.T) {
 	}
 
 	testRes := &video.WorkCountByUserIdResp{
-		WorkCount: 3,
+		WorkCount: 4,
 	}
 
 	require.NoError(t, err)

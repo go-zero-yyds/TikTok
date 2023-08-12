@@ -8,4 +8,6 @@ DataSourse: root:980845@tcp(localhost:3306)/tiktok_video?charset=utf8mb4&parseTi
 Cache:
   - Host: 127.0.0.1:6379
     Type: node
-Node: 1
+Snow:
+  StartTime: 2023-06-16
+  Node: 1
