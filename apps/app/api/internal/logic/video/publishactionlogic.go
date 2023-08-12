@@ -116,11 +116,12 @@ func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error)
 	return res, nil
 }
 
-// ExampleReadFrameAsJpeg 获取视频略缩图
+// ExampleReadFrameAsJpeg 获取视频略缩图，随机截取关键帧。
 func ExampleReadFrameAsJpeg(inFile io.Reader, frameNum int) (io.Reader, error) {
 	buf := bytes.NewBuffer(nil)
-	err := ffmpeg.Input("pipe:0").WithInput(inFile).
-		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
+	err := ffmpeg.Input("pipe:0").
+		Filter("select", ffmpeg.Args{"eq(pict_type\\,I)"}).
+		Filter("random", ffmpeg.Args{"seed=42"}).
 		Output("pipe:1", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
 		OverWriteOutput().
 		WithInput(inFile).
