@@ -11,10 +11,11 @@ import (
 type ServiceContext struct {
 	Config    config.Config
 	Snowflake *snowflake.Node
-	DBact     *model.DBaction
+	DBAction  *model.DBAction
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
+	snowflake.Epoch = c.SnowflakeStartTime
 	node, err := snowflake.NewNode(int64(c.SnowflakeNode))
 	if err != nil {
 		return nil, err
@@ -22,6 +23,6 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	return &ServiceContext{
 		Config:    c,
 		Snowflake: node,
-		DBact:     model.NewDBaction(sqlx.NewMysql(c.DBsource), c.Cache),
+		DBAction:  model.NewDBAction(sqlx.NewMysql(c.DBSource), c.Cache),
 	}, nil
 }
