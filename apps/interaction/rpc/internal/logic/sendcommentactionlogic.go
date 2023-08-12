@@ -24,7 +24,7 @@ func NewSendCommentActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 	}
 }
 
-// 调用dB接口中函数 执行评论/取消操作
+// SendCommentAction 调用dB接口中函数 执行评论/取消操作
 // 成功返回comment结构体，（评论成功 赋值，取消成功 nil）
 func (l *SendCommentActionLogic) SendCommentAction(in *interaction.CommentActionReq) (*interaction.CommentActionResp, error) {
 	//植入雪花id
@@ -35,11 +35,11 @@ func (l *SendCommentActionLogic) SendCommentAction(in *interaction.CommentAction
 	if in.ActionType > 2 {
 		return nil, nil
 	}
-	resp, err := l.svcCtx.DBact.CommentAction(l.ctx, in.UserId, in.VideoId, in.ActionType, in.CommentText, in.CommentId)
-	if err != nil  {
+	resp, err := l.svcCtx.DBAction.CommentAction(l.ctx, in.UserId, in.VideoId, in.ActionType, in.CommentText, in.CommentId)
+	if err != nil {
 		return nil, err
 	}
-	
+
 	if in.ActionType == 1 {
 		return &interaction.CommentActionResp{
 			Comment: &interaction.Comment{
@@ -51,6 +51,6 @@ func (l *SendCommentActionLogic) SendCommentAction(in *interaction.CommentAction
 		}, nil
 	}
 	return &interaction.CommentActionResp{
-		Comment:nil,
+		Comment: nil,
 	}, nil
 }

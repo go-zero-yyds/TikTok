@@ -23,18 +23,19 @@ func NewGetCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 		Logger: logx.WithContext(ctx),
 	}
 }
-// 查看视频的所有评论，按发布时间倒序
+
+// GetCommentList 查看视频的所有评论，按发布时间倒序
 func (l *GetCommentListLogic) GetCommentList(in *interaction.CommentListReq) (*interaction.CommentListResp, error) {
-	commentlist , err := l.svcCtx.DBact.CommentList(l.ctx , in.UserId , in.VideoId)
-	if err != nil{
-		return nil , err
+	commentList, err := l.svcCtx.DBAction.CommentList(l.ctx, in.VideoId)
+	if err != nil {
+		return nil, err
 	}
-	ret := make([]*interaction.Comment , 0 , len(commentlist))
-	for _, v := range commentlist{
+	ret := make([]*interaction.Comment, 0, len(commentList))
+	for _, v := range commentList {
 		ret = append(ret, &interaction.Comment{
-			Id: v.CommentId,
-			UserId: v.UserId,
-			Content: v.Content,
+			Id:         v.CommentId,
+			UserId:     v.UserId,
+			Content:    v.Content,
 			CreateDate: fmt.Sprintf("%v", v.CreateDate.Unix()),
 		})
 	}

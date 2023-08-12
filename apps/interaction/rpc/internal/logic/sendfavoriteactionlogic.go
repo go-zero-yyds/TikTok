@@ -23,12 +23,12 @@ func NewSendFavoriteActionLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
-//调用dB接口中函数，进行点赞/取消操作
-//只有在底层数据库出现未知错误会返回err
+// SendFavoriteAction 调用dB接口中函数，进行点赞/取消操作
+// 只有在底层数据库出现未知错误会返回err
 func (l *SendFavoriteActionLogic) SendFavoriteAction(in *interaction.FavoriteActionReq) (*interaction.FavoriteActionResp, error) {
-	success , err := l.svcCtx.DBact.FavoriteAction(l.ctx , in.UserId, in.VideoId, in.ActionType)
-	if err != nil{
-		return nil , err
+	success, err := l.svcCtx.DBAction.FavoriteAction(l.ctx, in.UserId, in.VideoId, in.ActionType)
+	if err != nil {
+		return nil, err
 	}
 	return &interaction.FavoriteActionResp{
 		IsSucceed: success,
