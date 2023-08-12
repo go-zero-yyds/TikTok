@@ -66,7 +66,6 @@ func (l *GetRelationFriendListLogic) GetRelationFriendList(in *social.RelationFr
 		FriendUserList[i].Message = v.Content
 
 	}
-
-	//获取到social
+	
 	return &social.RelationFriendListResp{UserList: FriendUserList}, nil
 }
