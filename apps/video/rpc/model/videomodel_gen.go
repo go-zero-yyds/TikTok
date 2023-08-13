@@ -115,6 +115,10 @@ func (m *defaultVideoModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn,
 	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
+
+
 func (m *defaultVideoModel) tableName() string {
 	return m.table
 }
+
+

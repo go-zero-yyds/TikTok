@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"TikTok/apps/video/rpc/internal/svc"
+	"TikTok/apps/video/rpc/model"
 	"TikTok/apps/video/rpc/video"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -24,7 +25,25 @@ func NewSendPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *SendPublishActionLogic) SendPublishAction(in *video.PublishActionReq) (*video.PublishActionResp, error) {
-	// todo: add your logic here and delete this line
 
-	return &video.PublishActionResp{}, nil
+	videoId := l.svcCtx.Snowflake.Generate().Int64()
+
+	videoData := &model.Video{
+		VideoId:  videoId,
+		UserId:   in.UserId,
+		PlayUrl:  in.PlayUrl,
+		CoverUrl: in.CoverUrl,
+		Title:    in.Title,
+	}
+
+	_, err := l.svcCtx.Model.Insert(l.ctx, videoData)
+	if err != nil {
+		return &video.PublishActionResp{
+			IsSucceed: false,
+		}, err
+	}
+
+	return &video.PublishActionResp{
+		IsSucceed: true,
+	}, nil
 }

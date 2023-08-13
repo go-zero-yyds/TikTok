@@ -23,7 +23,11 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	ctx := svc.NewServiceContext(c)
+	ctx, err := svc.NewServiceContext(c)
+	if err != nil {
+		fmt.Printf("Starting rpc Error at %v...\n", err)
+		return
+	}
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		video.RegisterVideoServer(grpcServer, server.NewVideoServer(ctx))
