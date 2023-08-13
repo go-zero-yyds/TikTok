@@ -6,9 +6,9 @@ import (
 	"TikTok/apps/user/rpc/user"
 	"TikTok/common/tool"
 	"context"
+	"errors"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"google.golang.org/grpc/status"
 )
 
 type RegisterLogic struct {
@@ -30,8 +30,8 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 	_, err := l.svcCtx.UserModel.FindOneByUsername(l.ctx, in.Username)
 	// 用户已注册
 	if err == nil {
-		return nil, status.Error(100, "用户已存在")
-	} else if err != model.ErrNotFound { // 错误
+		return nil, model.DuplicateUsername
+	} else if !errors.Is(err, model.ErrNotFound) { // 错误
 		return nil, err
 	} else { // 注册
 		snowId := l.svcCtx.Snowflake.Generate().Int64() // 雪花算法生成id
@@ -40,13 +40,13 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 			return nil, err
 		}
 
-		_, errinsert := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
+		_, errInsert := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
 			UserId:   snowId,
 			Username: in.Username,
 			Password: pwdHash,
 		})
 
-		if errinsert != nil {
+		if errInsert != nil {
 			return nil, err
 		}
 		return &user.RegisterResp{
