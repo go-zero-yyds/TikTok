@@ -1,37 +1,40 @@
 syntax = "proto3";
 
 package video;
-option go_package="./video";
+option go_package = "./video";
 
-message  WorkCountByUserIdReq {
+message WorkCountByUserIdReq {
   int64 UserId = 1; // 用户id
 }
-message  WorkCountByUserIdResp {
+message WorkCountByUserIdResp {
   int64 WorkCount = 1; // 发布视频数量
 }
 
 message BasicVideoInfo {
-  int64 Id = 1; // 视频唯一标识
-  int64 UserId = 2; // 视频作者信息
-  string PlayUrl = 3; // 视频播放地址
+  int64 Id = 1;        // 视频唯一标识
+  int64 UserId = 2;    // 视频作者信息
+  string PlayUrl = 3;  // 视频播放地址
   string CoverUrl = 4; // 视频封面地址
-  string Title = 5; // 视频标题
+  string Title = 5;    // 视频标题
 }
 
 message FeedReq {
-  optional int64 LatestTime = 1; // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
+  optional int64 LatestTime =
+      1; // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
   optional int64 UserId = 2; // 可选参数，调用接口的用户id
 }
-    
+
 message FeedResp {
   repeated BasicVideoInfo VideoList = 1; // 视频列表
-  optional int64 NextTime = 2; // 本次返回的视频中，发布最早的时间，作为下次请求时的LatestTime
+  optional int64 NextTime =
+      2; // 本次返回的视频中，发布最早的时间，作为下次请求时的LatestTime
 }
 
 message PublishActionReq {
-  int64 UserId = 1; // 调用接口的用户id
-  string Url = 2; // 视频url
-  string Title = 3; // 视频标题
+  int64 UserId = 1;    // 调用接口的用户id
+  string PlayUrl = 2;  // 视频播放地址
+  string CoverUrl = 3; // 视频封面地址
+  string Title = 4;    // 视频标题
 }
 
 message PublishActionResp {
@@ -41,7 +44,7 @@ message PublishActionResp {
 message PublishListReq {
   int64 UserId = 1; // 用户id
 }
-    
+
 message PublishListResp {
   repeated BasicVideoInfo VideoList = 1; // 用户发布的视频列表
 }
@@ -55,7 +58,8 @@ message BasicVideoInfoResp {
 }
 
 service Video {
-  rpc GetWorkCountByUserId(WorkCountByUserIdReq) returns (WorkCountByUserIdResp);
+  rpc GetWorkCountByUserId(WorkCountByUserIdReq)
+      returns (WorkCountByUserIdResp);
   rpc GetFeed(FeedReq) returns (FeedResp);
   rpc SendPublishAction(PublishActionReq) returns (PublishActionResp);
   rpc GetPublishList(PublishListReq) returns (PublishListResp);

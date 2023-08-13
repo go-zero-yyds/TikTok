@@ -25,6 +25,11 @@ func NewGetWorkCountByUserIdLogic(ctx context.Context, svcCtx *svc.ServiceContex
 
 func (l *GetWorkCountByUserIdLogic) GetWorkCountByUserId(in *video.WorkCountByUserIdReq) (*video.WorkCountByUserIdResp, error) {
 	// todo: add your logic here and delete this line
-
-	return &video.WorkCountByUserIdResp{}, nil
+	videoCount, err := l.svcCtx.Model.CountByUserId(context.Background(), in.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &video.WorkCountByUserIdResp{
+		WorkCount: videoCount,
+	}, nil
 }
