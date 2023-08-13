@@ -27,25 +27,25 @@ func NewGetPublishListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 
 func (l *GetPublishListLogic) GetPublishList(in *video.PublishListReq) (*video.PublishListResp, error) {
 	publishListResp := &video.PublishListResp{}
-	mvideoList, err := l.svcCtx.Model.VideoListByUserId(context.Background(), in.UserId)
+	videoList, err := l.svcCtx.Model.VideoListByUserId(context.Background(), in.UserId)
 	if err != nil {
 		fmt.Println("err", err)
 		return nil, err
 	}
 
-	for _, v := range mvideoList {
+	for _, v := range videoList {
 		publishListResp.VideoList = append(publishListResp.VideoList, convertToBasic(v))
 	}
 	return publishListResp, nil
 }
 
-func convertToBasic(mvideo *model.Video) *video.BasicVideoInfo {
+func convertToBasic(v *model.Video) *video.BasicVideoInfo {
 	basic := &video.BasicVideoInfo{
-		Id:       mvideo.VideoId,
-		UserId:   mvideo.UserId,
-		PlayUrl:  mvideo.PlayUrl,
-		CoverUrl: mvideo.CoverUrl,
-		Title:    mvideo.Title,
+		Id:       v.VideoId,
+		UserId:   v.UserId,
+		PlayUrl:  v.PlayUrl,
+		CoverUrl: v.CoverUrl,
+		Title:    v.Title,
 	}
 
 	return basic

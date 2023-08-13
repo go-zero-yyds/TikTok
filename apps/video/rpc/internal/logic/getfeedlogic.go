@@ -37,13 +37,13 @@ func (l *GetFeedLogic) GetFeed(in *video.FeedReq) (*video.FeedResp, error) {
 		nowTime = *in.LatestTime
 	}
 
-	mvideoList, err := l.svcCtx.Model.VideoFeedByLastTime(l.ctx, nowTime)
+	videoList, err := l.svcCtx.Model.VideoFeedByLastTime(l.ctx, nowTime)
 	if err != nil {
 		return &video.FeedResp{}, err
 	}
 
 	publishListResp := make([]*video.BasicVideoInfo, 0, 30)
-	for _, v := range mvideoList {
+	for _, v := range videoList {
 		publishListResp = append(publishListResp, convertToBasic(v))
 	}
 
@@ -51,7 +51,7 @@ func (l *GetFeedLogic) GetFeed(in *video.FeedReq) (*video.FeedResp, error) {
 	nextTime := int64(0)
 	if len(publishListResp) > 0 {
 		lastIndex = len(publishListResp) - 1
-		nextTime = mvideoList[lastIndex].CreateTime.UnixMilli()
+		nextTime = videoList[lastIndex].CreateTime.UnixMilli()
 	}
 
 	return &video.FeedResp{
