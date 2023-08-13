@@ -27,7 +27,6 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
-	// todo: add your logic here and delete this line
 	res, err := l.svcCtx.UserModel.FindOneByUsername(l.ctx, in.Username)
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {

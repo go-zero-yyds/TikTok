@@ -26,7 +26,6 @@ func NewDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetailLogi
 }
 
 func (l *DetailLogic) Detail(in *user.BasicUserInfoReq) (*user.BasicUserInfoResp, error) {
-	// todo: add your logic here and delete this line
 	res, err := l.svcCtx.UserModel.FindOne(l.ctx, in.UserId)
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {
