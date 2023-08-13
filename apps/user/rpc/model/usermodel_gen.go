@@ -41,8 +41,8 @@ type (
 
 	User struct {
 		UserId          int64  `db:"user_id"`          // 唯一用户ID，使用雪花算法生成
-		Username        string `db:"username"`         // 用户注册用户名，最长32个字符，唯一
-		Password        string `db:"password"`         // 密码，最长32个字符
+		Username        string `db:"username"`         // 用户注册用户名，最长256个字符，唯一
+		Password        string `db:"password"`         // 密码，最长256字符
 		Avatar          string `db:"avatar"`           // 用户头像
 		BackgroundImage string `db:"background_image"` // 用户个人页顶部大图
 		Signature       string `db:"signature"`        // 个人简介
