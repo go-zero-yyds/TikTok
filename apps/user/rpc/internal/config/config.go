@@ -7,9 +7,11 @@ import (
 
 type Config struct {
 	zrpc.RpcServerConf
-	Mysql struct {
-		DataSource string
-	}
-	Cache cache.CacheConf
-	Node  int64
+	DBSource  string
+	Cache     cache.CacheConf
+	Snowflake SnowflakeConf
+}
+type SnowflakeConf struct {
+	StartTime int64
+	Node      int64
 }

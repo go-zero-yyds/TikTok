@@ -1,7 +1,7 @@
 Name: user.rpc
-ListenOn: 0.0.0.0:8081
-Mysql: 
-  DataSource: root:123456@tcp(localhost:3306)/tiktok_user?
+ListenOn: 0.0.0.0:8001
+
+DBSource: root:12345678@tcp(localhost:3306)/tiktok_user?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
 Etcd:
   Hosts:
   - 127.0.0.1:2379
@@ -9,4 +9,6 @@ Etcd:
 Cache: 
   - Host: 127.0.0.1:6379
     Type: node
-Node: 1
+Snowflake:
+  StartTime: 1288834974657
+  Node: 1

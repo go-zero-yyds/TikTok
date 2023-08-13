@@ -15,11 +15,12 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
-	node, err := snowflake.NewNode(c.Node)
+	snowflake.Epoch = c.Snowflake.StartTime
+	node, err := snowflake.NewNode(c.Snowflake.Node)
 	if err != nil {
 		return nil, err
 	}
-	conn := sqlx.NewMysql(c.Mysql.DataSource)
+	conn := sqlx.NewMysql(c.DBSource)
 	return &ServiceContext{
 		Config:    c,
 		UserModel: model.NewUserModel(conn, c.Cache),
