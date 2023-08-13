@@ -4,7 +4,7 @@ import (
 	"TikTok/apps/user/rpc/internal/svc"
 	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
-	"TikTok/common/tool"
+	"TikTok/pkg/tool"
 	"context"
 	"errors"
 
