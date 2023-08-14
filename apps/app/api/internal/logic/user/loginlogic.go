@@ -2,8 +2,10 @@ package user
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
 	"context"
+	"errors"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -30,6 +32,11 @@ func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginRe
 		Username: req.Username,
 		Password: req.Password,
 	})
+	if errors.Is(err, model.UserValidation) {
+		return &types.UserLoginResponse{
+			RespStatus: types.RespStatus(apiVars.UserValidation),
+		}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

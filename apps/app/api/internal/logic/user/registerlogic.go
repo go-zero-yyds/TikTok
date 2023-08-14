@@ -2,8 +2,10 @@ package user
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
 	"context"
+	"errors"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -31,6 +33,11 @@ func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.Us
 		Username: req.Username,
 		Password: req.Password,
 	})
+	if errors.Is(err, model.DuplicateUsername) {
+		return &types.UserRegisterResponse{
+			RespStatus: types.RespStatus(apiVars.DuplicateUsername),
+		}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -6,9 +6,11 @@ import (
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/social/rpc/social"
+	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
 	"TikTok/apps/video/rpc/video"
 	"context"
+	"errors"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/mr"
@@ -37,7 +39,11 @@ func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, 
 		return nil, err
 	}
 	userInfo, err := TryGetUserInfo(tokenID, req.UserID, l.svcCtx, l.ctx)
-
+	if errors.Is(err, model.UserNotFound) {
+		return &types.UserResponse{
+			RespStatus: types.RespStatus(apiVars.UserNotFound),
+		}, nil
+	}
 	if err == apiVars.SomeDataErr {
 		return &types.UserResponse{
 			RespStatus: types.RespStatus(apiVars.SomeDataErr),

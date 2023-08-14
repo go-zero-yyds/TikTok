@@ -25,4 +25,16 @@ var (
 		StatusCode: 500,
 		StatusMsg:  "内部错误",
 	}
+	UserNotFound = RespErr{
+		StatusCode: 100,
+		StatusMsg:  "用户不存在",
+	}
+	UserValidation = RespErr{
+		StatusCode: 200,
+		StatusMsg:  "密码错误",
+	}
+	DuplicateUsername = RespErr{
+		StatusCode: 300,
+		StatusMsg:  "用户已存在",
+	}
 )
