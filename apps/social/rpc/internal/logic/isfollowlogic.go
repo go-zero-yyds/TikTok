@@ -2,6 +2,7 @@ package logic
 
 import (
 	"TikTok/apps/social/rpc/internal/errors"
+	"TikTok/apps/social/rpc/internal/logic/common"
 	"TikTok/apps/social/rpc/internal/svc"
 	"TikTok/apps/social/rpc/social"
 	"context"
@@ -23,23 +24,15 @@ func NewIsFollowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsFollow
 	}
 }
 
+type IsFollowFunc func(*social.IsFollowReq) (*social.IsFollowResp, error)
+
 // IsFollow 是否关注
 func (l *IsFollowLogic) IsFollow(in *social.IsFollowReq) (*social.IsFollowResp, error) {
 
-	////校验参数是否合规
-	//ok, err2 := utils.MatchUID(in.UserId)
-	//if err2 != nil || ok != true {
-	//	logc.Error(l.ctx, errors.ParamsError, in.UserId, in.ToUserId)
-	//	return &social.IsFollowResp{IsFollow: false}, nil
-	//}
-
-	//查询 social 表中是否有这两个用户
-	UserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
-	ToUserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.ToUserId)
-
-	//如果不存在则直接返回失败
-	if UserIdExist == false || ToUserIdExist == false || err != nil {
-		logc.Error(l.ctx, errors.RecordNotFound, in.UserId, in.ToUserId)
+	//验证用户存在性并注册，否则返回失败
+	check := common.NewValidateAndRegisterStruct(l.ctx, l.svcCtx)
+	ok := check.ValidateAndRegister(in.UserId, in.ToUserId)
+	if ok != true {
 		return &social.IsFollowResp{IsFollow: false}, nil
 	}
 

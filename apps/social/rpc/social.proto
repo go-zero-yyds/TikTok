@@ -76,6 +76,7 @@ message IsFollowReq {
   int64 UserId = 1; // 用户id
   int64 ToUserId = 2; // 对方用户id
 }
+
 message IsFollowResp {
   bool IsFollow = 1;
 }

@@ -5,9 +5,10 @@ import (
 	"TikTok/apps/social/rpc/internal/svc"
 	"TikTok/apps/social/rpc/social"
 	"context"
+	"database/sql"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
-	"log"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 type SendRelationActionLogic struct {
@@ -26,12 +27,11 @@ func NewSendRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 
 // SendRelationAction 执行关注/取关操作（好友相关：只要双方互相关注了自动变成好友，否则一方取关则自动解除好友）
 func (l *SendRelationActionLogic) SendRelationAction(in *social.RelationActionReq) (*social.RelationActionResp, error) {
-	isSucceed := false
 	//查询 social 表中是否有这两个用户
 	UserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 	ToUserIdExist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.ToUserId)
 
-	//如果不存在则直接返回失败
+	//如果不存在则注册进social表内并重试
 	if UserIdExist == false || ToUserIdExist == false || err != nil {
 		logc.Error(l.ctx, errors.RecordNotFound, in.UserId, in.ToUserId)
 		return &social.RelationActionResp{IsSucceed: false}, nil
@@ -44,40 +44,40 @@ func (l *SendRelationActionLogic) SendRelationAction(in *social.RelationActionRe
 		ToUserId: in.ToUserId,
 	})
 
+	isSucceed := false
+
 	if in.ActionType == 1 { //如果是执行关注对方行为
 		//如果没有关注对方
 		if resp.IsFollow == false {
-			err = l.svcCtx.CustomDB.UpdateStatusByUserIdAndToUserIdInFollow(l.ctx, in.UserId, in.ToUserId, 1) //修改字段为关注状态
-			//user 在 social 表中的 follow_count +1
-			err = l.svcCtx.CustomDB.AutoIncrementUpdateFieldByUserIdAndToUserIdInTable(l.ctx, in.UserId, "social", "follow_count", "1")
-			//toUser 在 social 表中的 follower_count +1
-			err = l.svcCtx.CustomDB.AutoIncrementUpdateFieldByUserIdAndToUserIdInTable(l.ctx, in.ToUserId, "social", "follower_count", "1")
+			ok, err := l.UpdateUserSocialCount(in, 1)
+			if err != nil || ok != true {
+				logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
+				return &social.RelationActionResp{IsSucceed: false}, nil
+			}
 			isSucceed = true
 		}
 
-		_, err = l.CheckFollowAndExecute(in, 1)
-		if err != nil {
+		ok, err := l.CheckFollowAndExecute(in, 1)
+		if ok != true || err != nil {
 			logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
 		}
 
 	} else if in.ActionType == 2 { //如果是执行取关对方行为
 		//如果关注了对方
 		if resp.IsFollow == true {
-			err = l.svcCtx.CustomDB.UpdateStatusByUserIdAndToUserIdInFollow(l.ctx, in.UserId, in.ToUserId, 0) //修改字段为未关注状态
-			//user 在 social 表中的 follow_count -1
-			err = l.svcCtx.CustomDB.AutoIncrementUpdateFieldByUserIdAndToUserIdInTable(l.ctx, in.UserId, "social", "follow_count", "-1")
-			//toUser 在 social 表中的 follower_count -1
-			err = l.svcCtx.CustomDB.AutoIncrementUpdateFieldByUserIdAndToUserIdInTable(l.ctx, in.ToUserId, "social", "follower_count", "-1")
+			ok, err := l.UpdateUserSocialCount(in, 2)
+			if err != nil || ok != true {
+				logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
+				return &social.RelationActionResp{IsSucceed: false}, nil
+			}
 			isSucceed = true
 		}
 
-		_, err = l.CheckFollowAndExecute(in, 2)
-		if err != nil {
+		ok, err := l.CheckFollowAndExecute(in, 2)
+		if ok != true || err != nil {
 			logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
 		}
 	}
-
-	log.Println("result::", isSucceed)
 
 	if err != nil {
 		logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
@@ -87,7 +87,60 @@ func (l *SendRelationActionLogic) SendRelationAction(in *social.RelationActionRe
 	return &social.RelationActionResp{IsSucceed: isSucceed}, nil
 }
 
-// CheckFollowAndExecute 查询关注表对方是否有关注自己，有则执行对应操作 operationType == 1 ==> add; operationType == 2 ==> remove
+// UpdateUserSocialCount update user socialCount(followList and followerList) in social table operationType == 1 ==> add; operationType == 2 ==> remove
+func (l *SendRelationActionLogic) UpdateUserSocialCount(in *social.RelationActionReq, operationType int8) (ok bool, err error) {
+	resultChan := make(chan bool)
+	defer close(resultChan)
+	go func(in *social.RelationActionReq, operationType int8) {
+		switch operationType {
+		case 1:
+			//开启事务
+			err = l.svcCtx.CustomDB.Conn.TransactCtx(l.ctx, func(ctx context.Context, session sqlx.Session) error {
+				err := l.svcCtx.CustomDB.TransactionUpdateSocialCount(l.ctx, session, in.UserId, in.ToUserId, 1, 1)
+				if err != sql.ErrNoRows {
+					return err
+				}
+				return nil
+			})
+
+			if err != nil {
+				logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
+				resultChan <- false
+				return
+			}
+			resultChan <- true
+			return
+		case 2:
+			//开启事务
+			err = l.svcCtx.CustomDB.Conn.TransactCtx(l.ctx, func(ctx context.Context, session sqlx.Session) error {
+				err := l.svcCtx.CustomDB.TransactionUpdateSocialCount(l.ctx, session, in.UserId, in.ToUserId, 0, -1)
+				if err != sql.ErrNoRows {
+					return err
+				}
+				return nil
+			})
+
+			if err != nil {
+				logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
+				resultChan <- false
+				return
+			}
+			resultChan <- true
+			return
+		}
+	}(in, operationType)
+
+	select {
+	case result := <-resultChan:
+		if result == false {
+			logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId, in.ToUserId)
+			return false, err
+		}
+		return true, nil
+	}
+}
+
+// CheckFollowAndExecute 查询关注表对方是否有关注自己，有则执行对应操作（成为好友/解除好友） operationType == 1 ==> add; operationType == 2 ==> remove
 func (l *SendRelationActionLogic) CheckFollowAndExecute(in *social.RelationActionReq, operationType int8) (ok bool, err error) {
 	ok = true
 	//查询关注表对方是否有关注自己
