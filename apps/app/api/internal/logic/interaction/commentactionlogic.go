@@ -8,6 +8,9 @@ import (
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/interactionclient"
 	"context"
+	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -78,7 +81,11 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 
 func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *svc.ServiceContext, ctx context.Context) (*types.Comment, error) {
 	res := &types.Comment{}
-	res.CreateDate = comment.CreateDate
+	timestamp, err := strconv.ParseInt(comment.CreateDate, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	res.CreateDate = FormatTimestamp(timestamp)
 	res.ID = comment.Id
 	res.Content = comment.Content
 	userInfo, err := user.TryGetUserInfo(tokenID, comment.UserId, svcCtx, ctx)
@@ -91,4 +98,30 @@ func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *s
 	}
 
 	return res, nil
+}
+
+func FormatTimestamp(timestamp int64) string {
+	currentTime := time.Now()
+	timestampTime := time.Unix(timestamp, 0)
+	year, month, day := currentTime.Year(), currentTime.Month(), currentTime.Day()
+	timestampYear, timestampMonth, timestampDay := timestampTime.Year(), timestampTime.Month(), timestampTime.Day()
+
+	if year == timestampYear && month == timestampMonth && day == timestampDay {
+		diff := currentTime.Sub(timestampTime)
+		if diff.Hours() >= 1 {
+			return fmt.Sprintf("%.0f小时前", diff.Hours())
+		} else if diff.Minutes() >= 1 {
+			return fmt.Sprintf("%.0f分钟前", diff.Minutes())
+		} else {
+			return fmt.Sprintf("%.0f秒钟前", diff.Seconds())
+		}
+	} else if year == timestampYear && month == timestampMonth && day-1 == timestampDay {
+		return fmt.Sprintf("昨天 %02d:%02d", timestampTime.Hour(), timestampTime.Minute())
+	} else if year == timestampYear && month == timestampMonth && day-2 == timestampDay {
+		return fmt.Sprintf("前天 %02d:%02d", timestampTime.Hour(), timestampTime.Minute())
+	} else if year == timestampYear {
+		return fmt.Sprintf("%02d-%02d", timestampMonth, timestampDay)
+	} else {
+		return fmt.Sprintf("%d-%02d-%02d", timestampYear, timestampMonth, timestampDay)
+	}
 }
