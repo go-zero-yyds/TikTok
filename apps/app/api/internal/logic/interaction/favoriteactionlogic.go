@@ -3,6 +3,7 @@ package interaction
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/interaction/rpc/interaction"
+	"TikTok/apps/video/rpc/video"
 	"context"
 
 	"TikTok/apps/app/api/internal/svc"
@@ -31,7 +32,10 @@ func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (
 	if err != nil {
 		return nil, err
 	}
-
+	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
+	if err != nil {
+		return nil, err
+	}
 	_, err = l.svcCtx.InteractionRPC.SendFavoriteAction(l.ctx, &interaction.FavoriteActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,

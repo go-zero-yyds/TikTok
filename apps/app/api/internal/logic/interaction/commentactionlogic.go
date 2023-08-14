@@ -7,6 +7,7 @@ import (
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/interactionclient"
+	"TikTok/apps/video/rpc/video"
 	"context"
 	"fmt"
 	"strconv"
@@ -35,7 +36,10 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	if err != nil {
 		return nil, err
 	}
-
+	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
+	if err != nil {
+		return nil, err
+	}
 	rpcReq := &interaction.CommentActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,
