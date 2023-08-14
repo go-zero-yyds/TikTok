@@ -29,12 +29,16 @@ func NewGetFeedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetFeedLo
 
 func (l *GetFeedLogic) GetFeed(in *video.FeedReq) (*video.FeedResp, error) {
 	// todo: add your logic here and delete this line
-	lastYear := time.UnixMilli(*in.LatestTime).Year()
 	var nowTime int64
-	if in.LatestTime == nil || (lastYear < minYear || lastYear > maxYear) {
-		nowTime = time.Now().UnixMilli()
-	} else {
+	if in.LatestTime != nil {
 		nowTime = *in.LatestTime
+	} else {
+		nowTime = time.Now().UnixMilli()
+	}
+
+	lastYear := time.UnixMilli(nowTime).Year()
+	if lastYear < minYear || lastYear > maxYear {
+		nowTime = time.Now().UnixMilli()
 	}
 
 	videoList, err := l.svcCtx.Model.VideoFeedByLastTime(l.ctx, nowTime)
