@@ -47,8 +47,8 @@ func (l *IsFollowLogic) IsFollow(in *social.IsFollowReq) (*social.IsFollowResp, 
 	//返回关注状态
 	followStatus := false
 
-	//如果关注了（别问为什么是49，问就是ASCII的1）
-	if followStruct.Status[0] == 49 {
+	//如果关注了
+	if followStruct.Status == 1 {
 		followStatus = true
 	}
 
