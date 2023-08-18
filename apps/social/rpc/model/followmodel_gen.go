@@ -38,7 +38,8 @@ type (
 		Id       int64 `db:"id"`         // 字段ID
 		UserId   int64 `db:"user_id"`    // 用户ID
 		ToUserId int64 `db:"to_user_id"` // 关注者ID
-		Status   []uint8  `db:"status"`     // 关注状态 0=>没关注 1=>关注
+		Status   int64 `db:"status"`     // 关注状态 0=>没关注 1=>关注
+		Version  int64 `db:"version"`    // for update版本号
 	}
 )
 
@@ -70,14 +71,14 @@ func (m *defaultFollowModel) FindOne(ctx context.Context, id int64) (*Follow, er
 }
 
 func (m *defaultFollowModel) Insert(ctx context.Context, data *Follow) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, followRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, followRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status, data.Version)
 	return ret, err
 }
 
 func (m *defaultFollowModel) Update(ctx context.Context, data *Follow) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, followRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status, data.Version, data.Id)
 	return err
 }
 

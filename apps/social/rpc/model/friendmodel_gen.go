@@ -39,6 +39,7 @@ type (
 		UserId   int64 `db:"user_id"`    // 用户ID
 		ToUserId int64 `db:"to_user_id"` // 好友ID
 		Status   byte  `db:"status"`     // 关系状态 0 ==> 未绑/删除 1 ==>好友
+		Version  int64 `db:"version"`    // for update版本号
 	}
 )
 
@@ -70,14 +71,14 @@ func (m *defaultFriendModel) FindOne(ctx context.Context, id int64) (*Friend, er
 }
 
 func (m *defaultFriendModel) Insert(ctx context.Context, data *Friend) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, friendRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, friendRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status, data.Version)
 	return ret, err
 }
 
 func (m *defaultFriendModel) Update(ctx context.Context, data *Friend) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, friendRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Status, data.Version, data.Id)
 	return err
 }
 
