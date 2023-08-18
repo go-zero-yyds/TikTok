@@ -1,14 +1,12 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-
 	"TikTok/apps/social/rpc/internal/config"
 	"TikTok/apps/social/rpc/internal/server"
 	"TikTok/apps/social/rpc/internal/svc"
 	"TikTok/apps/social/rpc/social"
-
+	"flag"
+	"fmt"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"

@@ -1,0 +1,8 @@
+ListenOn: 127.0.0.1:8004
+MySQL:
+  Database: "tiktok_social"
+  Account: "root"
+  Password: "87777832"
+  Host: "127.0.0.1"
+  Port: 3306
+  Options: "charset=utf8mb4&parseTime=True&loc=Local"

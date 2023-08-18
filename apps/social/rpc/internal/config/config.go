@@ -1,15 +1,17 @@
 package config
 
 import (
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
 type Config struct {
 	zrpc.RpcServerConf
-	MySQL MySQL
+	MySQL       MySQLConfig
+	RedisConfig redis.RedisConf
 }
 
-type MySQL struct {
+type MySQLConfig struct {
 	Database string `json:",default=tiktok_social"`
 	Account  string `json:",default=root"`
 	Password string `json:",default=123456"`

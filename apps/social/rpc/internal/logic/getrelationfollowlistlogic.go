@@ -2,6 +2,7 @@ package logic
 
 import (
 	"TikTok/apps/social/rpc/internal/errors"
+	"TikTok/apps/social/rpc/internal/logic/common"
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 
@@ -27,16 +28,15 @@ func NewGetRelationFollowListLogic(ctx context.Context, svcCtx *svc.ServiceConte
 
 // GetRelationFollowList 获取关注的人的ID
 func (l *GetRelationFollowListLogic) GetRelationFollowList(in *social.RelationFollowListReq) (*social.RelationFollowListResp, error) {
-	//查询 social 表中是否有该 user_id
-	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 
-	//如果不存在则直接返回空
-	if exist == false || err != nil {
-		logc.Error(l.ctx, errors.RecordNotFound, in.UserId)
-		return &social.RelationFollowListResp{UserList: nil}, nil
+	//验证用户存在性并注册
+	check := common.NewValidateAndRegisterStruct(l.ctx, l.svcCtx)
+	ok := check.ValidateAndRegister(in.UserId)
+	if ok != true {
+		logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId)
 	}
 
-	userList, err := l.svcCtx.CustomDB.QueryUsersOfFollowListByUserId(l.ctx, in.UserId)
+	userList, err := l.svcCtx.CustomDB.QueryFollowListOfUserByUserId(l.ctx, in.UserId)
 	//如果未找到关注/没有关注则直接返回空
 	if userList == nil || err != nil {
 		logc.Error(l.ctx, errors.RecordNotFound, in.UserId)

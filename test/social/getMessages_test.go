@@ -17,10 +17,12 @@ import (
 func TestGetMessages(t *testing.T) {
 	log.Println("--------------------Testing--------------------")
 
+	log.Println("测试场景：获取消息列表")
+
 	req := &social.MessageChatReq{
 		UserId:     111,
 		ToUserId:   222,
-		PreMsgTime: 1691750037,
+		PreMsgTime: 1691750037000, //毫秒级
 	}
 
 	res, err := logic.GetMessages(context.Background(), req)

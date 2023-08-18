@@ -17,6 +17,8 @@ import (
 func TestGetRelationFollowList(t *testing.T) {
 	log.Println("--------------------Testing--------------------")
 
+	log.Println("测试场景：获取关注列表")
+
 	req := &social.RelationFollowListReq{
 		UserId: 111,
 	}

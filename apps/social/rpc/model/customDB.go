@@ -63,8 +63,8 @@ func (db *CustomDB) QueryFriendIdListByUserIdInFriend(ctx context.Context, userI
 	return friendIdList, err
 }
 
-// QueryUsersOfFollowerListByUserId query：userId ==> followerList ==> followerList.userId.fields.values
-func (db *CustomDB) QueryUsersOfFollowerListByUserId(ctx context.Context, userId int64) (userList []int64, err error) {
+// QueryFollowerListOfUserByUserId query：userId ==> followerList ==> followerList.userId.fields.values
+func (db *CustomDB) QueryFollowerListOfUserByUserId(ctx context.Context, userId int64) (userList []int64, err error) {
 	tableNameA := "follow"
 	tableNameB := "social"
 	//query := fmt.Sprintf("SELECT s.id, s.user_id, s.follow_count, s.follower_count, s.total_favorited, s.work_count, s.favorite_count FROM %s AS f JOIN %s AS s ON f.to_user_id = s.user_id WHERE f.to_user_id = ?", tableNameA, tableNameB)
@@ -76,8 +76,8 @@ func (db *CustomDB) QueryUsersOfFollowerListByUserId(ctx context.Context, userId
 	return userList, err
 }
 
-// QueryUsersOfFollowListByUserId query：userId ==> followList ==> followList.userId.fields.values
-func (db *CustomDB) QueryUsersOfFollowListByUserId(ctx context.Context, userId int64) (userList []int64, err error) {
+// QueryFollowListOfUserByUserId query：userId ==> followList ==> followList.userId.fields.values
+func (db *CustomDB) QueryFollowListOfUserByUserId(ctx context.Context, userId int64) (userList []int64, err error) {
 	tableNameA := "follow"
 	tableNameB := "social"
 	//query := fmt.Sprintf("SELECT s.id, s.user_id, s.follow_count, s.follower_count, s.total_favorited, s.work_count, s.favorite_count FROM %s AS f JOIN %s AS s ON f.to_user_id = s.user_id WHERE f.user_id = ?", tableNameA, tableNameB)
@@ -149,7 +149,7 @@ func (db *CustomDB) QueryRecordByUserIdAndToUserIdInFollow(ctx context.Context, 
 func (db *CustomDB) InsertRecordByUserIdAndToUserIdInFollow(ctx context.Context, userId, toUserId int64) error {
 	var follow Follow
 	tableName := "follow"
-	insert := fmt.Sprintf("insert into %s (`user_id`, `to_user_id`, `status`) VALUES (?, ?, ?)", tableName)
+	insert := fmt.Sprintf("insert into %s (`user_id`, `to_user_id`, `status`, `version`) VALUES (?, ?, ?,0)", tableName)
 	err := db.Conn.QueryRowPartialCtx(ctx, &follow, insert, userId, toUserId, 0)
 	if err != nil {
 		logc.Error(ctx, err, userId, toUserId)
@@ -164,7 +164,7 @@ func (db *CustomDB) InsertRecordByUserIdAndToUserIdInFollow(ctx context.Context,
 func (db *CustomDB) InsertRecordByUserIdAndToUserIdInFriend(ctx context.Context, userId, toUserId int64, status int8) error {
 	var friend Friend
 	tableName := "friend"
-	insert := fmt.Sprintf("INSERT INTO %s (`user_id`, `to_user_id`, `status`) VALUES (?, ?, ?)", tableName)
+	insert := fmt.Sprintf("INSERT INTO %s (`user_id`, `to_user_id`, `status`, `version`) VALUES (?, ?, ?,0)", tableName)
 	err := db.Conn.QueryRowPartialCtx(ctx, &friend, insert, userId, toUserId, status)
 	if err != nil {
 		logc.Error(ctx, err, userId, toUserId)
@@ -196,7 +196,7 @@ func (db *CustomDB) InsertRecordByUserIdAndToUserIdAndContentInMessage(ctx conte
 func (db *CustomDB) InsertRecordByUserIdInSocial(ctx context.Context, userId int64, followCount int64, followerCount int64) error {
 	var social Social
 	tableName := "social"
-	insert := fmt.Sprintf("INSERT INTO %s (`user_id`, `follow_count`, `follower_count`) VALUES (?, ?, ?)", tableName)
+	insert := fmt.Sprintf("INSERT INTO %s (`user_id`, `follow_count`, `follower_count`,`version`) VALUES (?, ?, ?,0)", tableName)
 	err := db.Conn.QueryRowPartialCtx(ctx, &social, insert, strconv.FormatInt(userId, 10), followCount, followerCount)
 	if err != nil {
 		logc.Error(ctx, err, userId)
@@ -264,28 +264,54 @@ func IntListToString(list []int64) string {
 
 func (db *CustomDB) TransactionUpdateSocialCount(ctx context.Context, session sqlx.Session, userId int64, toUserId int64, actionType byte, count int8) (err error) {
 
-	//update status in follow
-	var follow Follow
-	update := fmt.Sprintf("UPDATE %s SET status = ? WHERE user_id = ? AND to_user_id = ?", "follow")
-	err = session.QueryRowPartialCtx(ctx, &follow, update, actionType, userId, toUserId)
-	if err != sql.ErrNoRows {
+	//lock userId record by for update in follow
+	var f Follow
+	query := fmt.Sprintf("select id,user_id,to_user_id,status,version from follow where user_id = ? for update")
+	err = session.QueryRowPartialCtx(ctx, &f, query, userId)
+	if err != sql.ErrNoRows && err != nil {
 		return err
 	}
 
-	//update followCount in follow
+	//update status in follow
+	update := fmt.Sprintf("UPDATE %s SET status = ? WHERE user_id = ? AND to_user_id = ?", "follow")
+	err = session.QueryRowPartialCtx(ctx, &f, update, actionType, userId, toUserId)
+	if err != sql.ErrNoRows && err != nil {
+		return err
+	}
+
+	var s Social
+	//lock records by for update in social
+	query = fmt.Sprintf("select user_id,follow_count,follower_count,version from social where user_id in (?,?) for update")
+	err = session.QueryRowPartialCtx(ctx, &s, query, userId, toUserId)
+	if err != sql.ErrNoRows && err != nil {
+		return err
+	}
+
+	//update followCount in social
 	var obj interface{}
 	update = fmt.Sprintf("UPDATE %s SET %s = %s + ? WHERE user_id = ?", "social", "follow_count", "follow_count")
 	err = session.QueryRowPartialCtx(ctx, &obj, update, count, userId)
-	if err != sql.ErrNoRows {
+	if err != sql.ErrNoRows && err != nil {
 		return err
 	}
 
-	//update followerCount in follow
+	//update followerCount in social
 	update = fmt.Sprintf("UPDATE %s SET %s = %s + ? WHERE user_id = ?", "social", "follower_count", "follower_count")
 	err = session.QueryRowPartialCtx(ctx, &obj, update, count, toUserId)
-	if err != sql.ErrNoRows {
+	if err != sql.ErrNoRows && err != nil {
 		return err
 	}
 
-	return err
+	return nil
+}
+
+func (db *CustomDB) LockRecordBySessionInFriend(ctx context.Context, session sqlx.Session, userId int64, toUserId int64) (err error) {
+	//lock records by for update in friend
+	var f Friend
+	query := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM friend WHERE (user_id = ? AND to_user_id = ?) OR (user_id = ? AND to_user_id = ?)) AS result")
+	err = session.QueryRowPartialCtx(ctx, &f, query, userId, toUserId, userId, toUserId)
+	if err != sql.ErrNoRows && err != nil {
+		return err
+	}
+	return nil
 }

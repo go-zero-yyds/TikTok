@@ -6,7 +6,6 @@ import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
-	"log"
 )
 
 type Validator struct {
@@ -30,7 +29,6 @@ func (va *Validator) ValidateUserInSocial(userIdMap *map[int64]bool) (ok bool, e
 	ok = true
 	for userId, _ := range *userIdMap {
 		exist, err := va.svcCtx.CustomDB.QueryUserIdIsExistInSocial(va.ctx, userId)
-		log.Println("QueryUserIdIsExistInSocial??", userId, exist)
 		if err != nil || exist != true {
 			logc.Error(va.ctx, errors.RecordNotFound, userId)
 			(*userIdMap)[userId] = false

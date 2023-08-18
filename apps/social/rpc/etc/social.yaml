@@ -9,6 +9,15 @@ MySQL:
   Port: 3306
   Options: "charset=utf8mb4&parseTime=True&loc=Local"
 
+RedisConfig:
+  Host: "127.0.0.1:6379"
+  Type: "node"
+  Pass: ""
+  Tls: false
+  NonBlock: false
+  Key: "s"
+
+
 Etcd:
   Hosts:
   - 127.0.0.1:2379

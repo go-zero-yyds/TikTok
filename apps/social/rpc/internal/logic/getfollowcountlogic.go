@@ -2,6 +2,7 @@ package logic
 
 import (
 	"TikTok/apps/social/rpc/internal/errors"
+	"TikTok/apps/social/rpc/internal/logic/common"
 	"TikTok/apps/social/rpc/internal/svc"
 	"TikTok/apps/social/rpc/social"
 	"context"
@@ -25,13 +26,12 @@ func NewGetFollowCountLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 
 // GetFollowCount 获取用户关注数量
 func (l *GetFollowCountLogic) GetFollowCount(in *social.FollowCountReq) (*social.FollowCountResp, error) {
-	//查询 social 表中是否有该 user_id
-	exist, err := l.svcCtx.CustomDB.QueryUserIdIsExistInSocial(l.ctx, in.UserId)
 
-	//如果不存在则直接返回失败
-	if exist == false || err != nil {
-		logc.Error(l.ctx, errors.RecordNotFound, in.UserId)
-		return &social.FollowCountResp{FollowCount: -1}, nil
+	//验证用户存在性并注册
+	check := common.NewValidateAndRegisterStruct(l.ctx, l.svcCtx)
+	ok := check.ValidateAndRegister(in.UserId)
+	if ok != true {
+		logc.Error(l.ctx, errors.SQLOperateFailed, in.UserId)
 	}
 
 	//查询 social 表中用户的 follow_count
