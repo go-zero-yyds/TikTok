@@ -24,7 +24,12 @@ func NewGetFollowerCountLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *GetFollowerCountLogic) GetFollowerCount(in *social.FollowerCountReq) (*social.FollowerCountResp, error) {
-	// todo: add your logic here and delete this line
 
-	return &social.FollowerCountResp{}, nil
+	count, err := l.svcCtx.DBAction.FollowerCount(l.ctx, in.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &social.FollowerCountResp{
+		FollowerCount: count,
+	}, nil
 }

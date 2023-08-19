@@ -24,7 +24,12 @@ func NewGetRelationFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceCon
 }
 
 func (l *GetRelationFollowerListLogic) GetRelationFollowerList(in *social.RelationFollowerListReq) (*social.RelationFollowerListResp, error) {
-	// todo: add your logic here and delete this line
 
-	return &social.RelationFollowerListResp{}, nil
+	list, err := l.svcCtx.DBAction.FollowerList(l.ctx, in.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &social.RelationFollowerListResp{
+		UserList: list,
+	}, nil
 }

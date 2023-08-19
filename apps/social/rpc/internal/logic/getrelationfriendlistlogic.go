@@ -24,7 +24,19 @@ func NewGetRelationFriendListLogic(ctx context.Context, svcCtx *svc.ServiceConte
 }
 
 func (l *GetRelationFriendListLogic) GetRelationFriendList(in *social.RelationFriendListReq) (*social.RelationFriendListResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &social.RelationFriendListResp{}, nil
+	list, err := l.svcCtx.DBAction.FollowList(l.ctx, in.UserId)
+	if err != nil {
+		return nil, err
+	}
+	var userList []*social.FriendUser
+	for _, v := range list {
+		message, err := l.svcCtx.DBAction.NowMessage(l.ctx, in.UserId, v)
+		if err != nil {
+			return nil, err
+		}
+		userList = append(userList, message)
+	}
+	return &social.RelationFriendListResp{
+		UserList: userList,
+	}, nil
 }
