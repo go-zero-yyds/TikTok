@@ -135,7 +135,7 @@ type Comment struct {
 }
 
 type CommentListRequest struct {
-	Token   string `form:"token"`
+	Token   string `form:"token,optional"`
 	VideoID int64  `form:"video_id,range=[0:]"`
 }
 

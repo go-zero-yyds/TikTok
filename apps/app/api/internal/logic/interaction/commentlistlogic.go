@@ -27,10 +27,12 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 }
 
 func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *types.CommentListResponse, err error) {
-	// todo: add your logic here and delete this line
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
+	tokenID := int64(0)
+	if req.Token != "" {
+		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)
+		if err != nil {
+			return nil, err
+		}
 	}
 	list, err := l.svcCtx.InteractionRPC.GetCommentList(l.ctx, &interaction.CommentListReq{
 		UserId:  tokenID,
