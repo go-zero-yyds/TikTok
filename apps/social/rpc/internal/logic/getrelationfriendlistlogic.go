@@ -24,7 +24,6 @@ func NewGetRelationFriendListLogic(ctx context.Context, svcCtx *svc.ServiceConte
 }
 
 func (l *GetRelationFriendListLogic) GetRelationFriendList(in *social.RelationFriendListReq) (*social.RelationFriendListResp, error) {
-	// todo: add your logic here and delete this line
 	list, err := l.svcCtx.DBAction.FollowList(l.ctx, in.UserId)
 	if err != nil {
 		return nil, err

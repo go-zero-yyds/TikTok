@@ -24,7 +24,11 @@ func NewSendMessageActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *SendMessageActionLogic) SendMessageAction(in *social.MessageActionReq) (*social.MessageActionResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &social.MessageActionResp{}, nil
+	err := l.svcCtx.DBAction.SendMessage(l.ctx, in.UserId, in.ToUserId, in.Content)
+	if err != nil {
+		return nil, err
+	}
+	return &social.MessageActionResp{
+		IsSucceed: true,
+	}, nil
 }

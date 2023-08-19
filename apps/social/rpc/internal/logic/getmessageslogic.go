@@ -24,7 +24,12 @@ func NewGetMessagesLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetMe
 }
 
 func (l *GetMessagesLogic) GetMessages(in *social.MessageChatReq) (*social.MessageChatResp, error) {
-	// todo: add your logic here and delete this line
 
-	return &social.MessageChatResp{}, nil
+	list, err := l.svcCtx.DBAction.MessageList(l.ctx, in.UserId, in.ToUserId, in.PreMsgTime)
+	if err != nil {
+		return nil, err
+	}
+	return &social.MessageChatResp{
+		MessageList: list,
+	}, nil
 }

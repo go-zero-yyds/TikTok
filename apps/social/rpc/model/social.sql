@@ -9,10 +9,10 @@ CREATE TABLE `follow`  (
 
 
 CREATE TABLE `message`  (
-                            `id` bigint NOT NULL AUTO_INCREMENT COMMENT '消息ID，由雪花算法生成',
+                            `id` bigint NOT NULL AUTO_INCREMENT COMMENT '消息ID',
                             `from_user_id` bigint NOT NULL COMMENT '消息发生者ID',
                             `to_user_id` bigint NOT NULL COMMENT '消息接收者ID',
                             `content` varchar(255) CHARACTER SET utf8mb4 COLLATE uca1400_as_ci NOT NULL COMMENT '消息内容',
-                            `created_time` datetime NOT NULL COMMENT '消息创建时间',
+                            `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息创建时间',
                             PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = uca1400_as_ci ROW_FORMAT = Dynamic;
