@@ -43,7 +43,7 @@ func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp
 		return nil, err
 	}
 	return &types.RelationFriendListResponse{
-		RespStatus: types.RespStatus{},
+		RespStatus: types.RespStatus(apiVars.Success),
 		UserList:   infoList,
 	}, nil
 }

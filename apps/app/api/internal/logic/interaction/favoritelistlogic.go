@@ -28,7 +28,12 @@ func NewFavoriteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Favo
 }
 
 func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *types.FavoriteListResponse, err error) {
-	// todo: add your logic here and delete this line
+	if req.Token == "" {
+		return &types.FavoriteListResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+			VideoList:  make([]types.Video, 0),
+		}, nil
+	}
 	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
 	if err != nil {
 		return nil, err

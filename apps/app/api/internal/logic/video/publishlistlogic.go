@@ -26,7 +26,12 @@ func NewPublishListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Publi
 }
 
 func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *types.PublishListResponse, err error) {
-	// todo: add your logic here and delete this line
+	if req.Token == "" {
+		return &types.PublishListResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+			VideoList:  make([]types.Video, 0),
+		}, nil
+	}
 	// 解析token
 	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
 	if err != nil {

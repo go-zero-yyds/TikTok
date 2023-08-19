@@ -37,4 +37,8 @@ var (
 		StatusCode: 300,
 		StatusMsg:  "用户已存在",
 	}
+	NotLogged = RespErr{
+		StatusCode: 400,
+		StatusMsg:  "用户未登录",
+	}
 )

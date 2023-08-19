@@ -29,7 +29,12 @@ func NewFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Foll
 }
 
 func (l *FollowerListLogic) FollowerList(req *types.RelationFollowerListRequest) (resp *types.RelationFollowerListResponse, err error) {
-	// todo: add your logic here and delete this line
+	if req.Token == "" {
+		return &types.RelationFollowerListResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+			UserList:   make([]types.User, 0),
+		}, nil
+	}
 	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
 	if err != nil {
 		return nil, err
@@ -43,7 +48,7 @@ func (l *FollowerListLogic) FollowerList(req *types.RelationFollowerListRequest)
 		return nil, err
 	}
 	return &types.RelationFollowerListResponse{
-		RespStatus: types.RespStatus{},
+		RespStatus: types.RespStatus(apiVars.Success),
 		UserList:   infoList,
 	}, nil
 }

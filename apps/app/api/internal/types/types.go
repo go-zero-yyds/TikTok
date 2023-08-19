@@ -86,7 +86,7 @@ type PublishActionResponse struct {
 
 type PublishListRequest struct {
 	UserID int64  `form:"user_id,range=[0:]"`
-	Token  string `form:"token"`
+	Token  string `form:"token,optional"`
 }
 
 type PublishListResponse struct {
@@ -106,7 +106,7 @@ type FavoriteActionResponse struct {
 
 type FavoriteListRequest struct {
 	UserID int64  `form:"user_id,range=[0:]"`
-	Token  string `form:"token"`
+	Token  string `form:"token,optional"`
 }
 
 type FavoriteListResponse struct {
@@ -156,7 +156,7 @@ type RelationActionResponse struct {
 
 type RelationFollowListRequest struct {
 	UserID int64  `form:"user_id,range=[0:]"`
-	Token  string `form:"token"`
+	Token  string `form:"token,optional"`
 }
 
 type RelationFollowListResponse struct {
@@ -166,7 +166,7 @@ type RelationFollowListResponse struct {
 
 type RelationFollowerListRequest struct {
 	UserID int64  `form:"user_id,range=[0:]"`
-	Token  string `form:"token"`
+	Token  string `form:"token,optional"`
 }
 
 type RelationFollowerListResponse struct {

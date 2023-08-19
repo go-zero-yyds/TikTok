@@ -37,7 +37,7 @@ type PublishActionResponse struct {
 
 type PublishListRequest struct {
     UserID int64  `form:"user_id,range=[0:]"`
-    Token  string `form:"token"`
+    Token  string `form:"token,optional"`
 }
 
 type PublishListResponse struct {
