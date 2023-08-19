@@ -9,7 +9,7 @@ message Message {
   int64 ToUserId = 2; // 该消息接收者的id
   int64 FromUserId =3; // 该消息发送者的id
   string Content = 4; // 消息内容
-  optional string CreateTime = 5; // 消息创建时间
+  optional int64 CreateTime = 5; // 消息创建时间
 }
 message FriendUser {
     int64 UserId = 1;

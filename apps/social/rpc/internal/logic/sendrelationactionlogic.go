@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"strconv"
 
 	"TikTok/apps/social/rpc/internal/svc"
 	"TikTok/apps/social/rpc/social"
@@ -24,7 +25,11 @@ func NewSendRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *SendRelationActionLogic) SendRelationAction(in *social.RelationActionReq) (*social.RelationActionResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &social.RelationActionResp{}, nil
+	res, err := l.svcCtx.DBAction.FollowAction(l.ctx, in.UserId, in.ToUserId, strconv.Itoa(int(in.ActionType)))
+	if err != nil {
+		return nil, err
+	}
+	return &social.RelationActionResp{
+		IsSucceed: res,
+	}, nil
 }
