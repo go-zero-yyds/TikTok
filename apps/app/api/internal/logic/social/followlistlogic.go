@@ -1,6 +1,7 @@
 package social
 
 import (
+	"TikTok/apps/social/rpc/social"
 	"context"
 
 	"TikTok/apps/app/api/internal/svc"
@@ -25,6 +26,20 @@ func NewFollowListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Follow
 
 func (l *FollowListLogic) FollowList(req *types.RelationFollowListRequest) (resp *types.RelationFollowListResponse, err error) {
 	// todo: add your logic here and delete this line
-
-	return
+	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
+	if err != nil {
+		return nil, err
+	}
+	list, err := l.svcCtx.SocialRPC.GetRelationFollowList(l.ctx, &social.RelationFollowListReq{UserId: tokenID})
+	if err != nil {
+		return nil, err
+	}
+	infoList, err := GetUserInfoList(list.UserList, tokenID, l.svcCtx, l.ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &types.RelationFollowListResponse{
+		RespStatus: types.RespStatus{},
+		UserList:   infoList,
+	}, nil
 }

@@ -1,7 +1,11 @@
 package user
 
 import (
+	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/user/rpc/model"
+	"TikTok/apps/user/rpc/user"
 	"context"
+	"errors"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -24,7 +28,30 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginResponse, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	userID, err := l.svcCtx.UserRPC.Login(l.ctx, &user.LoginReq{
+		Username: req.Username,
+		Password: req.Password,
+	})
+	if errors.Is(err, model.UserValidation) {
+		return &types.UserLoginResponse{
+			RespStatus: types.RespStatus(apiVars.UserValidation),
+		}, nil
+	}
+	if errors.Is(err, model.UserNotFound) {
+		return &types.UserLoginResponse{
+			RespStatus: types.RespStatus(apiVars.UserNotFound),
+		}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	token, err := l.svcCtx.JwtAuth.CreateToken(userID.GetUserId())
+	if err != nil {
+		return nil, err
+	}
+	return &types.UserLoginResponse{
+		RespStatus: types.RespStatus(apiVars.Success),
+		UserID:     userID.UserId,
+		Token:      token,
+	}, nil
 }

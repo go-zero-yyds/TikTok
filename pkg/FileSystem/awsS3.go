@@ -1,9 +1,10 @@
-package oss
+package FileSystem
 
 import (
 	"context"
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -18,17 +19,19 @@ import (
 type S3 struct {
 	URL    string
 	Bucket string
+	prefix string
 	client *s3.Client
 	ctx    context.Context
 }
 
-func NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe string) (*S3, error) {
-	return NewS3Ctx(context.TODO(), URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe)
+func NewS3(URL, Bucket, Prefix, AwsAccessKeyId, AwsSecretAccessSecret string) *S3 {
+	return NewS3Ctx(context.TODO(), URL, Bucket, Prefix, AwsAccessKeyId, AwsSecretAccessSecret)
 }
-func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessKe string) (*S3, error) {
+func NewS3Ctx(ctx context.Context, URL, Bucket, Prefix, AwsAccessKeyId, AwsSecretAccessKe string) *S3 {
 	var res S3
 	res.ctx = ctx
 	res.Bucket = Bucket
+	res.prefix = Prefix
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			PartitionID:       "",
@@ -46,28 +49,30 @@ func NewS3Ctx(ctx context.Context, URL, Bucket, AwsAccessKeyId, AwsSecretAccessK
 		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	res.client = s3.NewFromConfig(cfg)
 	_, err = res.bucketExists()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &res, nil
+	return &res
 }
 
 // Upload 上传文件, 可覆盖
-func (s *S3) Upload(file io.Reader, key ...string) (*s3.PutObjectOutput, error) {
-	result, err := s.client.PutObject(s.ctx, &s3.PutObjectInput{
+func (s *S3) Upload(file io.Reader, key ...string) error {
+	_, err := s.client.PutObject(s.ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(filepath.Join(key...)),
+		Key:    aws.String(filepath.Join(s.prefix, filepath.Join(key...))),
 		Body:   file,
-	})
+	}, s3.WithAPIOptions(
+		v4.SwapComputePayloadSHA256ForUnsignedPayloadMiddleware,
+	))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return nil
 }
 
 // GetDownloadLink 获取文件下载链接
@@ -76,7 +81,7 @@ func (s *S3) GetDownloadLink(key ...string) (string, error) {
 	presignedUrl, err := presignClient.PresignGetObject(context.Background(),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.Bucket),
-			Key:    aws.String(filepath.Join(key...)),
+			Key:    aws.String(filepath.Join(s.prefix, filepath.Join(key...))),
 		},
 		s3.WithPresignExpires(time.Minute*15))
 	if err != nil {
@@ -86,15 +91,15 @@ func (s *S3) GetDownloadLink(key ...string) (string, error) {
 }
 
 // Delete 删除文件
-func (s *S3) Delete(key ...string) (*s3.DeleteObjectOutput, error) {
-	res, err := s.client.DeleteObject(s.ctx, &s3.DeleteObjectInput{
+func (s *S3) Delete(key ...string) error {
+	_, err := s.client.DeleteObject(s.ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(filepath.Join(key...)),
+		Key:    aws.String(filepath.Join(s.prefix, filepath.Join(key...))),
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return res, nil
+	return nil
 }
 
 // bucketExists 检查是否存在桶

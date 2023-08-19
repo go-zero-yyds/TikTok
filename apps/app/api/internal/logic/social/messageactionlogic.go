@@ -1,6 +1,8 @@
 package social
 
 import (
+	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/social/rpc/social"
 	"context"
 
 	"TikTok/apps/app/api/internal/svc"
@@ -25,6 +27,19 @@ func NewMessageActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Mes
 
 func (l *MessageActionLogic) MessageAction(req *types.MessageActionRequest) (resp *types.MessageActionResponse, err error) {
 	// todo: add your logic here and delete this line
+	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
+	if err != nil {
+		return nil, err
+	}
+	_, err = l.svcCtx.SocialRPC.SendMessageAction(l.ctx, &social.MessageActionReq{
+		UserId:     tokenID,
+		ToUserId:   req.ToUserID,
+		ActionType: req.ActionType,
+		Content:    req.Content,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	return &types.MessageActionResponse{RespStatus: types.RespStatus(apiVars.Success)}, nil
 }

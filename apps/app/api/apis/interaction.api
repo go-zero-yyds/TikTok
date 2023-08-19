@@ -12,39 +12,36 @@ import "dep.api"
 // - /douyin/favorite/action/ - 赞操作
 type FavoriteActionRequest struct {
     Token      string `form:"token"`
-    VideoID    int64  `form:"video_id"`
+    VideoID    int64  `form:"video_id,range=[0:]"`
     ActionType int32  `form:"action_type"`
 }
 
 type FavoriteActionResponse struct {
-    StatusCode int32  `json:"status_code"`
-    StatusMsg  string `json:"status_msg,optional"`
+    RespStatus
 }
 
 // - /douyin/favorite/list/ - 喜欢列表
 type FavoriteListRequest struct {
-    UserID int64  `form:"user_id"`
+    UserID int64  `form:"user_id,range=[0:]"`
     Token  string `form:"token"`
 }
 
 type FavoriteListResponse struct {
-    StatusCode int32   `json:"status_code"`
-    StatusMsg  string  `json:"status_msg,optional"`
+    RespStatus
     VideoList  []Video `json:"video_list"`
 }
 
 // - /douyin/comment/action/ - 评论操作
 type CommentActionRequest struct {
     Token       string `form:"token"`
-    VideoID     int64  `form:"video_id"`
-    ActionType  int32  `form:"action_type"`
+    VideoID     int64  `form:"video_id,range=[0:]"`
+    ActionType  int32  `form:"action_type,options=[1,2]"`
     CommentText string `form:"comment_text,optional"`
-    CommentID   int64  `form:"comment_id,optional"`
+    CommentID   int64  `form:"comment_id,range=[0:],optional"`
 }
 
 type CommentActionResponse struct {
-    StatusCode int32   `json:"status_code"`
-    StatusMsg  string  `json:"status_msg,optional"`
+    RespStatus
     Comment    Comment `json:"comment,optional"`
 }
 
@@ -58,11 +55,10 @@ type Comment struct {
 // - /douyin/comment/list/ - 视频评论列表
 type CommentListRequest struct {
     Token   string `form:"token"`
-    VideoID int64  `form:"video_id"`
+    VideoID int64  `form:"video_id,range=[0:]"`
 }
 
 type CommentListResponse struct {
-    StatusCode int32     `json:"status_code"`
-    StatusMsg  string    `json:"status_msg,optional"`
+    RespStatus
     CommentList []Comment `json:"comment_list"`
 }

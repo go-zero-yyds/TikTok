@@ -1,6 +1,9 @@
 package interaction
 
 import (
+	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/interaction/rpc/interaction"
+	"TikTok/apps/video/rpc/video"
 	"context"
 
 	"TikTok/apps/app/api/internal/svc"
@@ -25,6 +28,24 @@ func NewFavoriteActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Fa
 
 func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (resp *types.FavoriteActionResponse, err error) {
 	// todo: add your logic here and delete this line
+	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
+	if err != nil {
+		return nil, err
+	}
+	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
+	if err != nil {
+		return nil, err
+	}
+	_, err = l.svcCtx.InteractionRPC.SendFavoriteAction(l.ctx, &interaction.FavoriteActionReq{
+		UserId:     tokenID,
+		VideoId:    req.VideoID,
+		ActionType: req.ActionType,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	return &types.FavoriteActionResponse{
+		RespStatus: types.RespStatus(apiVars.Success),
+	}, nil
 }

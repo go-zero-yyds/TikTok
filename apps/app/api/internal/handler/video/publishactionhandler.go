@@ -18,7 +18,7 @@ func PublishActionHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := video.NewPublishActionLogic(r.Context(), svcCtx)
-		resp, err := l.PublishAction(&req)
+		resp, err := l.PublishAction(&req, r)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

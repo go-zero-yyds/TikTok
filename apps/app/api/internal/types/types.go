@@ -7,10 +7,9 @@ type UserRegisterRequest struct {
 }
 
 type UserRegisterResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
-	UserID     int64  `json:"user_id"`
-	Token      string `json:"token"`
+	RespStatus
+	UserID int64  `json:"user_id"`
+	Token  string `json:"token"`
 }
 
 type UserLoginRequest struct {
@@ -19,21 +18,19 @@ type UserLoginRequest struct {
 }
 
 type UserLoginResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
-	UserID     int64  `json:"user_id"`
-	Token      string `json:"token"`
+	RespStatus
+	UserID int64  `json:"user_id"`
+	Token  string `json:"token"`
 }
 
 type UserRequest struct {
-	UserID int64  `form:"user_id"`
+	UserID int64  `form:"user_id,range=[0:]"`
 	Token  string `form:"token"`
 }
 
 type UserResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
-	User       User   `json:"user"`
+	RespStatus
+	User User `json:"user"`
 }
 
 type User struct {
@@ -61,16 +58,20 @@ type Video struct {
 	Title         string `json:"title"`
 }
 
+type RespStatus struct {
+	StatusCode int32  `json:"status_code"`
+	StatusMsg  string `json:"status_msg,optional"`
+}
+
 type FeedRequest struct {
 	LatestTime int64  `form:"latest_time,optional"`
 	Token      string `form:"token,optional"`
 }
 
 type FeedResponse struct {
-	StatusCode int32   `json:"status_code"`
-	StatusMsg  string  `json:"status_msg,optional"`
-	VideoList  []Video `json:"video_list"`
-	NextTime   int64   `json:"next_time,optional"`
+	RespStatus
+	VideoList []Video `json:"video_list"`
+	NextTime  int64   `json:"next_time,optional"`
 }
 
 type PublishActionRequest struct {
@@ -80,55 +81,50 @@ type PublishActionRequest struct {
 }
 
 type PublishActionResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
+	RespStatus
 }
 
 type PublishListRequest struct {
-	UserID int64  `form:"user_id"`
+	UserID int64  `form:"user_id,range=[0:]"`
 	Token  string `form:"token"`
 }
 
 type PublishListResponse struct {
-	StatusCode int32   `json:"status_code"`
-	StatusMsg  string  `json:"status_msg,optional"`
-	VideoList  []Video `json:"video_list"`
+	RespStatus
+	VideoList []Video `json:"video_list"`
 }
 
 type FavoriteActionRequest struct {
 	Token      string `form:"token"`
-	VideoID    int64  `form:"video_id"`
+	VideoID    int64  `form:"video_id,range=[0:]"`
 	ActionType int32  `form:"action_type"`
 }
 
 type FavoriteActionResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
+	RespStatus
 }
 
 type FavoriteListRequest struct {
-	UserID int64  `form:"user_id"`
+	UserID int64  `form:"user_id,range=[0:]"`
 	Token  string `form:"token"`
 }
 
 type FavoriteListResponse struct {
-	StatusCode int32   `json:"status_code"`
-	StatusMsg  string  `json:"status_msg,optional"`
-	VideoList  []Video `json:"video_list"`
+	RespStatus
+	VideoList []Video `json:"video_list"`
 }
 
 type CommentActionRequest struct {
 	Token       string `form:"token"`
-	VideoID     int64  `form:"video_id"`
-	ActionType  int32  `form:"action_type"`
+	VideoID     int64  `form:"video_id,range=[0:]"`
+	ActionType  int32  `form:"action_type,options=[1,2]"`
 	CommentText string `form:"comment_text,optional"`
-	CommentID   int64  `form:"comment_id,optional"`
+	CommentID   int64  `form:"comment_id,range=[0:],optional"`
 }
 
 type CommentActionResponse struct {
-	StatusCode int32   `json:"status_code"`
-	StatusMsg  string  `json:"status_msg,optional"`
-	Comment    Comment `json:"comment,optional"`
+	RespStatus
+	Comment Comment `json:"comment,optional"`
 }
 
 type Comment struct {
@@ -140,57 +136,52 @@ type Comment struct {
 
 type CommentListRequest struct {
 	Token   string `form:"token"`
-	VideoID int64  `form:"video_id"`
+	VideoID int64  `form:"video_id,range=[0:]"`
 }
 
 type CommentListResponse struct {
-	StatusCode  int32     `json:"status_code"`
-	StatusMsg   string    `json:"status_msg,optional"`
+	RespStatus
 	CommentList []Comment `json:"comment_list"`
 }
 
 type RelationActionRequest struct {
 	Token      string `form:"token"`
-	ToUserID   int64  `form:"to_user_id"`
-	ActionType int32  `form:"action_type"`
+	ToUserID   int64  `form:"to_user_id,range=[0:]"`
+	ActionType int32  `form:"action_type,options=[1,2]"`
 }
 
 type RelationActionResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,omitempty"`
+	RespStatus
 }
 
 type RelationFollowListRequest struct {
-	UserID int64  `form:"user_id"`
+	UserID int64  `form:"user_id,range=[0:]"`
 	Token  string `form:"token"`
 }
 
 type RelationFollowListResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
-	UserList   []User `json:"user_list"`
+	RespStatus
+	UserList []User `json:"user_list"`
 }
 
 type RelationFollowerListRequest struct {
-	UserID int64  `form:"user_id"`
+	UserID int64  `form:"user_id,range=[0:]"`
 	Token  string `form:"token"`
 }
 
 type RelationFollowerListResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
-	UserList   []User `json:"user_list"`
+	RespStatus
+	UserList []User `json:"user_list"`
 }
 
 type RelationFriendListRequest struct {
-	UserID int64  `form:"user_id"`
+	UserID int64  `form:"user_id,range=[0:]"`
 	Token  string `form:"token"`
 }
 
 type RelationFriendListResponse struct {
-	StatusCode int32        `json:"status_code"`
-	StatusMsg  string       `json:"status_msg,optional"`
-	UserList   []FriendUser `json:"user_list"`
+	RespStatus
+	UserList []FriendUser `json:"user_list"`
 }
 
 type FriendUser struct {
@@ -201,13 +192,12 @@ type FriendUser struct {
 
 type MessageChatRequest struct {
 	Token      string `form:"token"`
-	ToUserID   int64  `form:"to_user_id"`
+	ToUserID   int64  `form:"to_user_id,range=[0:]"`
 	PreMsgTime int64  `form:"pre_msg_time"`
 }
 
 type MessageChatResponse struct {
-	StatusCode  int32     `json:"status_code"`
-	StatusMsg   string    `json:"status_msg,optional"`
+	RespStatus
 	MessageList []Message `json:"message_list"`
 }
 
@@ -216,17 +206,16 @@ type Message struct {
 	ToUserID   int64  `json:"to_user_id"`
 	FromUserID int64  `json:"from_user_id"`
 	Content    string `json:"content"`
-	CreateTime string `json:"create_time,optional"`
+	CreateTime int64  `json:"create_time,optional"`
 }
 
 type MessageActionRequest struct {
 	Token      string `form:"token"`
-	ToUserID   int64  `form:"to_user_id"`
-	ActionType int32  `form:"action_type"`
+	ToUserID   int64  `form:"to_user_id,range=[0:]"`
+	ActionType int32  `form:"action_type,options=[1]"`
 	Content    string `form:"content"`
 }
 
 type MessageActionResponse struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,optional"`
+	RespStatus
 }

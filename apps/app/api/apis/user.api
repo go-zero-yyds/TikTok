@@ -17,8 +17,7 @@ type UserRegisterRequest struct {
 }
 
 type UserRegisterResponse struct {
-    StatusCode int32  `json:"status_code"`
-    StatusMsg  string `json:"status_msg,optional"`
+    RespStatus
     UserID     int64  `json:"user_id"`
     Token      string `json:"token"`
 }
@@ -30,21 +29,19 @@ type UserLoginRequest struct {
 }
 
 type UserLoginResponse struct {
-    StatusCode int32  `json:"status_code"`
-    StatusMsg  string `json:"status_msg,optional"`
+    RespStatus
     UserID     int64  `json:"user_id"`
     Token      string `json:"token"`
 }
 
 // - /douyin/user/ - 用户信息
 type UserRequest struct {
-    UserID int64  `form:"user_id"`
+    UserID int64  `form:"user_id,range=[0:]"`
     Token  string `form:"token"`
 }
 
 type UserResponse struct {
-    StatusCode int32 `json:"status_code"`
-    StatusMsg  string `json:"status_msg,optional"`
+    RespStatus
     User       User   `json:"user"`
 }
 

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"TikTok/apps/app/api/utils/oss"
+	"TikTok/pkg/FileSystem"
 	"bytes"
 	"io"
 	"net/http"
@@ -12,21 +12,19 @@ func TestS3Utility(t *testing.T) {
 	// Replace the following values with your S3 server configuration for testing
 	URL := "http://127.0.0.1:9000"
 	Bucket := "test"
-	AwsAccessKeyId := "YOUR_ACCESS_KEY_ID"
-	AwsSecretAccessKey := "YOUR_SECRET_ACCESS_KEY"
+	AwsAccessKeyId := "7KDhgxEm3G5sQLj4ePHv"
+	AwsSecretAccessKey := "zaB97osHgENMqdc970FfOL9PGiA1UTiosa7CBLQ8"
 
 	// Create a new S3 client for testing
-	s3Client, err := oss.NewS3(URL, Bucket, AwsAccessKeyId, AwsSecretAccessKey)
-	if err != nil {
-		t.Fatalf("Failed to create S3 client: %v", err)
-	}
+	var s3Client FileSystem.FileSystem
+	s3Client = FileSystem.NewS3(URL, Bucket, "", AwsAccessKeyId, AwsSecretAccessKey)
 
 	// Test Upload and GetDownloadLink
 	data := []byte("This is a test data.")
 	key := "testfile.txt"
 
 	// Upload the data to S3
-	_, err = s3Client.Upload(bytes.NewReader(data), key)
+	err := s3Client.Upload(bytes.NewReader(data), key)
 	if err != nil {
 		t.Fatalf("Failed to upload file to S3: %v", err)
 	}
@@ -75,7 +73,7 @@ func TestS3Utility(t *testing.T) {
 	}
 
 	// Test Delete
-	_, err = s3Client.Delete(key)
+	err = s3Client.Delete(key)
 	if err != nil {
 		t.Fatalf("Failed to delete file: %v", err)
 	}
