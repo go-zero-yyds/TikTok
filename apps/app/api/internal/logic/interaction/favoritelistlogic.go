@@ -38,6 +38,9 @@ func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *
 	if err != nil {
 		return nil, err
 	}
+	if list.VideoList == nil {
+		list.VideoList = make([]int64, 0)
+	}
 	e := apiVars.Success
 	videoList, err := mr.MapReduce(func(source chan<- int64) {
 		for _, bv := range list.VideoList {

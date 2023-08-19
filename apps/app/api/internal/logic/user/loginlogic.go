@@ -37,6 +37,11 @@ func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginRe
 			RespStatus: types.RespStatus(apiVars.UserValidation),
 		}, nil
 	}
+	if errors.Is(err, model.UserNotFound) {
+		return &types.UserLoginResponse{
+			RespStatus: types.RespStatus(apiVars.UserNotFound),
+		}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

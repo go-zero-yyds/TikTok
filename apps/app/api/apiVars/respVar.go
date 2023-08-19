@@ -17,7 +17,7 @@ var (
 	}
 	// SomeDataErr 部分数据获取失败
 	SomeDataErr = RespErr{
-		StatusCode: 0,
+		StatusCode: 120,
 		StatusMsg:  "部分数据异常",
 	}
 	// InternalError 内部异常造成的错误

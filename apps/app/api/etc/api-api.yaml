@@ -2,26 +2,34 @@ Name: api-api
 Host: 0.0.0.0
 Port: 8080
 MaxBytes: 104857600 # 100MIB
-
+Timeout: 100000 # 100s
 # RPC
 UserRPC:
-  Endpoints:
-    - 127.0.0.1:8001
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    key: user.rpc
   NonBlock: true
 
 VideoRPC:
-  Endpoints:
-    - 127.0.0.1:8002
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    key: video.rpc
   NonBlock: true
 
 InteractionRPC:
-  Endpoints:
-    - 127.0.0.1:8003
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: interaction.rpc
   NonBlock: true
 
 SocialRPC:
-  Endpoints:
-    - 127.0.0.1:8004
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    key: social.rpc
   NonBlock: true
 
 # Jwt
@@ -30,14 +38,14 @@ JwtAuth:
   AccessExpire: 86400
 
 FS:
-  Prefix: /upload/
-  AwsS3:
-    Endpoint: http://127.0.0.1:9000
-    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
-    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
-    Bucket: tiktok
+  Prefix: /tk/tk
+  #  AwsS3:
+  #    Endpoint: http://127.0.0.1:9000
+  #    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
+  #    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
+  #    Bucket: tiktok
   Webdav:
-    URL:
-    User:
-    Password:
-    DownloadLinkPrefix:
+    URL: https://alist.csbxd.fun/dav/
+    User: bxd
+    Password: .13Phoalist25
+    DownloadLinkPrefix: https://alist.csbxd.fun/d/

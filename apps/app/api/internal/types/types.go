@@ -76,6 +76,7 @@ type FeedResponse struct {
 
 type PublishActionRequest struct {
 	Token string `form:"token"`
+	Data  []byte `form:"data"`
 	Title string `form:"title"`
 }
 
@@ -205,7 +206,7 @@ type Message struct {
 	ToUserID   int64  `json:"to_user_id"`
 	FromUserID int64  `json:"from_user_id"`
 	Content    string `json:"content"`
-	CreateTime string `json:"create_time,optional"`
+	CreateTime int64  `json:"create_time,optional"`
 }
 
 type MessageActionRequest struct {

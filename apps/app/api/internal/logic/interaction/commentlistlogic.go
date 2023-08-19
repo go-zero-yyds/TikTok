@@ -39,6 +39,9 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 	if err != nil {
 		return nil, err
 	}
+	if list.CommentList == nil {
+		list.CommentList = make([]*interaction.Comment, 0)
+	}
 	e := apiVars.Success
 	commentList, err := mr.MapReduce(func(source chan<- *interaction.Comment) {
 		for _, bv := range list.CommentList {

@@ -12,6 +12,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
+	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
 	"io"
 	"mime/multipart"
@@ -74,13 +75,11 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 }
 
 func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byte) error {
-
-	err := l.svcCtx.FS.Upload(bytes.NewReader(file), "video", name+extension)
+	img, err := ExampleReadFrameAsJpeg(bytes.NewReader(file))
 	if err != nil {
 		return err
 	}
-
-	img, err := ExampleReadFrameAsJpeg(bytes.NewReader(file))
+	err = l.svcCtx.FS.Upload(bytes.NewReader(file), "video", name+extension)
 	if err != nil {
 		return err
 	}
@@ -89,6 +88,7 @@ func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byt
 	if err != nil {
 		return err
 	}
+	logc.Infof(l.ctx, "视频%v上传成功", name)
 	return nil
 }
 

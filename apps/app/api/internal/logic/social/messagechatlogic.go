@@ -48,7 +48,7 @@ func (l *MessageChatLogic) MessageChat(req *types.MessageChatRequest) (resp *typ
 			ToUserID:   message.ToUserId,
 			FromUserID: message.FromUserId,
 			Content:    message.Content,
-			CreateTime: message.GetCreateTime(),
+			CreateTime: message.CreateTime,
 		}
 	}
 	return &types.MessageChatResponse{

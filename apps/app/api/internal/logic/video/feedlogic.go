@@ -73,7 +73,7 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 	tokenID *int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.Video, error) {
 
 	if feedBasicList == nil {
-		return nil, apiVars.InternalError
+		return make([]types.Video, 0), nil
 	}
 	var e *apiVars.RespErr
 

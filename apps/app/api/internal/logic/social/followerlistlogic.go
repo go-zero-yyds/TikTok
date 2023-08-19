@@ -53,7 +53,7 @@ func GetUserInfoList(userList []int64,
 	userID int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.User, error) {
 
 	if userList == nil {
-		return nil, apiVars.InternalError
+		return make([]types.User, 0), nil
 	}
 	var e *apiVars.RespErr
 
@@ -83,6 +83,8 @@ func GetUserInfoList(userList []int64,
 		logc.Errorf(ctx, "转换用户列表失败: %v", err)
 		return nil, err
 	}
-
+	if e == nil {
+		return userInfoList, nil
+	}
 	return userInfoList, *e
 }

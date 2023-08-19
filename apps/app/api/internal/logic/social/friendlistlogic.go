@@ -87,6 +87,8 @@ func GetFriendInfoList(userList []*social.FriendUser,
 		logc.Errorf(ctx, "转换用户列表失败: %v", err)
 		return nil, err
 	}
-
+	if e == nil {
+		return userInfoList, nil
+	}
 	return userInfoList, *e
 }
