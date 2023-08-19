@@ -24,7 +24,11 @@ func NewIsFollowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsFollow
 }
 
 func (l *IsFollowLogic) IsFollow(in *social.IsFollowReq) (*social.IsFollowResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &social.IsFollowResp{}, nil
+	isFollow, err := l.svcCtx.DBAction.IsFollow(l.ctx, in.UserId, in.ToUserId)
+	if err != nil {
+		return nil, err
+	}
+	return &social.IsFollowResp{
+		IsFollow: isFollow,
+	}, nil
 }
