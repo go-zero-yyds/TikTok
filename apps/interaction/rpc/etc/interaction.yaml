@@ -8,6 +8,12 @@ Etcd:
 Cache:
   - Host: 127.0.0.1:6379
     Type: node
+
+Redis:
+  Host: 127.0.0.1:6379
+  Type: node
+  Key: interaction.rpc
+
 SnowflakeNode: 1
 SnowflakeStartTime: 1288834974657
 CleanTime: "3 4 * * *"
