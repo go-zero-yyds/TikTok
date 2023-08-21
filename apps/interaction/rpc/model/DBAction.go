@@ -28,17 +28,17 @@ func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 // ErrNotFound错误是数据库未查询到所返回，这里需要捕获（这是正常操作，同下）
 // 只有出现未知错误才会返回并打印日志，否则正常操作error = nil(同下)
 func (d *DBAction) IsFavorite(ctx context.Context, userId, videoId int64) (bool, error) {
-	f, err := d.favorite.FindOneById(ctx, userId, videoId)
+	f, err := d.favorite.FindOneByUserIdVideoId(ctx, userId, videoId)
 	if err != nil && !errors.Is(err, ErrNotFound) {
 		logc.Error(ctx, userId, videoId, err)
 		return false, err
 	}
-	return f.Behavior == "1", nil
+	return f != nil && f.Behavior == "1", nil
 }
 
 // FavoriteCountByUserId 调用favorite对数据库查询，用户 点赞数量
 func (d *DBAction) FavoriteCountByUserId(ctx context.Context, userId int64) (int64, error) {
-	count, err := d.favorite.userORvideoCount(ctx, userId, true)
+	count, err := d.favorite.UserOrVideoCount(ctx, userId, true)
 	if err != nil && !errors.Is(err, ErrNotFound) {
 		logc.Error(ctx, userId)
 		return 0, err
@@ -48,7 +48,7 @@ func (d *DBAction) FavoriteCountByUserId(ctx context.Context, userId int64) (int
 
 // FavoriteCountByVideoId 调用favorite对数据库查询，视频 点赞数量
 func (d *DBAction) FavoriteCountByVideoId(ctx context.Context, videoId int64) (int64, error) {
-	count, err := d.favorite.userORvideoCount(ctx, videoId, false)
+	count, err := d.favorite.UserOrVideoCount(ctx, videoId, false)
 	if err != nil && !errors.Is(err, ErrNotFound) {
 		logc.Error(ctx, videoId)
 		return 0, err
@@ -70,38 +70,20 @@ func (d *DBAction) CommentCountByVideoId(ctx context.Context, videoId int64) (in
 // 并对数据库actionType操作
 // 如果取消操作，则更新Behavior 后续等待特定时间再删除记录
 // 只有出现未知错误是false否则都是true
-func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, actionType int32) (bool, error) {
-	f, err := d.favorite.FindOneById(ctx, userId, videoId)
-	if err != nil && !errors.Is(err, ErrNotFound) {
-		logc.Error(ctx, userId, videoId, actionType)
+func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, actionType string) (bool, error) {
+	result, err := d.favorite.InsertOrUpdate(ctx, &Favorite{
+		UserId:   userId,
+		VideoId:  videoId,
+		Behavior: actionType,
+	})
+	if err != nil {
 		return false, err
 	}
-	//如果点赞过，并且用户操作也是点赞 直接返回
-	if f.Behavior == "1" && actionType == 1 {
-		return true, nil
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
 	}
-	//如果没点赞，并且用户操作也是取消点赞直接返回
-	if f.Behavior == "2" && actionType == 2 {
-		return true, nil
-	}
-	//剩下的都是相反操作，if 点赞 ->取消  else 点赞
-	if f.Behavior == "1" {
-		f.Behavior = "2"
-		err = d.favorite.IndirectUpdate(ctx, f)
-	} else if f.Behavior == "2" { //有可能不在表中
-		f.Behavior = "1"
-		err = d.favorite.IndirectUpdate(ctx, f)
-	} else { //不在表中
-		_, err = d.favorite.IndirectInsert(ctx, &Favorite{
-			UserId:   userId,
-			VideoId:  videoId,
-			Behavior: "1",
-		})
-	}
-	if err != nil && !errors.Is(err, ErrNotFound) {
-		logc.Error(ctx, err)
-	}
-	return true, nil
+	return affected != int64(0), nil
 }
 
 // FavoriteList 调用favorite对数据库查询用户点赞视频列表

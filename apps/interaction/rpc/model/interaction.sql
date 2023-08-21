@@ -14,6 +14,6 @@ CREATE TABLE favorite(
     videoId BIGINT NOT NULL COMMENT "视频id",
     behavior ENUM('1', '2') NOT NULL COMMENT "1:点赞 2:未点赞",
     PRIMARY KEY (favoriteId),
-    INDEX idx_user_video (userId, videoId) COMMENT "联合索引,联查或查userid使用",
+    UNIQUE INDEX idx_user_video (userId, videoId) COMMENT "联合索引,联查或查userid使用",
     INDEX idx_video (videoId) COMMENT "查videoId使用"
 );
