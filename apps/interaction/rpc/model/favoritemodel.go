@@ -27,6 +27,7 @@ type (
 		FindVideos(ctx context.Context, userId int64) ([]int64, error)                   //用户点赞视频id列表
 		FlushAndClean(ctx context.Context) error                                         //特定时间重置数据，删除没用数据
 		InsertOrUpdate(ctx context.Context, data *Favorite) (sql.Result, error)
+		EmptyOrUpdate(ctx context.Context, newData *Favorite) (result sql.Result, err error)
 	}
 
 	customFavoriteModel struct {
@@ -57,7 +58,6 @@ func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]
 }
 
 // UserOrVideoCount 查看各自点赞数量 true : user  false : video
-// 【缓存】【这部分性能不太好】
 func (m *defaultFavoriteModel) UserOrVideoCount(ctx context.Context, Id int64, userOrVideo bool) (int64, error) {
 	var obj string
 	var Key string
@@ -91,6 +91,7 @@ func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
 	return err
 }
 
+// InsertOrUpdate 插入一条关注记录或者更新关注记录
 func (m *defaultFavoriteModel) InsertOrUpdate(ctx context.Context, data *Favorite) (sql.Result, error) {
 	favoriteCountUserIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountUserIdPrefix, data.UserId)
 	favoriteCountVideoIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountVideoIdPrefix, data.VideoId)
@@ -103,6 +104,19 @@ func (m *defaultFavoriteModel) InsertOrUpdate(ctx context.Context, data *Favorit
 			ON DUPLICATE KEY UPDATE behavior = ?;
 		`, m.table, favoriteRowsExpectAutoSet)
 		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.Behavior, data.Behavior)
+	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, favoriteCountUserIdKey, favoriteCountVideoIdKey)
+	return ret, err
+}
+
+// EmptyOrUpdate 更新关注记录没有则不操作
+func (m *defaultFavoriteModel) EmptyOrUpdate(ctx context.Context, newData *Favorite) (result sql.Result, err error) {
+	favoriteCountUserIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountUserIdPrefix, newData.UserId)
+	favoriteCountVideoIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountVideoIdPrefix, newData.VideoId)
+	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, newData.FavoriteId)
+	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, newData.UserId, newData.VideoId)
+	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set %s where `userId` = ? and videoId = ?", m.table, favoriteRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.UserId, newData.VideoId)
 	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, favoriteCountUserIdKey, favoriteCountVideoIdKey)
 	return ret, err
 }

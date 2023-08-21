@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -71,11 +72,20 @@ func (d *DBAction) CommentCountByVideoId(ctx context.Context, videoId int64) (in
 // 如果取消操作，则更新Behavior 后续等待特定时间再删除记录
 // 只有出现未知错误是false否则都是true
 func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, actionType string) (bool, error) {
-	result, err := d.favorite.InsertOrUpdate(ctx, &Favorite{
+	data := &Favorite{
 		UserId:   userId,
 		VideoId:  videoId,
 		Behavior: actionType,
-	})
+	}
+	var (
+		result sql.Result
+		err    error
+	)
+	if actionType == "1" {
+		result, err = d.favorite.InsertOrUpdate(ctx, data)
+	} else {
+		result, err = d.favorite.EmptyOrUpdate(ctx, data)
+	}
 	if err != nil {
 		return false, err
 	}
