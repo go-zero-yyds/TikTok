@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/zeromicro/go-zero/core/stores/cache"
@@ -32,15 +33,14 @@ func NewCommentModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option)
 	}
 }
 
-
 func (m *defaultCommentModel) Count(ctx context.Context, videoId int64) (int64, error) {
 	query := fmt.Sprintf("select count(*) from %s where `videoId` = ? ", m.table)
 	var resp int64
 	err := m.QueryRowNoCacheCtx(ctx, &resp, query, videoId)
-	switch err {
-	case nil:
+	switch {
+	case err == nil:
 		return resp, nil
-	case sqlc.ErrNotFound:
+	case errors.Is(err, sqlc.ErrNotFound):
 		return 0, ErrNotFound
 	default:
 		return 0, err

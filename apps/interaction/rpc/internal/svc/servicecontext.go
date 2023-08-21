@@ -22,11 +22,11 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	r := redis.MustNewRedis(c.Redis.RedisConf)
 	return &ServiceContext{
 		Config:    c,
 		Snowflake: node,
-		DBAction:  model.NewDBAction(sqlx.NewMysql(c.DBSource), c.Cache),
-		Rds:       redis.MustNewRedis(c.Redis.RedisConf),
+		DBAction:  model.NewDBAction(r, sqlx.NewMysql(c.DBSource), c.Cache),
+		Rds:       r,
 	}, nil
 }

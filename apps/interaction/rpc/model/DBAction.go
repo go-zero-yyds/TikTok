@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/logc"
@@ -17,10 +18,10 @@ type DBAction struct {
 }
 
 // NewDBAction 初始化数据库信息
-func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
+func NewDBAction(r *redis.Redis, conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 	ret := &DBAction{
-		favorite: NewFavoriteModel(conn, c), //创建点赞表的接口
-		comment:  NewCommentModel(conn, c),  //创建评论表的接口
+		favorite: NewFavoriteModel(r, conn, c), //创建点赞表的接口
+		comment:  NewCommentModel(conn, c),     //创建评论表的接口
 	}
 	return ret
 }
@@ -93,7 +94,15 @@ func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, ac
 	if err != nil {
 		return false, err
 	}
-	return affected != int64(0), nil
+	res := affected != int64(0)
+	if res {
+		if actionType == "1" {
+			d.favorite.IncrCountCache(ctx, userId, videoId)
+		} else {
+			d.favorite.DecrCountCache(ctx, userId, videoId)
+		}
+	}
+	return res, nil
 }
 
 // FavoriteList 调用favorite对数据库查询用户点赞视频列表

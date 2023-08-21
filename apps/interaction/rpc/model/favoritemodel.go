@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/zeromicro/go-zero/core/logc"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
@@ -23,22 +25,26 @@ type (
 	// and implement the added methods in customFavoriteModel.
 	FavoriteModel interface {
 		favoriteModel
-		UserOrVideoCount(ctx context.Context, Id int64, userORvideo bool) (int64, error) //用户/视频点赞数量
-		FindVideos(ctx context.Context, userId int64) ([]int64, error)                   //用户点赞视频id列表
-		FlushAndClean(ctx context.Context) error                                         //特定时间重置数据，删除没用数据
+		UserOrVideoCount(ctx context.Context, Id int64, userORvideo bool) (int64, error)
+		FindVideos(ctx context.Context, userId int64) ([]int64, error)
+		FlushAndClean(ctx context.Context) error
 		InsertOrUpdate(ctx context.Context, data *Favorite) (sql.Result, error)
 		EmptyOrUpdate(ctx context.Context, newData *Favorite) (result sql.Result, err error)
+		IncrCountCache(ctx context.Context, userId, videoId int64)
+		DecrCountCache(ctx context.Context, userId, videoId int64)
 	}
 
 	customFavoriteModel struct {
 		*defaultFavoriteModel
+		rds *redis.Redis
 	}
 )
 
 // NewFavoriteModel returns a model for the database table.
-func NewFavoriteModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) FavoriteModel {
+func NewFavoriteModel(r *redis.Redis, conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) FavoriteModel {
 	return &customFavoriteModel{
 		defaultFavoriteModel: newFavoriteModel(conn, c, opts...),
+		rds:                  r,
 	}
 }
 
@@ -92,9 +98,7 @@ func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
 }
 
 // InsertOrUpdate 插入一条关注记录或者更新关注记录
-func (m *defaultFavoriteModel) InsertOrUpdate(ctx context.Context, data *Favorite) (sql.Result, error) {
-	favoriteCountUserIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountUserIdPrefix, data.UserId)
-	favoriteCountVideoIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountVideoIdPrefix, data.VideoId)
+func (m *customFavoriteModel) InsertOrUpdate(ctx context.Context, data *Favorite) (sql.Result, error) {
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, data.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, data.UserId, data.VideoId)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
@@ -104,19 +108,56 @@ func (m *defaultFavoriteModel) InsertOrUpdate(ctx context.Context, data *Favorit
 			ON DUPLICATE KEY UPDATE behavior = ?;
 		`, m.table, favoriteRowsExpectAutoSet)
 		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.Behavior, data.Behavior)
-	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, favoriteCountUserIdKey, favoriteCountVideoIdKey)
+	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
+
 	return ret, err
+}
+
+func (m *customFavoriteModel) IncrCountCache(ctx context.Context, userId, videoId int64) {
+	favoriteCountUserIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountUserIdPrefix, userId)
+	favoriteCountVideoIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountVideoIdPrefix, videoId)
+	val, err := m.rds.IncrCtx(ctx, favoriteCountUserIdKey)
+	if err != nil {
+		logc.Errorf(ctx, "failed to incr cache with key: %q, error: %v", favoriteCountUserIdKey, err)
+	}
+	if val == int64(1) {
+		_ = m.DelCacheCtx(ctx, favoriteCountUserIdKey)
+	}
+	val, err = m.rds.IncrCtx(ctx, favoriteCountVideoIdKey)
+	if err != nil {
+		logc.Errorf(ctx, "failed to incr cache with key: %q, error: %v", favoriteCountVideoIdKey, err)
+	}
+	if val == int64(1) {
+		_ = m.DelCacheCtx(ctx, favoriteCountVideoIdKey)
+	}
+}
+
+func (m *customFavoriteModel) DecrCountCache(ctx context.Context, userId, videoId int64) {
+	favoriteCountUserIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountUserIdPrefix, userId)
+	favoriteCountVideoIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountVideoIdPrefix, videoId)
+	val, err := m.rds.DecrCtx(ctx, favoriteCountUserIdKey)
+	if err != nil {
+		logc.Errorf(ctx, "failed to decr cache with key: %q, error: %v", favoriteCountUserIdKey, err)
+	}
+	if val == int64(-1) {
+		_ = m.DelCacheCtx(ctx, favoriteCountUserIdKey)
+	}
+	val, err = m.rds.DecrCtx(ctx, favoriteCountVideoIdKey)
+	if err != nil {
+		logc.Errorf(ctx, "failed to decr cache with key: %q, error: %v", favoriteCountVideoIdKey, err)
+	}
+	if val == int64(-1) {
+		_ = m.DelCacheCtx(ctx, favoriteCountVideoIdKey)
+	}
 }
 
 // EmptyOrUpdate 更新关注记录没有则不操作
 func (m *defaultFavoriteModel) EmptyOrUpdate(ctx context.Context, newData *Favorite) (result sql.Result, err error) {
-	favoriteCountUserIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountUserIdPrefix, newData.UserId)
-	favoriteCountVideoIdKey := fmt.Sprintf("%s%v", cacheFavoriteCountVideoIdPrefix, newData.VideoId)
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, newData.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, newData.UserId, newData.VideoId)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `userId` = ? and videoId = ?", m.table, favoriteRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.UserId, newData.VideoId)
-	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, favoriteCountUserIdKey, favoriteCountVideoIdKey)
+	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
 	return ret, err
 }
