@@ -20,7 +20,7 @@ var (
 	commentFieldNames          = builder.RawFieldNames(&Comment{})
 	commentRows                = strings.Join(commentFieldNames, ",")
 	commentRowsExpectAutoSet   = strings.Join(stringx.Remove(commentFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
-	commentRowsWithPlaceHolder = strings.Join(stringx.Remove(commentFieldNames, "`commentId`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+	commentRowsWithPlaceHolder = strings.Join(stringx.Remove(commentFieldNames, "`comment_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
 
 	cacheCommentCommentIdPrefix = "cache:comment:commentId:"
 )
@@ -39,11 +39,11 @@ type (
 	}
 
 	Comment struct {
-		CommentId  int64     `db:"commentId"`  // 评论id 雪花算法生成
-		UserId     int64     `db:"userId"`     // 用户id
-		VideoId    int64     `db:"videoId"`    // 视频id
-		CreateDate time.Time `db:"createDate"` // 创建日期
-		Content    string    `db:"content"`    // 用户评论内容
+		CommentId  int64     `db:"comment_id"`  // 评论id 雪花算法生成
+		UserId     int64     `db:"user_id"`     // 用户id
+		VideoId    int64     `db:"video_id"`    // 视频id
+		CreateDate time.Time `db:"create_date"` // 创建日期
+		Content    string    `db:"content"`     // 用户评论内容
 	}
 )
 
@@ -64,7 +64,7 @@ func (m *defaultCommentModel) withSession(session sqlx.Session) *defaultCommentM
 func (m *defaultCommentModel) Delete(ctx context.Context, commentId int64) error {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, commentId)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `commentId` = ?", m.table)
+		query := fmt.Sprintf("delete from %s where `comment_id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, commentId)
 	}, commentCommentIdKey)
 	return err
@@ -74,7 +74,7 @@ func (m *defaultCommentModel) FindOne(ctx context.Context, commentId int64) (*Co
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, commentId)
 	var resp Comment
 	err := m.QueryRowCtx(ctx, &resp, commentCommentIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `commentId` = ? limit 1", commentRows, m.table)
+		query := fmt.Sprintf("select %s from %s where `comment_id` = ? limit 1", commentRows, m.table)
 		return conn.QueryRowCtx(ctx, v, query, commentId)
 	})
 	switch err {
@@ -99,7 +99,7 @@ func (m *defaultCommentModel) Insert(ctx context.Context, data *Comment) (sql.Re
 func (m *defaultCommentModel) Update(ctx context.Context, data *Comment) error {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `commentId` = ?", m.table, commentRowsWithPlaceHolder)
+		query := fmt.Sprintf("update %s set %s where `comment_id` = ?", m.table, commentRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, data.CommentId)
 	}, commentCommentIdKey)
 	return err
@@ -110,7 +110,7 @@ func (m *defaultCommentModel) formatPrimary(primary any) string {
 }
 
 func (m *defaultCommentModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `commentId` = ? limit 1", commentRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `comment_id` = ? limit 1", commentRows, m.table)
 	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 

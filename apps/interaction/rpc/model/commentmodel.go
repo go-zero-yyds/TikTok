@@ -34,7 +34,7 @@ func NewCommentModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option)
 }
 
 func (m *defaultCommentModel) Count(ctx context.Context, videoId int64) (int64, error) {
-	query := fmt.Sprintf("select count(*) from %s where `videoId` = ? ", m.table)
+	query := fmt.Sprintf("select count(*) from %s where `video_id` = ? ", m.table)
 	var resp int64
 	err := m.QueryRowNoCacheCtx(ctx, &resp, query, videoId)
 	switch {
@@ -48,7 +48,7 @@ func (m *defaultCommentModel) Count(ctx context.Context, videoId int64) (int64, 
 }
 
 func (m *defaultCommentModel) CommentList(ctx context.Context, videoId int64) ([]*Comment, error) {
-	query := fmt.Sprintf("select * from %s where `videoId` = ? order by createDate desc ", m.table)
+	query := fmt.Sprintf("select * from %s where `video_id` = ? order by create_date desc ", m.table)
 	resp := make([]*Comment, 0)
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, videoId)
 	switch err {

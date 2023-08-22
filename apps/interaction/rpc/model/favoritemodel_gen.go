@@ -18,8 +18,8 @@ import (
 var (
 	favoriteFieldNames          = builder.RawFieldNames(&Favorite{})
 	favoriteRows                = strings.Join(favoriteFieldNames, ",")
-	favoriteRowsExpectAutoSet   = strings.Join(stringx.Remove(favoriteFieldNames, "`favoriteId`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
-	favoriteRowsWithPlaceHolder = strings.Join(stringx.Remove(favoriteFieldNames, "`favoriteId`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+	favoriteRowsExpectAutoSet   = strings.Join(stringx.Remove(favoriteFieldNames, "`favorite_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
+	favoriteRowsWithPlaceHolder = strings.Join(stringx.Remove(favoriteFieldNames, "`favorite_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
 
 	cacheFavoriteFavoriteIdPrefix    = "cache:favorite:favoriteId:"
 	cacheFavoriteUserIdVideoIdPrefix = "cache:favorite:userId:videoId:"
@@ -40,10 +40,10 @@ type (
 	}
 
 	Favorite struct {
-		FavoriteId int64  `db:"favoriteId"` // 自增id,优化插入效率
-		UserId     int64  `db:"userId"`     // 用户id
-		VideoId    int64  `db:"videoId"`    // 视频id
-		Behavior   string `db:"behavior"`   // 1:点赞 2:未点赞
+		FavoriteId int64  `db:"favorite_id"` // 自增id，优化插入效率
+		UserId     int64  `db:"user_id"`     // 用户id
+		VideoId    int64  `db:"video_id"`    // 视频id
+		Behavior   string `db:"behavior"`    // 1:点赞 2:未点赞
 	}
 )
 
@@ -70,7 +70,7 @@ func (m *defaultFavoriteModel) Delete(ctx context.Context, favoriteId int64) err
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, favoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, data.UserId, data.VideoId)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `favoriteId` = ?", m.table)
+		query := fmt.Sprintf("delete from %s where `favorite_id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, favoriteId)
 	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
 	return err
@@ -80,7 +80,7 @@ func (m *defaultFavoriteModel) FindOne(ctx context.Context, favoriteId int64) (*
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, favoriteId)
 	var resp Favorite
 	err := m.QueryRowCtx(ctx, &resp, favoriteFavoriteIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `favoriteId` = ? limit 1", favoriteRows, m.table)
+		query := fmt.Sprintf("select %s from %s where `favorite_id` = ? limit 1", favoriteRows, m.table)
 		return conn.QueryRowCtx(ctx, v, query, favoriteId)
 	})
 	switch err {
@@ -97,7 +97,7 @@ func (m *defaultFavoriteModel) FindOneByUserIdVideoId(ctx context.Context, userI
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, userId, videoId)
 	var resp Favorite
 	err := m.QueryRowIndexCtx(ctx, &resp, favoriteUserIdVideoIdKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v any) (i any, e error) {
-		query := fmt.Sprintf("select %s from %s where `userId` = ? and `videoId` = ? limit 1", favoriteRows, m.table)
+		query := fmt.Sprintf("select %s from %s where `user_id` = ? and `video_id` = ? limit 1", favoriteRows, m.table)
 		if err := conn.QueryRowCtx(ctx, &resp, query, userId, videoId); err != nil {
 			return nil, err
 		}
@@ -132,7 +132,7 @@ func (m *defaultFavoriteModel) Update(ctx context.Context, newData *Favorite) er
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, data.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, data.UserId, data.VideoId)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `favoriteId` = ?", m.table, favoriteRowsWithPlaceHolder)
+		query := fmt.Sprintf("update %s set %s where `favorite_id` = ?", m.table, favoriteRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.FavoriteId)
 	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
 	return err
@@ -143,7 +143,7 @@ func (m *defaultFavoriteModel) formatPrimary(primary any) string {
 }
 
 func (m *defaultFavoriteModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `favoriteId` = ? limit 1", favoriteRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `favorite_id` = ? limit 1", favoriteRows, m.table)
 	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 

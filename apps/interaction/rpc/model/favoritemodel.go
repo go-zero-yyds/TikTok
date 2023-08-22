@@ -50,7 +50,7 @@ func NewFavoriteModel(r *redis.Redis, conn sqlx.SqlConn, c cache.CacheConf, opts
 
 // FindVideos 查看用户点赞视频id列表
 func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select videoId from %s where `userId` = ? and behavior = '1'  ", m.table)
+	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '1'  ", m.table)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
@@ -68,10 +68,10 @@ func (m *defaultFavoriteModel) UserOrVideoCount(ctx context.Context, Id int64, u
 	var obj string
 	var Key string
 	if userOrVideo {
-		obj = "userId"
+		obj = "user_id"
 		Key = fmt.Sprintf("%s%v", cacheFavoriteCountUserIdPrefix, Id)
 	} else {
-		obj = "videoId"
+		obj = "video_id"
 		Key = fmt.Sprintf("%s%v", cacheFavoriteCountVideoIdPrefix, Id)
 	}
 	var resp int64
@@ -156,7 +156,7 @@ func (m *defaultFavoriteModel) EmptyOrUpdate(ctx context.Context, newData *Favor
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, newData.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, newData.UserId, newData.VideoId)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `userId` = ? and videoId = ?", m.table, favoriteRowsWithPlaceHolder)
+		query := fmt.Sprintf("update %s set %s where `user_id` = ? and video_id = ?", m.table, favoriteRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.UserId, newData.VideoId)
 	}, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
 	return ret, err
