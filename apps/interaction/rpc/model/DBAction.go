@@ -4,24 +4,30 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/zeromicro/go-zero/core/stores/redis"
-	"time"
-
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/redis"
+	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"time"
 )
 
 type DBAction struct {
-	favorite FavoriteModel
-	comment  CommentModel
+	favorite   FavoriteModel
+	comment    CommentModel
+	userLikes  UserLikesModel
+	videoStats VideoStatsModel
+	conn       sqlc.CachedConn
 }
 
 // NewDBAction 初始化数据库信息
 func NewDBAction(r *redis.Redis, conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 	ret := &DBAction{
-		favorite: NewFavoriteModel(r, conn, c), //创建点赞表的接口
-		comment:  NewCommentModel(conn, c),     //创建评论表的接口
+		favorite:   NewFavoriteModel(r, conn, c), //创建点赞表的接口
+		comment:    NewCommentModel(conn, c),     //创建评论表的接口
+		userLikes:  NewUserLikesModel(conn, c),
+		videoStats: NewVideoStatsModel(conn, c),
+		conn:       sqlc.NewConn(conn, c),
 	}
 	return ret
 }
@@ -38,34 +44,43 @@ func (d *DBAction) IsFavorite(ctx context.Context, userId, videoId int64) (bool,
 	return f != nil && f.Behavior == "1", nil
 }
 
-// FavoriteCountByUserId 调用favorite对数据库查询，用户 点赞数量
+// FavoriteCountByUserId 查询，用户 点赞数量
 func (d *DBAction) FavoriteCountByUserId(ctx context.Context, userId int64) (int64, error) {
-	count, err := d.favorite.UserOrVideoCount(ctx, userId, true)
-	if err != nil && !errors.Is(err, ErrNotFound) {
+	count, err := d.userLikes.FindOne(ctx, userId)
+	if errors.Is(err, ErrNotFound) {
+		return 0, nil
+	}
+	if err != nil {
 		logc.Error(ctx, userId)
 		return 0, err
 	}
-	return count, nil
+	return count.LikeCount, nil
 }
 
 // FavoriteCountByVideoId 调用favorite对数据库查询，视频 点赞数量
 func (d *DBAction) FavoriteCountByVideoId(ctx context.Context, videoId int64) (int64, error) {
-	count, err := d.favorite.UserOrVideoCount(ctx, videoId, false)
-	if err != nil && !errors.Is(err, ErrNotFound) {
+	count, err := d.videoStats.FindOne(ctx, videoId)
+	if errors.Is(err, ErrNotFound) {
+		return 0, nil
+	}
+	if err != nil {
 		logc.Error(ctx, videoId)
 		return 0, err
 	}
-	return count, nil
+	return count.LikeCount, nil
 }
 
 // CommentCountByVideoId 调用comment对数据库查询，视频 评论数量
 func (d *DBAction) CommentCountByVideoId(ctx context.Context, videoId int64) (int64, error) {
-	count, err := d.comment.Count(ctx, videoId)
-	if err != nil && !errors.Is(err, ErrNotFound) {
+	count, err := d.videoStats.FindOne(ctx, videoId)
+	if errors.Is(err, ErrNotFound) {
+		return 0, nil
+	}
+	if err != nil {
 		logc.Error(ctx, videoId)
 		return 0, err
 	}
-	return count, nil
+	return count.CommentCount, nil
 }
 
 // FavoriteAction 调用favorite对数据库查询用户是否点赞过
@@ -78,29 +93,56 @@ func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, ac
 		VideoId:  videoId,
 		Behavior: actionType,
 	}
-	var (
-		result sql.Result
-		err    error
-	)
-	if actionType == "1" {
-		result, err = d.favorite.InsertOrUpdate(ctx, data)
-	} else {
-		result, err = d.favorite.EmptyOrUpdate(ctx, data)
-	}
-	if err != nil {
-		return false, err
-	}
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
-	}
-	res := affected != int64(0)
-	if res {
+	var res bool
+	keys := make([]string, 0)
+	err := d.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+		var (
+			result sql.Result
+			err    error
+		)
 		if actionType == "1" {
-			d.favorite.IncrCountCache(ctx, userId, videoId)
+			result, err = d.favorite.TranInsertOrUpdate(ctx, session, data, &keys)
 		} else {
-			d.favorite.DecrCountCache(ctx, userId, videoId)
+			result, err = d.favorite.TranEmptyOrUpdate(ctx, session, data, &keys)
 		}
+		if err != nil {
+			return err
+		}
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		res = affected != int64(0)
+		if !res {
+			return nil
+		}
+		if actionType == "1" {
+			err := d.videoStats.TranIncrLikeCount(ctx, session, videoId, &keys)
+			if err != nil {
+				return err
+			}
+			err = d.userLikes.TranIncrCount(ctx, session, userId)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := d.videoStats.TranDecrLikeCount(ctx, session, videoId, &keys)
+			if err != nil {
+				return err
+			}
+			err = d.userLikes.TranDecrCount(ctx, session, userId)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if res {
+		_ = d.conn.DelCacheCtx(ctx, keys...)
 	}
 	return res, nil
 }
@@ -119,27 +161,59 @@ func (d *DBAction) FavoriteList(ctx context.Context, userId int64) ([]int64, err
 // 成功返回comment结构体，（评论成功 查询结果，取消成功 初始值）
 // 如果用户可选参数没有赋值，将会返回地址错误
 func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, actionType int32, commentText *string, commentId *int64) (*Comment, error) {
-	var ret *Comment
+	var c *Comment = &Comment{
+		UserId:     userId,
+		VideoId:    videoId,
+		CreateDate: time.Now(),
+	}
 	var err error
+	keys := make([]string, 0)
 	if actionType == 1 {
-		ret = &Comment{
-			CommentId:  *commentId,
-			UserId:     userId,
-			VideoId:    videoId,
-			Content:    *commentText,
-			CreateDate: time.Now(),
+		c.Content = *commentText
+		err = d.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+			_, err := d.comment.TranInsert(ctx, session, c, &keys)
+			if err != nil {
+				return err
+			}
+			err = d.videoStats.TranIncrCommentCount(ctx, session, c.VideoId, &keys)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
 		}
-		_, err = d.comment.Insert(ctx, ret)
 	} else if actionType == 2 {
-		err = d.comment.Delete(ctx, *commentId)
+		c.CommentId = *commentId
+		_, err = d.comment.FindOneByCommentIdUserId(ctx, c.CommentId, c.UserId)
+		if err != nil {
+			return nil, err
+		}
+		err = d.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+			err := d.comment.TranUpdateDel(ctx, session, c, &keys)
+			if err != nil {
+				return err
+			}
+			err = d.videoStats.TranDecrCommentCount(ctx, session, c.VideoId, &keys)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if err != nil && !errors.Is(err, ErrNotFound) {
+	if err != nil {
 		logc.Error(ctx, commentId, actionType)
 		return nil, err
 	}
-
-	return ret, nil
+	_ = d.conn.DelCacheCtx(ctx, keys...)
+	return c, nil
 }
 
 func (d *DBAction) CommentList(ctx context.Context, videoId int64) ([]*Comment, error) {

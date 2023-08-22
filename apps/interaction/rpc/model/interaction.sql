@@ -1,12 +1,15 @@
 CREATE TABLE comment (
-                         comment_id BIGINT NOT NULL COMMENT "评论id 雪花算法生成",
+                         comment_id BIGINT NOT NULL AUTO_INCREMENT COMMENT "自增id",
                          user_id BIGINT NOT NULL COMMENT "用户id",
                          video_id BIGINT NOT NULL COMMENT "视频id",
                          create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT "创建日期",
                          content TEXT NOT NULL COMMENT "用户评论内容",
+                         is_deleted ENUM('0', '1') NOT NULL DEFAULT '0' COMMENT "0:未删除 1:已删除",
                          INDEX idx_user_video (video_id, user_id) COMMENT "联合索引，video用的较多",
+                         UNIQUE INDEX idx_comment_user (comment_id, user_id) COMMENT "唯一索引，用于确保每个用户对每条评论只能有一个记录",
                          PRIMARY KEY (comment_id)
 );
+
 
 CREATE TABLE favorite (
                           favorite_id BIGINT NOT NULL AUTO_INCREMENT COMMENT "自增id，优化插入效率",
