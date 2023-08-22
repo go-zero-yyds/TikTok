@@ -45,24 +45,31 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 		list.CommentList = make([]*interaction.Comment, 0)
 	}
 	e := apiVars.Success
-	commentList, err := mr.MapReduce(func(source chan<- *interaction.Comment) {
-		for _, bv := range list.CommentList {
-			source <- bv
+	size := len(list.CommentList)
+	commentList, err := mr.MapReduce(func(source chan<- IdxComment) {
+		for i, bv := range list.CommentList {
+			source <- IdxComment{
+				Comment: bv,
+				idx:     i,
+			}
 		}
-	}, func(item *interaction.Comment, writer mr.Writer[*types.Comment], cancel func(error)) {
-		videoInfo, err := GetCommentInfo(item, tokenID, l.svcCtx, l.ctx)
+	}, func(item IdxComment, writer mr.Writer[IdxApiComment], cancel func(error)) {
+		videoInfo, err := GetCommentInfo(item.Comment, tokenID, l.svcCtx, l.ctx)
 		if err != nil {
 			e = apiVars.SomeDataErr
 			if err != apiVars.SomeDataErr {
 				return
 			}
 		}
-		writer.Write(videoInfo)
-	}, func(pipe <-chan *types.Comment, writer mr.Writer[[]types.Comment], cancel func(error)) {
-		var vs []types.Comment
+		writer.Write(IdxApiComment{
+			Comment: videoInfo,
+			idx:     item.idx,
+		})
+	}, func(pipe <-chan IdxApiComment, writer mr.Writer[[]types.Comment], cancel func(error)) {
+		vs := make([]types.Comment, size)
 		for item := range pipe {
 			v := item
-			vs = append(vs, *v)
+			vs[v.idx] = *v.Comment
 		}
 		writer.Write(vs)
 	})
@@ -71,4 +78,13 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 		RespStatus:  types.RespStatus(e),
 		CommentList: commentList,
 	}, nil
+}
+
+type IdxComment struct {
+	*interaction.Comment
+	idx int
+}
+type IdxApiComment struct {
+	*types.Comment
+	idx int
 }

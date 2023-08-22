@@ -25,7 +25,6 @@ type FeedResponse struct {
 // - /douyin/publish/action/ - 视频投稿
 type PublishActionRequest struct {
     Token string `form:"token"`
-    Data  []byte `form:"data"`
     Title string `form:"title"`
 }
 

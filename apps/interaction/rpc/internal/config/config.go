@@ -7,9 +7,7 @@ import (
 
 type Config struct {
 	zrpc.RpcServerConf
-	DBSource           string
-	Cache              cache.CacheConf
-	SnowflakeNode      int
-	SnowflakeStartTime int64
-	CleanTime          string
+	DBSource  string
+	Cache     cache.CacheConf
+	CleanTime string
 }

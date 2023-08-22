@@ -121,7 +121,7 @@ func ExampleReadFrameAsJpeg(inFile io.Reader) (io.Reader, error) {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input("pipe:0").
 		Filter("select", ffmpeg.Args{"eq(pict_type\\,I)"}).
-		Filter("random", ffmpeg.Args{"seed=42"}).
+		Filter("random", ffmpeg.Args{}).
 		Output("pipe:1", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
 		OverWriteOutput().
 		WithInput(inFile).
