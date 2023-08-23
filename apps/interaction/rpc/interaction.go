@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var configFile = flag.String("f", "etc/interaction.yaml", "the config file")
+var configFile = flag.String("f", "apps/interaction/rpc/etc/interaction.yaml", "the config file")
 
 func main() {
 	var cfg logx.LogConf
@@ -28,15 +28,15 @@ func main() {
 	cfg.Mode = "file"
 	logc.MustSetup(cfg)
 	defer logc.Close()
-	
+
 	flag.Parse()
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	ctx , err := svc.NewServiceContext(c)
-	if err != nil{
-		logc.Error(context.Background() , "loading svc error")
-		return 
+	ctx, err := svc.NewServiceContext(c)
+	if err != nil {
+		logc.Error(context.Background(), "loading svc error")
+		return
 	}
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
@@ -47,7 +47,7 @@ func main() {
 		}
 	})
 	//启动定时任务
-	cron.InitCron(context.Background() , ctx , c.CleanTime)
+	cron.InitCron(context.Background(), ctx, c.CleanTime)
 
 	defer s.Stop()
 

@@ -1,15 +1,17 @@
 package config
 
 import (
+	"github.com/zeromicro/go-queue/kq"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
 type Config struct {
 	zrpc.RpcServerConf
-	DBSource  string
-	Cache     cache.CacheConf
-	Snowflake SnowflakeConf
+	DBSource       string
+	Cache          cache.CacheConf
+	Snowflake      SnowflakeConf
+	KqConsumerConf kq.KqConf
 }
 type SnowflakeConf struct {
 	StartTime int64

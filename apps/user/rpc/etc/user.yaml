@@ -1,7 +1,7 @@
 Name: user.rpc
-ListenOn: 0.0.0.0:8001
+ListenOn: 127.0.0.1:8001
 
-DBSource: root:12345678@tcp(localhost:3306)/tiktok_user?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+DBSource: root:87777832@tcp(localhost:3306)/tiktok_user?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
 Etcd:
   Hosts:
   - 127.0.0.1:2379
@@ -12,3 +12,12 @@ Cache:
 Snowflake:
   StartTime: 1288834974657
   Node: 1
+KqConsumerConf:
+  Name: kqConsumer
+  Brokers:
+    - 127.0.1:9092
+  Group: userConsumer
+  Topic: user-success
+  Offset: first
+  Consumers: 8
+  Processors: 8

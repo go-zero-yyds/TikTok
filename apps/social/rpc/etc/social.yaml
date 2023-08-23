@@ -1,7 +1,7 @@
 Name: social.rpc
 Timeout: 100000 # 100s
 ListenOn: 0.0.0.0:8004
-DBSource: "root:12345678@tcp(127.0.0.1:3306)/tiktok_social?charset=utf8mb4&parseTime=True&loc=Local"
+DBSource: "root:87777832@tcp(127.0.0.1:3306)/tiktok_social?charset=utf8mb4&parseTime=True&loc=Local"
 Etcd:
   Hosts:
   - 127.0.0.1:2379

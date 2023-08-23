@@ -7,6 +7,8 @@ import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/mr"
+	"regexp"
+	"strconv"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -29,7 +31,21 @@ func NewFriendListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Friend
 }
 
 func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp *types.RelationFriendListResponse, err error) {
-	// todo: add your logic here and delete this line
+
+	// 参数检查
+	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.UserID, 10)) //是否为19位纯数字
+	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
+		return &types.RelationFriendListResponse{
+			RespStatus: types.RespStatus(apiVars.UserIdRuleError),
+		}, nil
+	}
+
+	if req.Token == "" {
+		return &types.RelationFriendListResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+		}, nil
+	}
+
 	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
 	if err != nil {
 		return nil, err

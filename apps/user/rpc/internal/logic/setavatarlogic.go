@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"TikTok/apps/user/rpc/model"
 	"context"
 
 	"TikTok/apps/user/rpc/internal/svc"
@@ -24,7 +25,16 @@ func NewSetAvatarLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SetAvat
 }
 
 func (l *SetAvatarLogic) SetAvatar(in *user.SetAvatarReq) (*user.SetAvatarResp, error) {
-	// todo: add your logic here and delete this line
+	errUpdate := l.svcCtx.UserModel.Update(l.ctx, &model.User{
+		UserId: in.UserId,
+		//Avatar: in.Avatar,
+	})
 
-	return &user.SetAvatarResp{}, nil
+	if errUpdate != nil {
+		return nil, errUpdate
+	}
+
+	return &user.SetAvatarResp{
+		IsSucceed: true,
+	}, nil
 }

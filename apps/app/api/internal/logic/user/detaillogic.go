@@ -15,6 +15,8 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/mr"
 	"github.com/zeromicro/go-zero/core/threading"
+	"regexp"
+	"strconv"
 	"sync"
 )
 
@@ -33,6 +35,21 @@ func NewDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetailLogi
 }
 
 func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, err error) {
+
+	// 参数检查
+	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.UserID, 10)) //是否为19位纯数字
+	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
+		return &types.UserResponse{
+			RespStatus: types.RespStatus(apiVars.UserIdRuleError),
+		}, nil
+	}
+
+	if req.Token == "" {
+		return &types.UserResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+		}, nil
+	}
+
 	// 解析token
 	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
 	if err != nil {

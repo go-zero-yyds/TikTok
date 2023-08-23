@@ -37,7 +37,24 @@ func NewPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pub
 }
 
 func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *http.Request) (resp *types.PublishActionResponse, err error) {
-	// todo: add your logic here and delete this line
+
+	// 参数检查
+	if req.Title == "" { //检查标题是否为空
+		return &types.PublishActionResponse{
+			RespStatus: types.RespStatus(apiVars.TitleRuleError),
+		}, nil
+	} else if req.Data == nil { //检查文件是否存在
+		return &types.PublishActionResponse{
+			RespStatus: types.RespStatus(apiVars.FileNotFound),
+		}, nil
+	}
+
+	if req.Token == "" {
+		return &types.PublishActionResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+		}, nil
+	}
+
 	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
 	if err != nil {
 		return nil, err

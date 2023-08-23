@@ -30,7 +30,7 @@ type UserLoginRequest struct {
 
 type UserLoginResponse struct {
     RespStatus
-    UserID     int64  `json:"user_id"`
+    UserID     int64  `json:"user_id,range=[0:]"`
     Token      string `json:"token"`
 }
 

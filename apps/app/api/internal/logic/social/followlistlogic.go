@@ -4,6 +4,8 @@ import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/social/rpc/social"
 	"context"
+	"regexp"
+	"strconv"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -26,6 +28,15 @@ func NewFollowListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Follow
 }
 
 func (l *FollowListLogic) FollowList(req *types.RelationFollowListRequest) (resp *types.RelationFollowListResponse, err error) {
+
+	// 参数检查
+	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.UserID, 10)) //是否为19位纯数字
+	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
+		return &types.RelationFollowListResponse{
+			RespStatus: types.RespStatus(apiVars.UserIdRuleError),
+		}, nil
+	}
+
 	if req.Token == "" {
 		return &types.RelationFollowListResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

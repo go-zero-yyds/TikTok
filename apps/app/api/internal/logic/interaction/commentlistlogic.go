@@ -5,6 +5,8 @@ import (
 	"TikTok/apps/interaction/rpc/interaction"
 	"context"
 	"github.com/zeromicro/go-zero/core/mr"
+	"regexp"
+	"strconv"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -27,6 +29,21 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 }
 
 func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *types.CommentListResponse, err error) {
+
+	// 参数检查
+	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.VideoID, 10)) //是否为19位纯数字
+	if strconv.FormatInt(req.VideoID, 10) == "" || matched == false {
+		return &types.CommentListResponse{
+			RespStatus: types.RespStatus(apiVars.VideoIdRuleError),
+		}, nil
+	}
+
+	if req.Token == "" {
+		return &types.CommentListResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+		}, nil
+	}
+
 	tokenID := int64(0)
 	if req.Token != "" {
 		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)

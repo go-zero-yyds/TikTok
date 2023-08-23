@@ -7,6 +7,8 @@ import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/mr"
+	"regexp"
+	"strconv"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -29,12 +31,22 @@ func NewFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Foll
 }
 
 func (l *FollowerListLogic) FollowerList(req *types.RelationFollowerListRequest) (resp *types.RelationFollowerListResponse, err error) {
+
+	// 参数检查
+	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.UserID, 10)) //是否为19位纯数字
+	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
+		return &types.RelationFollowerListResponse{
+			RespStatus: types.RespStatus(apiVars.UserIdRuleError),
+		}, nil
+	}
+
 	if req.Token == "" {
 		return &types.RelationFollowerListResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),
 			UserList:   make([]types.User, 0),
 		}, nil
 	}
+
 	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
 	if err != nil {
 		return nil, err

@@ -2,13 +2,13 @@ package user
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
 	"context"
 	"errors"
-
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
+	"regexp"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,7 +28,19 @@ func NewRegisterLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Register
 }
 
 func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.UserRegisterResponse, err error) {
-	// todo: add your logic here and delete this line
+
+	// 参数检查
+	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)+$", req.Username) //是否为邮箱格式
+	if len(req.Username) > 32 || req.Username == "" || matched == false {
+		return &types.UserRegisterResponse{
+			RespStatus: types.RespStatus(apiVars.UsernameRuleError),
+		}, nil
+	} else if len(req.Password) < 5 || len(req.Password) > 32 || req.Password == "" {
+		return &types.UserRegisterResponse{
+			RespStatus: types.RespStatus(apiVars.PasswordRuleError),
+		}, nil
+	}
+
 	userID, err := l.svcCtx.UserRPC.Register(l.ctx, &user.RegisterReq{
 		Username: req.Username,
 		Password: req.Password,
