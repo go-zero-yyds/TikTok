@@ -97,7 +97,7 @@ func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *s
 	if err != nil {
 		return nil, err
 	}
-	res.CreateDate = fmt.Sprintf("%s-IP属地:%s", FormatTimestamp(timestamp), comment.Location)
+	res.CreateDate = fmt.Sprintf("%s · IP 属地%s", FormatTimestamp(timestamp), comment.Location)
 	res.ID = comment.Id
 	res.Content = comment.Content
 	userInfo, err := user.TryGetUserInfo(tokenID, comment.UserId, svcCtx, ctx)
