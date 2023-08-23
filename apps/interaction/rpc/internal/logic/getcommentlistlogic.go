@@ -37,6 +37,8 @@ func (l *GetCommentListLogic) GetCommentList(in *interaction.CommentListReq) (*i
 			UserId:     v.UserId,
 			Content:    v.Content,
 			CreateDate: fmt.Sprintf("%v", v.CreateDate.Unix()),
+			IpAddress:  v.IpAddress,
+			Location:   v.Location,
 		})
 	}
 	return &interaction.CommentListResp{

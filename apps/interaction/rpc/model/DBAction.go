@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
+
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
-	"time"
 )
 
 type DBAction struct {
@@ -160,10 +161,12 @@ func (d *DBAction) FavoriteList(ctx context.Context, userId int64) ([]int64, err
 // CommentAction 执行评论/取消操作
 // 成功返回comment结构体，（评论成功 查询结果，取消成功 初始值）
 // 如果用户可选参数没有赋值，将会返回地址错误
-func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, actionType int32, commentText *string, commentId *int64) (*Comment, error) {
+func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, actionType int32, commentText *string, IPaddr *string, IPattr *string, commentId *int64) (*Comment, error) {
 	var c *Comment = &Comment{
 		UserId:     userId,
 		VideoId:    videoId,
+		IpAddress:  *IPaddr,
+		Location:   *IPattr,
 		CreateDate: time.Now(),
 	}
 	var err error

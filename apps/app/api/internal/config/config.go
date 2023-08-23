@@ -32,4 +32,8 @@ type Config struct {
 		} `json:",optional"`
 		Prefix string
 	}
+	IP struct {
+		DbFilePath   string
+		JsonFilePath string
+	}
 }

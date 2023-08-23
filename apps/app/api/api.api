@@ -73,6 +73,7 @@ service api-api {
 @server(
 	prefix: douyin
 	group: interaction
+	middleware: ClientIPMiddleware
 )
 service api-api {
 	@doc "favoriteAction"

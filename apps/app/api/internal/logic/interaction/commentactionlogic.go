@@ -3,6 +3,7 @@ package interaction
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/logic/user"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
@@ -40,10 +41,17 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	if err != nil {
 		return nil, err
 	}
+	IPaddr := l.ctx.Value(middleware.IPKey).(string)
+	IPattr, err := l.svcCtx.GeoIPResolver.ResolveIP(IPaddr)
+	if err != nil {
+		return nil, err
+	}
 	rpcReq := &interaction.CommentActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,
 		ActionType: req.ActionType,
+		IPAddr:     &IPaddr,
+		IPAttr:     &IPattr,
 	}
 	if req.CommentID == 0 {
 		rpcReq.CommentText = &req.CommentText
@@ -89,7 +97,7 @@ func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *s
 	if err != nil {
 		return nil, err
 	}
-	res.CreateDate = FormatTimestamp(timestamp)
+	res.CreateDate = fmt.Sprintf("%s-IP属地:%s", FormatTimestamp(timestamp), comment.Location)
 	res.ID = comment.Id
 	res.Content = comment.Content
 	userInfo, err := user.TryGetUserInfo(tokenID, comment.UserId, svcCtx, ctx)

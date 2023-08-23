@@ -5,7 +5,7 @@ package interaction;
 option go_package = "./interaction";
 
 message IsFavoriteReq {
-  int64 UserId = 1; // 调用接口的用户id
+  int64 UserId = 1;  // 调用接口的用户id
   int64 VideoId = 2; // 视频id
 }
 message IsFavoriteResp {
@@ -37,8 +37,8 @@ message CommentCountByVideoIdResp {
 }
 
 message FavoriteActionReq {
-  int64 UserId = 1; // 调用接口的用户id
-  int64 VideoId = 2; // 视频id
+  int64 UserId = 1;     // 调用接口的用户id
+  int64 VideoId = 2;    // 视频id
   int32 ActionType = 3; // 1-点赞，2-取消点赞
 }
 
@@ -55,26 +55,29 @@ message FavoriteListResp {
 }
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 message CommentActionReq {
-  int64 UserId = 1; // 调用接口的用户id
-  int64 VideoId = 2; // 视频id
+  int64 UserId = 1;     // 调用接口的用户id
+  int64 VideoId = 2;    // 视频id
   int32 ActionType = 3; // 1-发布评论，2-删除评论
-  optional string CommentText = 4; // 用户填写的评论内容，在action_type=1的时候使用
-  optional int64 CommentId = 5; // 要删除的评论id，在action_type=2的时候使用
+  optional string CommentText =
+      4; // 用户填写的评论内容，在action_type=1的时候使用
+  optional string IPAddr = 5; // 用户ip地址，在action_type=1的时候使用
+  optional string IPAttr = 6; // 用户ip所在地，在action_type=1的时候使用
+  optional int64 CommentId = 7; // 要删除的评论id，在action_type=2的时候使用
 }
 
-message CommentActionResp {
-  optional Comment Comment = 1;
-}
+message CommentActionResp { optional Comment Comment = 1; }
 
 message Comment {
-  int64 Id = 1; // 视频评论id
-  int64 UserId = 2; // 评论用户id
-  string Content = 3; // 评论内容
+  int64 Id = 1;          // 视频评论id
+  int64 UserId = 2;      // 评论用户id
+  string Content = 3;    // 评论内容
   string CreateDate = 4; // 评论发布日期，格式 mm-dd
+  string IpAddress = 5;
+  string Location = 6;
 }
 
 message CommentListReq {
-  int64 UserId = 1; // 调用接口的用户id
+  int64 UserId = 1;  // 调用接口的用户id
   int64 VideoId = 2; // 视频id
 }
 
@@ -84,9 +87,12 @@ message CommentListResp {
 
 service interaction {
   rpc IsFavorite(IsFavoriteReq) returns (IsFavoriteResp);
-  rpc GetFavoriteCountByUserId(FavoriteCountByUserIdReq) returns (FavoriteCountByUserIdResp);
-  rpc GetFavoriteCountByVideoId(FavoriteCountByVideoIdReq) returns (FavoriteCountByVideoIdResp);
-  rpc GetCommentCountByVideoId(CommentCountByVideoIdReq) returns (CommentCountByVideoIdResp);
+  rpc GetFavoriteCountByUserId(FavoriteCountByUserIdReq)
+      returns (FavoriteCountByUserIdResp);
+  rpc GetFavoriteCountByVideoId(FavoriteCountByVideoIdReq)
+      returns (FavoriteCountByVideoIdResp);
+  rpc GetCommentCountByVideoId(CommentCountByVideoIdReq)
+      returns (CommentCountByVideoIdResp);
   rpc SendFavoriteAction(FavoriteActionReq) returns (FavoriteActionResp);
   rpc GetFavoriteList(FavoriteListReq) returns (FavoriteListResp);
   rpc SendCommentAction(CommentActionReq) returns (CommentActionResp);
