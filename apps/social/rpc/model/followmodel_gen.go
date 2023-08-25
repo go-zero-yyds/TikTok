@@ -40,10 +40,11 @@ type (
 	}
 
 	Follow struct {
-		Id       int64  `db:"id"`         // 字段ID
-		UserId   int64  `db:"user_id"`    // 用户ID
-		ToUserId int64  `db:"to_user_id"` // 关注者ID
-		Behavior string `db:"behavior"`   // 关注状态 2=>没关注 1=>关注
+		Id        int64  `db:"id"`         // 字段ID
+		UserId    int64  `db:"user_id"`    // 用户ID
+		ToUserId  int64  `db:"to_user_id"` // 关注者ID
+		Behavior  string `db:"behavior"`   // 关注状态 0=>没关注 1=>关注
+		Attribute string `db:"attribute"`  // 关系 0=>陌生人 1=>关注 2=>粉丝 3=>好友
 	}
 )
 
@@ -117,8 +118,8 @@ func (m *defaultFollowModel) Insert(ctx context.Context, data *Follow) (sql.Resu
 	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
 	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, followRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, followRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior, data.Attribute)
 	}, followIdKey, followUserIdToUserIdKey)
 	return ret, err
 }
@@ -133,7 +134,7 @@ func (m *defaultFollowModel) Update(ctx context.Context, newData *Follow) error 
 	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, followRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.UserId, newData.ToUserId, newData.Behavior, newData.Id)
+		return conn.ExecCtx(ctx, query, newData.UserId, newData.ToUserId, newData.Behavior, newData.Attribute, newData.Id)
 	}, followIdKey, followUserIdToUserIdKey)
 	return err
 }
