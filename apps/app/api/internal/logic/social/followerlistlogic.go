@@ -33,7 +33,7 @@ func NewFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Foll
 func (l *FollowerListLogic) FollowerList(req *types.RelationFollowerListRequest) (resp *types.RelationFollowerListResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.UserID, 10)) //是否为19位纯数字
+	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.UserID, 10)) //是否为纯数字
 	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
 		return &types.RelationFollowerListResponse{
 			RespStatus: types.RespStatus(apiVars.UserIdRuleError),

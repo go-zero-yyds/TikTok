@@ -2,7 +2,9 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"log"
 
 	"TikTok/apps/user/rpc/internal/svc"
 	"TikTok/apps/user/rpc/model"
@@ -27,6 +29,18 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
+
+	//测试
+	mqMap := make(map[string][]string, 10)
+	mqMap["1693651455589748736"] = []string{"signature", "www.baidu1234.com"}
+	marshal, _ := json.Marshal(mqMap)
+	s := string(marshal)
+	log.Println("s:", s)
+	if err := l.svcCtx.KqPusherClient.Push(s); err != nil {
+		logx.Errorf("KqPusherClient Push Error , err :%v", err)
+	}
+	log.Println("mq发过去了")
+
 	res, err := l.svcCtx.UserModel.FindOneByUsername(l.ctx, in.Username)
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {

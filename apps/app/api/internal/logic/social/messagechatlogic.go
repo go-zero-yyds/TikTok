@@ -30,7 +30,7 @@ func NewMessageChatLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Messa
 func (l *MessageChatLogic) MessageChat(req *types.MessageChatRequest) (resp *types.MessageChatResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.ToUserID, 10)) //是否为19位纯数字
+	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.ToUserID, 10)) //是否为纯数字
 	if strconv.FormatInt(req.ToUserID, 10) == "" || matched == false {
 		return &types.MessageChatResponse{
 			RespStatus: types.RespStatus(apiVars.UserIdRuleError),

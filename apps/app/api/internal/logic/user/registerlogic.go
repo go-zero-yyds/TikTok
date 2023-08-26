@@ -30,8 +30,8 @@ func NewRegisterLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Register
 func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.UserRegisterResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)+$", req.Username) //是否为邮箱格式
-	if len(req.Username) > 32 || req.Username == "" || matched == false {
+	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]{1,32}$", req.Username) //是否符合用户名格式
+	if req.Username == "" || matched == false {
 		return &types.UserRegisterResponse{
 			RespStatus: types.RespStatus(apiVars.UsernameRuleError),
 		}, nil

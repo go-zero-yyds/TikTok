@@ -51,6 +51,8 @@ func main() {
 	}
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
+	go func() {
+		serviceGroup.Start()
+	}()
 	s.Start()
-	serviceGroup.Start()
 }

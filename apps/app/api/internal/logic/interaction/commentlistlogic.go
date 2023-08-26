@@ -31,7 +31,7 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *types.CommentListResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.VideoID, 10)) //是否为19位纯数字
+	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.VideoID, 10)) //是否为纯数字
 	if strconv.FormatInt(req.VideoID, 10) == "" || matched == false {
 		return &types.CommentListResponse{
 			RespStatus: types.RespStatus(apiVars.VideoIdRuleError),

@@ -30,7 +30,7 @@ func NewRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Re
 func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (resp *types.RelationActionResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.ToUserID, 10)) //是否为19位纯数字
+	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.ToUserID, 10)) //是否为纯数字
 	if strconv.FormatInt(req.ToUserID, 10) == "" || matched == false {
 		return &types.RelationActionResponse{
 			RespStatus: types.RespStatus(apiVars.UserIdRuleError),

@@ -42,7 +42,12 @@ func (s *UserServer) SetAvatar(ctx context.Context, in *user.SetAvatarReq) (*use
 	return l.SetAvatar(in)
 }
 
-func (s *UserServer) SetBackgroundImage(ctx context.Context, in *user.BackgroundImageReq) (*user.BackgroundImageResp, error) {
+func (s *UserServer) SetBackgroundImage(ctx context.Context, in *user.SetBackgroundImageReq) (*user.SetBackgroundImageResp, error) {
 	l := logic.NewSetBackgroundImageLogic(ctx, s.svcCtx)
 	return l.SetBackgroundImage(in)
+}
+
+func (s *UserServer) SetSignature(ctx context.Context, in *user.SetSignatureReq) (*user.SetSignatureResp, error) {
+	l := logic.NewSetSignatureLogic(ctx, s.svcCtx)
+	return l.SetSignature(in)
 }

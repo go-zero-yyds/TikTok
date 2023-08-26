@@ -11,9 +11,7 @@ import (
 func Consumers(c config.Config, ctx context.Context, svcContext *svc.ServiceContext) []service.Service {
 
 	return []service.Service{
-		kq.MustNewQueue(c.KqConsumerConf, NewAvatarSuccess(ctx, svcContext)),
-		kq.MustNewQueue(c.KqConsumerConf, NewBackgroundImageSuccess(ctx, svcContext)),
-		kq.MustNewQueue(c.KqConsumerConf, NewSignatureSuccess(ctx, svcContext)),
+		kq.MustNewQueue(c.KqConsumerConf, NewPersonalSuccess(ctx, svcContext)),
 	}
 
 }

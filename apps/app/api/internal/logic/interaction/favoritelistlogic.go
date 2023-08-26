@@ -32,7 +32,7 @@ func NewFavoriteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Favo
 func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *types.FavoriteListResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.UserID, 10)) //是否为19位纯数字
+	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.UserID, 10)) //是否为纯数字
 	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
 		return &types.FavoriteListResponse{
 			RespStatus: types.RespStatus(apiVars.VideoIdRuleError),

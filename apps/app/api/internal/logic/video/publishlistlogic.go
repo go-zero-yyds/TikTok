@@ -30,7 +30,7 @@ func NewPublishListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Publi
 func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *types.PublishListResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d{19}$", strconv.FormatInt(req.UserID, 10)) //是否为19位纯数字
+	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.UserID, 10)) //是否为纯数字
 	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
 		return &types.PublishListResponse{
 			RespStatus: types.RespStatus(apiVars.UserIdRuleError),

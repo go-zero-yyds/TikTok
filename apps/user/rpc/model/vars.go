@@ -11,4 +11,5 @@ var (
 	UserNotFound      = status.Error(100, "用户不存在")
 	UserValidation    = status.Error(200, "密码错误")
 	DuplicateUsername = status.Error(300, "用户已存在")
+	UnmarshalError    = status.Error(400, "解析错误")
 )
