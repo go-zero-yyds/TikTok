@@ -1,7 +1,7 @@
 Name: social.rpc
 Timeout: 100000 # 100s
 ListenOn: 0.0.0.0:8004
-DBSource: "root:12345678@tcp(127.0.0.1:3306)/tiktok_social?charset=utf8mb4&parseTime=True&loc=Local"
+DBSource: "root:12345678@tcp(127.0.0.1:3307)/tiktok_social?charset=utf8mb4&parseTime=True&loc=Local"
 Etcd:
   Hosts:
   - 127.0.0.1:2379
@@ -10,3 +10,32 @@ Etcd:
 Cache:
   - Host: 127.0.0.1:6379
     Type: node
+  
+#kq
+KqCPersonalCallbackConf:
+  Name: personal-callback
+  Brokers:
+    - 127.0.0.1:9092
+  Group: kqConsumer
+  Topic: personal-callback
+  Offset: first
+  Consumers: 1
+  Processors: 1
+
+KqPusherConf:
+  Brokers:
+    - 127.0.0.1:9092
+  Topic: personal-success
+
+FS:
+  Prefix: /tk/tk
+  #  AwsS3:
+  #    Endpoint: http://127.0.0.1:9000
+  #    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
+  #    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
+  #    Bucket: tiktok
+  Webdav:
+    URL: 
+    User: 
+    Password: 
+    DownloadLinkPrefix: 
