@@ -23,7 +23,6 @@ func NewPersonalSuccess(ctx context.Context, svcCtx *svc.ServiceContext) *Person
 	}
 }
 
-// todo 记得创建api和三个新函数的参数检查230824
 func (l *PersonalSuccess) Consume(key, val string) error {
 	var mqMap map[string][]string
 

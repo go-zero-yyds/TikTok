@@ -41,6 +41,7 @@ func (l *SetSignatureLogic) SetSignature(in *user.SetSignatureReq) (*user.SetSig
 		logx.Errorf("KqPusherClient Push Error , err :%v", err)
 		isSucceed = false
 	}
+
 	return &user.SetSignatureResp{
 		IsSucceed: isSucceed,
 	}, err

@@ -6,8 +6,10 @@ import (
 	"TikTok/apps/user/rpc/user"
 	"TikTok/pkg/tool"
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/zeromicro/go-zero/core/logx"
+	"strconv"
 )
 
 type RegisterLogic struct {
@@ -47,6 +49,18 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 		if errInsert != nil {
 			return nil, err
 		}
+
+		// callback (这里只有注册没问题才会发送)
+		go func() {
+			mqMap := make(map[string][]string, 10)
+			mqMap[strconv.FormatInt(snowId, 10)] = []string{"register", "true"}
+			marshal, _ := json.Marshal(mqMap)
+			callbackJSON := string(marshal)
+			if err := l.svcCtx.KqPusherClient.Push(callbackJSON); err != nil {
+				logx.Errorf("KqPusherClient Push Error , err :%v", err)
+			}
+		}()
+
 		return &user.RegisterResp{
 			UserId: snowId,
 		}, nil
