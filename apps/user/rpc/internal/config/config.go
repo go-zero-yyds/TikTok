@@ -12,12 +12,14 @@ type Config struct {
 	Cache          cache.CacheConf
 	Snowflake      SnowflakeConf
 	KqConsumerConf kq.KqConf
-	KqPusherConf   struct {
-		Brokers []string
-		Topic   string
-	}
+	KqPusherConf   KqPusherConf
 }
 type SnowflakeConf struct {
 	StartTime int64
 	Node      int64
+}
+
+type KqPusherConf struct {
+	Brokers []string
+	Topic   string
 }
