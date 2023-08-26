@@ -12,8 +12,7 @@ type Config struct {
 	Cache          cache.CacheConf
 	Snowflake      SnowflakeConf
 	KqConsumerConf kq.KqConf
-	//测试
-	KqPusherConf struct {
+	KqPusherConf   struct {
 		Brokers []string
 		Topic   string
 	}
