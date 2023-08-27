@@ -3,7 +3,9 @@ package model
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
@@ -12,12 +14,6 @@ import (
 
 var (
 	_ FavoriteModel = (*customFavoriteModel)(nil)
-
-	cacheTiktokFavoriteUserIdPrefix  = "cache:tiktok:favorite:userId:" //这两条记录拼接作为一个key
-	cacheTiktokFavoriteVideoIdsuffix = ":videoId:"
-
-	cacheTiktokFavoriteUserId  = "cache:tiktok:favorite:userId:" //单独为一个key 用来记录各自出现在数据库用的数量
-	cacheTiktokFavoriteVideoId = "cache:tiktok:favorite:videoId:"
 )
 
 type (
@@ -25,120 +21,69 @@ type (
 	// and implement the added methods in customFavoriteModel.
 	FavoriteModel interface {
 		favoriteModel
-		FindOneById(ctx context.Context, userId, videoId int64) (*Favorite, error)       //检查用户是否给视频点赞
-		userORvideoCount(ctx context.Context, Id int64, userORvideo bool) (int64, error) //用户/视频点赞数量
-		FindVideos(ctx context.Context, userId int64) ([]int64, error)                   //用户点赞视频id列表
-		IndirectUpdate(ctx context.Context, data *Favorite) error                        //管理增加缓存删除
-		IndirectInsert(ctx context.Context, data *Favorite) (sql.Result, error)          //管理更新缓存删除
-		FlushAndClean(ctx context.Context) error                                         //特定时间重置数据，删除没用数据
+		FindVideos(ctx context.Context, userId int64) ([]int64, error)
+		FlushAndClean(ctx context.Context) error
+		TranInsertOrUpdate(ctx context.Context, s sqlx.Session, data *Favorite, keys *[]string) (sql.Result, error)
+		TranEmptyOrUpdate(ctx context.Context, s sqlx.Session, newData *Favorite, keys *[]string) (result sql.Result, err error)
 	}
 
 	customFavoriteModel struct {
 		*defaultFavoriteModel
+		rds *redis.Redis
 	}
 )
 
 // NewFavoriteModel returns a model for the database table.
-func NewFavoriteModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) FavoriteModel {
+func NewFavoriteModel(r *redis.Redis, conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) FavoriteModel {
 	return &customFavoriteModel{
 		defaultFavoriteModel: newFavoriteModel(conn, c, opts...),
+		rds:                  r,
 	}
 }
 
-// 查看用户点赞视频id列表
+// FindVideos 查看用户点赞视频id列表
 func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select videoId from %s where `userId` = ? and behavior = '1'  ", m.table)
+	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '1'  ", m.table)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
-	switch err {
-	case nil:
+	switch {
+	case err == nil:
 		return resp, nil
-	case sqlc.ErrNotFound:
+	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
 	default:
 		return nil, err
 	}
 }
 
-// 检查是否存在user和video之间的联系
-// 该函数总会返回对象
-// 【缓存】
-func (m *defaultFavoriteModel) FindOneById(ctx context.Context, userId, videoId int64) (*Favorite, error) {
-	tiktokFavoriteUserIdVIdeoIdKey := fmt.Sprintf("%s%v%s%v", cacheTiktokFavoriteUserIdPrefix, userId, cacheTiktokFavoriteVideoIdsuffix, videoId)
-	var resp Favorite
-	err := m.QueryRowCtx(ctx, &resp, tiktokFavoriteUserIdVIdeoIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select * from  %s where userId = ? and videoId = ?  ", m.table)
-		return conn.QueryRowCtx(ctx, &resp, query, userId, videoId)
-	})
-	return &resp, err
-}
-
-// 查看各自点赞数量 true : user  false : video
-// 【缓存】【这部分性能不太好】
-func (m *defaultFavoriteModel) userORvideoCount(ctx context.Context, Id int64, userORvideo bool) (int64, error) {
-	var obj string
-	var Key string
-	if userORvideo {
-		obj = "userId"
-		Key = fmt.Sprintf("%s%v", cacheTiktokFavoriteUserId, Id)
-	} else {
-		obj = "videoId"
-		Key = fmt.Sprintf("%s%v", cacheTiktokFavoriteVideoId, Id)
-	}
-	var resp int64
-	err := m.QueryRowCtx(ctx, &resp, Key, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select count(*) from %s where `%s` = ? and behavior = '1' ", m.table, obj)
-		return conn.QueryRowCtx(ctx, &resp, query, Id)
-	})
-	switch err {
-	case nil:
-		return resp, nil
-	case sqlc.ErrNotFound:
-		return 0, ErrNotFound
-	default:
-		return 0, err
-	}
-}
-
-// 管理insert缓存删除
-func (m *defaultFavoriteModel) IndirectInsert(ctx context.Context, data *Favorite) (sql.Result, error) {
-	tiktokFavoriteUserIdVIdeoIdKey := fmt.Sprintf("%s%v%s%v", cacheTiktokFavoriteUserIdPrefix, data.UserId, cacheTiktokFavoriteVideoIdsuffix, data.VideoId)
-	tiktokFavoriteUserIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteUserId, data.UserId)
-	tiktokFavoriteVideoIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteVideoId, data.VideoId)
-	//删除缓存
-	m.DelCacheCtx(ctx, tiktokFavoriteUserIdVIdeoIdKey, tiktokFavoriteUserIdKey, tiktokFavoriteVideoIdKey)
-	return m.Insert(ctx, data)
-}
-
-func (m *defaultFavoriteModel) IndirectUpdate(ctx context.Context, data *Favorite) error {
-	tiktokFavoriteUserIdVIdeoIdKey := fmt.Sprintf("%s%v%s%v", cacheTiktokFavoriteUserIdPrefix, data.UserId, cacheTiktokFavoriteVideoIdsuffix, data.VideoId)
-	tiktokFavoriteUserIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteUserId, data.UserId)
-	tiktokFavoriteVideoIdKey := fmt.Sprintf("%s%v", cacheTiktokFavoriteVideoId, data.VideoId)
-	//删除缓存
-	m.DelCacheCtx(ctx, tiktokFavoriteUserIdVIdeoIdKey, tiktokFavoriteUserIdKey, tiktokFavoriteVideoIdKey)
-	
-	//只有 未点赞 -> 点赞会处理 处理定时删除时的数据一致性
-	//-------------------------后续可能还可以优化一下...
-	if data.Behavior == "1" {
-		//查询是否在表中,在表中更新，否则增加
-		var resp Favorite
-		query := fmt.Sprintf("select * from  %s  where favoriteId = ? ", m.table)
-		err := m.QueryRowNoCacheCtx(ctx, &resp, query, data.FavoriteId)
-		if err != nil && err != ErrNotFound {
-			return err
-		}
-		if err == ErrNotFound {
-			_, err := m.Insert(ctx, data)
-			return err
-		}
-	}
-	return m.Update(ctx, data)
-}
-
-// 删除数据库中所有behavior为2的值，减少冗余
+// FlushAndClean 删除数据库中所有behavior为2的值，减少冗余
 func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
 	//这里不删除缓存中数据
 	query := fmt.Sprintf("delete from %s where behavior = '2' ", m.table)
-	_, err := m.ExecNoCache(query)
+	_, err := m.ExecNoCacheCtx(ctx, query)
 	return err
+}
+
+// InsertOrUpdate 插入一条关注记录或者更新关注记录
+func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Session, data *Favorite, keys *[]string) (sql.Result, error) {
+	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, data.FavoriteId)
+	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, data.UserId, data.VideoId)
+	query := fmt.Sprintf(`
+			INSERT INTO %s (%s)
+			VALUES (?, ?, ?)
+			ON DUPLICATE KEY UPDATE behavior = ?;
+		`, m.table, favoriteRowsExpectAutoSet)
+	ret, err := s.ExecCtx(ctx, query, data.UserId, data.VideoId, data.Behavior, data.Behavior)
+	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
+	return ret, err
+}
+
+// EmptyOrUpdate 更新关注记录没有则不操作
+func (m *defaultFavoriteModel) TranEmptyOrUpdate(ctx context.Context, s sqlx.Session, newData *Favorite, keys *[]string) (result sql.Result, err error) {
+	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, newData.FavoriteId)
+	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, newData.UserId, newData.VideoId)
+	query := fmt.Sprintf("update %s set %s where `user_id` = ? and video_id = ?", m.table, favoriteRowsWithPlaceHolder)
+	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.UserId, newData.VideoId)
+	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
+	return ret, err
 }

@@ -39,7 +39,7 @@ func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *
 		return nil, err
 	}
 
-	list, err := l.svcCtx.InteractionRPC.GetFavoriteList(l.ctx, &interaction.FavoriteListReq{UserId: tokenID})
+	list, err := l.svcCtx.InteractionRPC.GetFavoriteList(l.ctx, &interaction.FavoriteListReq{UserId: req.UserID})
 	if err != nil {
 		return nil, err
 	}

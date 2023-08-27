@@ -36,7 +36,7 @@ func (l *FollowListLogic) FollowList(req *types.RelationFollowListRequest) (resp
 	if err != nil {
 		return nil, err
 	}
-	list, err := l.svcCtx.SocialRPC.GetRelationFollowList(l.ctx, &social.RelationFollowListReq{UserId: tokenID})
+	list, err := l.svcCtx.SocialRPC.GetRelationFollowList(l.ctx, &social.RelationFollowListReq{UserId: req.UserID})
 	if err != nil {
 		return nil, err
 	}

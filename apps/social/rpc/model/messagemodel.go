@@ -63,7 +63,7 @@ func (m *defaultMessageModel) FindMessageList(ctx context.Context, userId int64,
 		FROM %s m
 		WHERE (m.from_user_id = ? AND m.to_user_id = ? AND m.create_time > ?)
 		   OR (m.from_user_id = ? AND m.to_user_id = ? AND m.create_time > ?)
-		ORDER BY m.create_time ASC;
+		ORDER BY m.create_time ASC LIMIT 1000;
 	`, messageRows, m.table)
 	var resp []Message
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId, toUserId, t, toUserId, userId, t)
