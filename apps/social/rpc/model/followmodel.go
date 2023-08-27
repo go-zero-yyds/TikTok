@@ -73,15 +73,15 @@ func (m *defaultFollowModel) TranLockByUserIdToUserId(ctx context.Context, s sql
 	}
 }
 
-func (m *defaultFollowModel) TranInsert(ctx context.Context, s sqlx.Session, data *Follow, _ *[]string) (sql.Result, error) {
-	//followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
-	//followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
+func (m *defaultFollowModel) TranInsert(ctx context.Context, s sqlx.Session, data *Follow, keys *[]string) (sql.Result, error) {
+	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
+	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, followRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior, data.Attribute)
 	if err != nil {
 		return nil, err
 	}
-	//*keys = append(*keys, followIdKey, followUserIdToUserIdKey)
+	*keys = append(*keys, followIdKey, followUserIdToUserIdKey)
 	return ret, err
 }
 
@@ -129,7 +129,7 @@ func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64)
 
 // FindFriendList 查看用户好友id列表
 func (m *defaultFollowModel) FindFriendList(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and attribute = %s LIMIT 1000", m.table, StatusFriend)
+	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and attribute = '%s' LIMIT 1000", m.table, StatusFriend)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
