@@ -67,8 +67,10 @@ func (d *DBAction) DoFollow(ctx context.Context, userId, toUserId int64) (bool, 
 				if v.Behavior == FollowTypeFollowing {
 					return nil
 				}
+				user.Id = v.Id
 				oldUserStatus = v.Attribute
 			} else {
+				toUser.Id = v.Id
 				toUser.Behavior = v.Behavior
 			}
 		}
@@ -142,8 +144,10 @@ func (d *DBAction) UnFollow(ctx context.Context, userId, toUserId int64) (bool, 
 				if v.Behavior == FollowTypeNotFollowing {
 					return nil
 				}
+				user.Id = v.Id
 				oldUserStatus = v.Attribute
 			} else {
+				toUser.Id = v.Id
 				toUser.Behavior = v.Behavior
 			}
 		}
