@@ -15,6 +15,7 @@ CREATE TABLE `message`  (
                             `to_user_id` bigint NOT NULL COMMENT '消息接收者ID',
                             `content` varchar(255) CHARACTER SET utf8mb4 COLLATE uca1400_as_ci NOT NULL COMMENT '消息内容',
                             `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息创建时间',
+                            INDEX idx_from_user_to_user (from_user_id, to_user_id) COMMENT '联合索引,联查聊天记录使用',
                             PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = uca1400_as_ci ROW_FORMAT = Dynamic;
 
