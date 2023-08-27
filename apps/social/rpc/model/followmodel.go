@@ -129,7 +129,7 @@ func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64)
 
 // FindFriendList 查看用户好友id列表
 func (m *defaultFollowModel) FindFriendList(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and attribute = %s LIMIT 1000", m.table, StatusFriend)
+	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and attribute = '%s' LIMIT 1000", m.table, StatusFriend)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {

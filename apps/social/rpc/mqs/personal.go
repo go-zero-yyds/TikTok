@@ -40,6 +40,7 @@ func (l *PersonalSuccess) Consume(key, val string) error {
 		if actionType == "register"{
 			for k := range l.svcCtx.Bot.Robots{
 				l.svcCtx.DBAction.FollowAction(l.ctx, userId, int64(k), "1")
+				l.svcCtx.DBAction.FollowAction(l.ctx, int64(k),userId, "1")
 				l.svcCtx.DBAction.SendMessage(l.ctx , k , userId , l.svcCtx.Bot.Robots[k].DisplayPrologue())
 			}
 			continue
