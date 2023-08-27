@@ -10,24 +10,34 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
-var _ FollowModel = (*customFollowModel)(nil)
-var (
-	cacheFollowCountIdPrefix   = "cache:follow:count:id:"
-	cacheFollowerCountIdPrefix = "cache:follower:count:id:"
+// 定义用户状态常量
+const (
+	StatusStranger = "0"
+	StatusFollow   = "1"
+	StatusFan      = "2"
+	StatusFriend   = "3"
 )
+
+// 定义关注类型常量
+const (
+	FollowTypeNotFollowing = "0"
+	FollowTypeFollowing    = "1"
+)
+
+var _ FollowModel = (*customFollowModel)(nil)
 
 type (
 	// FollowModel is an interface to be customized, add more methods here,
 	// and implement the added methods in customFollowModel.
 	FollowModel interface {
 		followModel
-		InsertIgnore(ctx context.Context, data *Follow) (sql.Result, error)
-		InsertOrUpdate(ctx context.Context, data *Follow) (sql.Result, error)
-		FindByFollowCount(ctx context.Context, id int64) (int64, error)
-		FindByFollowerCount(ctx context.Context, id int64) (int64, error)
 		FindFollowList(ctx context.Context, userId int64) ([]int64, error)
 		FindFollowerList(ctx context.Context, userId int64) ([]int64, error)
 		FindFriendList(ctx context.Context, userId int64) ([]int64, error)
+		TranLockByUserIdToUserId(ctx context.Context, s sqlx.Session, userId int64, toUserId int64) ([]Follow, error)
+		TranInsert(ctx context.Context, s sqlx.Session, data *Follow, keys *[]string) (sql.Result, error)
+		TranUpdate(ctx context.Context, s sqlx.Session, newData *Follow, keys *[]string) (sql.Result, error)
+		StateMachine(userStatus, userFollowType string) (newUserStatus string, newToUserStatus string)
 	}
 
 	customFollowModel struct {
@@ -42,69 +52,53 @@ func NewFollowModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) 
 	}
 }
 
-func (m *defaultFollowModel) InsertIgnore(ctx context.Context, data *Follow) (sql.Result, error) {
-	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
-	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert ignore into %s (%s) values (?, ?, ?)", m.table, followRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior)
-	}, followIdKey, followUserIdToUserIdKey)
-	return ret, err
-}
+func (m *defaultFollowModel) TranLockByUserIdToUserId(ctx context.Context, s sqlx.Session, userId int64, toUserId int64) ([]Follow, error) {
+	//followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, userId, toUserId)
+	var resp []Follow
+	query := fmt.Sprintf(`select %s from %s where
+ 			(user_id = ? and to_user_id = ?) or (to_user_id = ? and user_id = ?)
+            for update`, followRows, m.table)
+	err := s.QueryRowsCtx(ctx, &resp, query, userId, toUserId, userId, toUserId)
+	if err != nil {
+		return nil, err
+	}
 
-func (m *defaultFollowModel) InsertOrUpdate(ctx context.Context, data *Follow) (sql.Result, error) {
-	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
-	followCountIdKey := fmt.Sprintf("%s%v", cacheFollowCountIdPrefix, data.UserId)
-	followerCountIdKey := fmt.Sprintf("%s%v", cacheFollowerCountIdPrefix, data.ToUserId)
-	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf(`
-			INSERT INTO %s (%s)
-			VALUES (?, ?, ?)
-			ON DUPLICATE KEY UPDATE behavior = ?;
-		`, m.table, followRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior, data.Behavior)
-	}, followIdKey, followUserIdToUserIdKey, followCountIdKey, followerCountIdKey)
-	return ret, err
-}
-
-func (m *defaultFollowModel) FindByFollowCount(ctx context.Context, id int64) (int64, error) {
-	followCountIdKey := fmt.Sprintf("%s%v", cacheFollowCountIdPrefix, id)
-	var resp int64
-	err := m.QueryRowCtx(ctx, &resp, followCountIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select count(*) from %s where `user_id` = ? and `behavior` = '1'", m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
 	switch {
 	case err == nil:
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
-		return 0, ErrNotFound
+		return nil, ErrNotFound
 	default:
-		return 0, err
+		return nil, err
 	}
 }
 
-func (m *defaultFollowModel) FindByFollowerCount(ctx context.Context, id int64) (int64, error) {
-	followCountIdKey := fmt.Sprintf("%s%v", cacheFollowerCountIdPrefix, id)
-	var resp int64
-	err := m.QueryRowCtx(ctx, &resp, followCountIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select count(*) from %s where `to_user_id` = ? and `behavior` = '1'", m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
-	switch {
-	case err == nil:
-		return resp, nil
-	case errors.Is(err, sqlc.ErrNotFound):
-		return 0, ErrNotFound
-	default:
-		return 0, err
+func (m *defaultFollowModel) TranInsert(ctx context.Context, s sqlx.Session, data *Follow, keys *[]string) (sql.Result, error) {
+	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
+	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, followRowsExpectAutoSet)
+	ret, err := s.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior, data.Attribute)
+	if err != nil {
+		return nil, err
 	}
+	*keys = append(*keys, followIdKey, followUserIdToUserIdKey)
+	return ret, err
+}
+
+// TranUpdate 更新关注记录没有则不操作
+func (m *defaultFollowModel) TranUpdate(ctx context.Context, s sqlx.Session, newData *Follow, keys *[]string) (result sql.Result, err error) {
+	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, newData.Id)
+	//followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, newData.UserId, newData.ToUserId)
+	query := fmt.Sprintf("update %s set %s where `user_id` = ? and to_user_id = ?", m.table, followRowsWithPlaceHolder)
+	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.ToUserId, newData.Behavior, newData.Attribute, newData.UserId, newData.ToUserId)
+	*keys = append(*keys, followIdKey)
+	return ret, err
 }
 
 // FindFollowList 查看用户关注id列表
 func (m *defaultFollowModel) FindFollowList(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and behavior = '1'", m.table)
+	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and (attribute = '%s' or attribute = '%s') LIMIT 1000",
+		m.table, StatusFollow, StatusFriend)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
@@ -119,7 +113,8 @@ func (m *defaultFollowModel) FindFollowList(ctx context.Context, userId int64) (
 
 // FindFollowerList 查看用户粉丝id列表
 func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select user_id from %s where `to_user_id` = ? and behavior = '1'", m.table)
+	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and (attribute = '%s' or attribute = '%s') LIMIT 1000",
+		m.table, StatusFan, StatusFriend)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
@@ -132,14 +127,9 @@ func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64)
 	}
 }
 
-// FindFriendList 查看用户粉丝id列表
+// FindFriendList 查看用户好友id列表
 func (m *defaultFollowModel) FindFriendList(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf(`
-		SELECT DISTINCT f1.to_user_id
-		FROM %s f1
-		JOIN %s f2 ON f1.to_user_id = f2.user_id AND f1.user_id = f2.to_user_id
-		WHERE f1.user_id = ? AND f1.behavior = '1' AND f2.behavior = '1';
-	`, m.table, m.table)
+	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and attribute = '%s' LIMIT 1000", m.table, StatusFriend)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
@@ -150,4 +140,47 @@ func (m *defaultFollowModel) FindFriendList(ctx context.Context, userId int64) (
 	default:
 		return nil, err
 	}
+}
+
+// StateMachine 根据用户状态和关注类型返回新的用户状态
+func (m *defaultFollowModel) StateMachine(userStatus, userFollowType string) (newUserStatus string, newToUserStatus string) {
+	switch userStatus {
+	case StatusStranger:
+		if userFollowType == FollowTypeFollowing {
+			newUserStatus = StatusFollow
+			newToUserStatus = StatusFan
+		} else {
+			newUserStatus = StatusStranger
+			newToUserStatus = StatusStranger
+		}
+	case StatusFollow:
+		if userFollowType == FollowTypeFollowing {
+			newUserStatus = StatusFollow
+			newToUserStatus = StatusFan
+		} else {
+			newUserStatus = StatusStranger
+			newToUserStatus = StatusStranger
+		}
+	case StatusFan:
+		if userFollowType == FollowTypeFollowing {
+			newUserStatus = StatusFriend
+			newToUserStatus = StatusFriend
+		} else {
+			newUserStatus = StatusFan
+			newToUserStatus = StatusFollow
+		}
+	case StatusFriend:
+		if userFollowType == FollowTypeFollowing {
+			newUserStatus = StatusFriend
+			newToUserStatus = StatusFriend
+		} else {
+			newUserStatus = StatusFan
+			newToUserStatus = StatusFollow
+		}
+	default:
+		newUserStatus = StatusStranger
+		newToUserStatus = StatusStranger
+	}
+
+	return newUserStatus, newToUserStatus
 }
