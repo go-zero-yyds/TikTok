@@ -113,7 +113,7 @@ func (d *DBAction) DoFollow(ctx context.Context, userId, toUserId int64) (bool, 
 	return res, nil
 }
 
-// UnFollow 关注对方
+// UnFollow 取消关注对方
 func (d *DBAction) UnFollow(ctx context.Context, userId, toUserId int64) (bool, error) {
 
 	var res bool
