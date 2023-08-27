@@ -2,7 +2,6 @@ package ipattr
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net"
 	"os"
@@ -11,21 +10,34 @@ import (
 )
 
 type GeoIPResolver struct {
-	DB       *geoip2.Reader
-	JsonData map[string]interface{}
+	DB               *geoip2.Reader
+	SubdivisionsData map[string]interface{}
 }
 
-func NewGeoIPResolver(dbFilePath, jsonFilePath string) (*GeoIPResolver, error) {
+func NewGeoIPResolver(dbFilePath, subdivisionsPath string) (*GeoIPResolver, error) {
 	db, err := geoip2.Open(dbFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	file, err := os.Open(jsonFilePath)
+	subdivisions, err := jsonToMap(err, subdivisionsPath)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	return &GeoIPResolver{
+		DB:               db,
+		SubdivisionsData: subdivisions,
+	}, nil
+}
+
+func jsonToMap(err error, subdivisionsPath string) (map[string]interface{}, error) {
+	file, err := os.Open(subdivisionsPath)
+	if err != nil {
+		return nil, err
+	}
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	data, err := io.ReadAll(file)
 	if err != nil {
@@ -37,15 +49,7 @@ func NewGeoIPResolver(dbFilePath, jsonFilePath string) (*GeoIPResolver, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return &GeoIPResolver{
-		DB:       db,
-		JsonData: jsonData,
-	}, nil
-}
-
-func (r *GeoIPResolver) Close() {
-	r.DB.Close()
+	return jsonData, nil
 }
 
 func (r *GeoIPResolver) ResolveIP(ipString string) (string, error) {
@@ -54,9 +58,14 @@ func (r *GeoIPResolver) ResolveIP(ipString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	if zh, exists := r.JsonData[record.City.Names["en"]]; exists {
-		return fmt.Sprint(zh), nil
+	if zh, exists := record.Subdivisions[0].Names["zh-CN"]; exists {
+		return zh, nil
 	}
-	return record.City.Names["en"], nil
+	if zh, exists := r.SubdivisionsData[record.Subdivisions[0].Names["en"]]; exists {
+		return zh.(string), nil
+	}
+	if en, exists := record.Subdivisions[0].Names["en"]; exists {
+		return en, nil
+	}
+	return "", nil
 }

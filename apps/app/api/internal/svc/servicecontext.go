@@ -35,7 +35,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	} else {
 		fs = FileSystem.New(c.FS.Webdav.URL, c.FS.Webdav.User, c.FS.Webdav.Password, c.FS.Prefix, c.FS.Webdav.DownloadLinkPrefix)
 	}
-	geoIPResolver, _ := ipattr.NewGeoIPResolver(c.IP.DbFilePath, c.IP.JsonFilePath)
+	geoIPResolver, _ := ipattr.NewGeoIPResolver(c.IP.DbFilePath, c.IP.JsonSubdivisionsPath)
 
 	return &ServiceContext{
 		Config:         c,

@@ -42,6 +42,8 @@ func (l *SendCommentActionLogic) SendCommentAction(in *interaction.CommentAction
 				UserId:     resp.UserId,
 				Content:    resp.Content,
 				CreateDate: fmt.Sprintf("%v", resp.CreateDate.Unix()),
+				IpAddress:  resp.IpAddress,
+				Location:   resp.Location,
 			},
 		}, nil
 	}

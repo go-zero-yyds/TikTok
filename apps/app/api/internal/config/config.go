@@ -33,7 +33,7 @@ type Config struct {
 		Prefix string
 	}
 	IP struct {
-		DbFilePath   string
-		JsonFilePath string
+		DbFilePath           string
+		JsonSubdivisionsPath string
 	}
 }
