@@ -3,6 +3,7 @@ package interaction
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/logic/user"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
@@ -40,10 +41,17 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	if err != nil {
 		return nil, err
 	}
+	IPAddr := l.ctx.Value(middleware.IPKey).(string)
+	IPAttr, err := l.svcCtx.GeoIPResolver.ResolveIP(IPAddr)
+	if err != nil {
+		return nil, err
+	}
 	rpcReq := &interaction.CommentActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,
 		ActionType: req.ActionType,
+		IPAddr:     &IPAddr,
+		IPAttr:     &IPAttr,
 	}
 	if req.CommentID == 0 {
 		rpcReq.CommentText = &req.CommentText
@@ -89,7 +97,11 @@ func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *s
 	if err != nil {
 		return nil, err
 	}
-	res.CreateDate = FormatTimestamp(timestamp)
+	if comment.Location != "" {
+		res.CreateDate = fmt.Sprintf("%s · IP 属地%s", FormatTimestamp(timestamp), comment.Location)
+	} else {
+		res.CreateDate = FormatTimestamp(timestamp)
+	}
 	res.ID = comment.Id
 	res.Content = comment.Content
 	userInfo, err := user.TryGetUserInfo(tokenID, comment.UserId, svcCtx, ctx)
@@ -113,11 +125,13 @@ func FormatTimestamp(timestamp int64) string {
 	if year == timestampYear && month == timestampMonth && day == timestampDay {
 		diff := currentTime.Sub(timestampTime)
 		if diff.Hours() >= 1 {
-			return fmt.Sprintf("%.0f小时前", diff.Hours())
+			return fmt.Sprintf("%.0f 小时前", diff.Hours())
 		} else if diff.Minutes() >= 1 {
-			return fmt.Sprintf("%.0f分钟前", diff.Minutes())
+			return fmt.Sprintf("%.0f 分钟前", diff.Minutes())
+		} else if diff.Seconds() >= 1 {
+			return fmt.Sprintf("%.0f 秒钟前", diff.Seconds())
 		} else {
-			return fmt.Sprintf("%.0f秒钟前", diff.Seconds())
+			return "刚刚"
 		}
 	} else if year == timestampYear && month == timestampMonth && day-1 == timestampDay {
 		return fmt.Sprintf("昨天 %02d:%02d", timestampTime.Hour(), timestampTime.Minute())

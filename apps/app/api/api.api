@@ -73,6 +73,18 @@ service api-api {
 @server(
 	prefix: douyin
 	group: interaction
+	middleware: ClientIPMiddleware
+)
+service api-api {
+	@doc "commentAction"
+	@handler commentAction
+	post /comment/action (CommentActionRequest) returns (CommentActionResponse)
+
+}
+
+@server(
+	prefix: douyin
+	group: interaction
 )
 service api-api {
 	@doc "favoriteAction"
@@ -82,9 +94,6 @@ service api-api {
 	@handler favoriteList
 	get /favorite/list (FavoriteListRequest) returns (FavoriteListResponse)
 
-	@doc "commentAction"
-	@handler commentAction
-	post /comment/action (CommentActionRequest) returns (CommentActionResponse)
 	@doc "commentList"
 	@handler commentList
 	get /comment/list (CommentListRequest) returns (CommentListResponse)

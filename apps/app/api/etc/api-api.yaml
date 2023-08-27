@@ -45,7 +45,11 @@ FS:
   #    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
   #    Bucket: tiktok
   Webdav:
-    URL: 
-    User: 
-    Password: 
-    DownloadLinkPrefix: 
+    URL:
+    User:
+    Password:
+    DownloadLinkPrefix:
+
+IP:
+  DbFilePath: ./utils/IPattribution/mmdb/dbip-city-lite.mmdb
+  JsonFilePath: ./utils/IPattribution/mmdb/city.json

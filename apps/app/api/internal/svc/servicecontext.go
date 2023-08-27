@@ -2,23 +2,30 @@ package svc
 
 import (
 	"TikTok/apps/app/api/internal/config"
+	"TikTok/apps/app/api/internal/middleware"
+
+	ipattr "TikTok/apps/app/api/utils/IPattribution"
 	"TikTok/apps/app/api/utils/auth"
 	"TikTok/apps/interaction/rpc/interactionclient"
 	"TikTok/apps/social/rpc/socialclient"
 	"TikTok/apps/user/rpc/userclient"
 	"TikTok/apps/video/rpc/videoclient"
 	"TikTok/pkg/FileSystem"
+
+	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
 type ServiceContext struct {
-	Config         config.Config
-	UserRPC        userclient.User
-	VideoRPC       videoclient.Video
-	InteractionRPC interactionclient.Interaction
-	SocialRPC      socialclient.Social
-	JwtAuth        auth.JwtAuth
-	FS             FileSystem.FileSystem
+	Config             config.Config
+	UserRPC            userclient.User
+	VideoRPC           videoclient.Video
+	InteractionRPC     interactionclient.Interaction
+	SocialRPC          socialclient.Social
+	JwtAuth            auth.JwtAuth
+	FS                 FileSystem.FileSystem
+	ClientIPMiddleware rest.Middleware
+	GeoIPResolver      ipattr.GeoIPResolver
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -28,6 +35,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	} else {
 		fs = FileSystem.New(c.FS.Webdav.URL, c.FS.Webdav.User, c.FS.Webdav.Password, c.FS.Prefix, c.FS.Webdav.DownloadLinkPrefix)
 	}
+	geoIPResolver, _ := ipattr.NewGeoIPResolver(c.IP.DbFilePath, c.IP.JsonSubdivisionsPath)
+
 	return &ServiceContext{
 		Config:         c,
 		UserRPC:        userclient.NewUser(zrpc.MustNewClient(c.UserRPC)),
@@ -38,6 +47,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			AccessSecret: []byte(c.JwtAuth.AccessSecret),
 			AccessExpire: c.JwtAuth.AccessExpire,
 		},
-		FS: fs,
+		FS:                 fs,
+		ClientIPMiddleware: middleware.NewClientIPMiddleware().Handle,
+		GeoIPResolver:      *geoIPResolver,
 	}
 }

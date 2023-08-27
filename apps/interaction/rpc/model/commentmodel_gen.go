@@ -47,6 +47,8 @@ type (
 		CreateDate time.Time `db:"create_date"` // 创建日期
 		Content    string    `db:"content"`     // 用户评论内容
 		IsDeleted  string    `db:"is_deleted"`  // 0:未删除 1:已删除
+		IpAddress  string    `db:"ip_address"`  // 用户IP地址
+		Location   string    `db:"location"`    // IP地址归属地
 	}
 )
 

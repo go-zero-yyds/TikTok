@@ -30,7 +30,7 @@ func (l *SendCommentActionLogic) SendCommentAction(in *interaction.CommentAction
 	if in.ActionType > 2 {
 		return nil, nil
 	}
-	resp, err := l.svcCtx.DBAction.CommentAction(l.ctx, in.UserId, in.VideoId, in.ActionType, in.CommentText, in.CommentId)
+	resp, err := l.svcCtx.DBAction.CommentAction(l.ctx, in.UserId, in.VideoId, in.ActionType, in.CommentText, in.IPAddr, in.IPAttr, in.CommentId)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +42,8 @@ func (l *SendCommentActionLogic) SendCommentAction(in *interaction.CommentAction
 				UserId:     resp.UserId,
 				Content:    resp.Content,
 				CreateDate: fmt.Sprintf("%v", resp.CreateDate.Unix()),
+				IpAddress:  resp.IpAddress,
+				Location:   resp.Location,
 			},
 		}, nil
 	}
