@@ -57,6 +57,29 @@ message BasicVideoInfoResp {
   BasicVideoInfo Video = 1; // 视频信息
 }
 
+
+// 热门视频事件通知
+message NotifyHotVideoReq {
+  int64 videoId = 1; // 视频id
+  int64 userId = 2; // 用户id
+  int32 ActionType = 3; // 1-点赞，2-取消点赞
+}
+
+message NotifyHotVideoResp { }
+
+// 校验热门视频请求
+message CheckHotVideoReq {
+  int64 videoId = 1; // 视频id
+}
+
+message CheckHotVideoResp {
+  int32 isHotVideo = 1; // 是否热门视频
+}
+message VideoPusherReq {
+  int64 videoId = 1; // 视频id
+}
+
+message VideoPusherResp {}
 service Video {
   rpc GetWorkCountByUserId(WorkCountByUserIdReq)
       returns (WorkCountByUserIdResp);
@@ -64,4 +87,9 @@ service Video {
   rpc SendPublishAction(PublishActionReq) returns (PublishActionResp);
   rpc GetPublishList(PublishListReq) returns (PublishListResp);
   rpc Detail(BasicVideoInfoReq) returns (BasicVideoInfoResp);
+  // 视频事件通知,如:点赞、评论、分享
+  rpc NotifyHotVideo(NotifyHotVideoReq) returns(NotifyHotVideoResp);
+  // 校验热门视频
+  rpc CheckHotVideo(CheckHotVideoReq) returns(CheckHotVideoResp);
+  rpc VideoPusher(VideoPusherReq) returns(VideoPusherResp);
 }

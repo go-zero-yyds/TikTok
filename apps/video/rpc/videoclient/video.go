@@ -24,13 +24,21 @@ type (
 	PublishListResp       = video.PublishListResp
 	WorkCountByUserIdReq  = video.WorkCountByUserIdReq
 	WorkCountByUserIdResp = video.WorkCountByUserIdResp
-
+	NotifyHotVideoReq     = video.NotifyHotVideoReq 
+	NotifyHotVideoResp    = video.NotifyHotVideoResp
+	CheckHotVideoReq 	  = video.CheckHotVideoReq
+	CheckHotVideoResp 	  = video.CheckHotVideoResp
+	VideoPusherReq 		  = video.VideoPusherReq
+	VideoPusherResp 	  = video.VideoPusherResp
 	Video interface {
 		GetWorkCountByUserId(ctx context.Context, in *WorkCountByUserIdReq, opts ...grpc.CallOption) (*WorkCountByUserIdResp, error)
 		GetFeed(ctx context.Context, in *FeedReq, opts ...grpc.CallOption) (*FeedResp, error)
 		SendPublishAction(ctx context.Context, in *PublishActionReq, opts ...grpc.CallOption) (*PublishActionResp, error)
 		GetPublishList(ctx context.Context, in *PublishListReq, opts ...grpc.CallOption) (*PublishListResp, error)
 		Detail(ctx context.Context, in *BasicVideoInfoReq, opts ...grpc.CallOption) (*BasicVideoInfoResp, error)
+		NotifyHotVideo(ctx context.Context, in *NotifyHotVideoReq, opts ...grpc.CallOption) (*NotifyHotVideoResp, error)
+		CheckHotVideo(ctx context.Context, in *CheckHotVideoReq, opts ...grpc.CallOption) (*CheckHotVideoResp, error)
+		VideoPusher(ctx context.Context, in *VideoPusherReq,opts ...grpc.CallOption) (*VideoPusherResp, error) 
 	}
 
 	defaultVideo struct {
@@ -67,4 +75,19 @@ func (m *defaultVideo) GetPublishList(ctx context.Context, in *PublishListReq, o
 func (m *defaultVideo) Detail(ctx context.Context, in *BasicVideoInfoReq, opts ...grpc.CallOption) (*BasicVideoInfoResp, error) {
 	client := video.NewVideoClient(m.cli.Conn())
 	return client.Detail(ctx, in, opts...)
+}
+
+func (m *defaultVideo) NotifyHotVideo(ctx context.Context, in *NotifyHotVideoReq, opts ...grpc.CallOption) (*NotifyHotVideoResp, error) {
+	client := video.NewVideoClient(m.cli.Conn())
+	return client.NotifyHotVideo(ctx, in, opts...)
+}
+
+func (m *defaultVideo) CheckHotVideo(ctx context.Context, in *CheckHotVideoReq,opts ...grpc.CallOption) (*CheckHotVideoResp, error) {
+	client := video.NewVideoClient(m.cli.Conn())
+	return client.CheckHotVideo(ctx, in, opts...)
+}
+
+func (m *defaultVideo) VideoPusher(ctx context.Context, in *VideoPusherReq,opts ...grpc.CallOption) (*VideoPusherResp, error) {
+	client := video.NewVideoClient(m.cli.Conn())
+	return client.VideoPusher(ctx, in, opts...)
 }
