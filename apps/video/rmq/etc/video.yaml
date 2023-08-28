@@ -1,0 +1,32 @@
+Name: video.rmq
+ListenOn: 0.0.0.0:8003
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: video.rpc
+DBSource: root:12345678@tcp(localhost:3306)/tiktok_video?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+Cache:
+  - Host: 127.0.0.1:6379
+    Type: node
+
+RedisConf:
+  Host: 127.0.0.1:6379
+  Type: node
+  Pass: ""
+
+Kafka:
+  Name: hotvideo
+  Brokers:
+    - localhost:9095
+    - localhost:9094
+    - localhost:9093
+  Group: hotvideo
+  Topic: video-topic
+  Consumers: 1
+
+VideoRPC:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    key: video.rpc
+  NonBlock: true
