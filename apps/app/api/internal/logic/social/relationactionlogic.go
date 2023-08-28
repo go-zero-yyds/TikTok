@@ -2,13 +2,10 @@ package social
 
 import (
 	"TikTok/apps/app/api/apiVars"
-	"TikTok/apps/social/rpc/social"
-	"context"
-	"regexp"
-	"strconv"
-
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
+	"TikTok/apps/social/rpc/social"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -30,17 +27,6 @@ func NewRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Re
 func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (resp *types.RelationActionResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.ToUserID, 10)) //是否为纯数字
-	if strconv.FormatInt(req.ToUserID, 10) == "" || matched == false {
-		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apiVars.UserIdRuleError),
-		}, nil
-	} else if (req.ActionType != 1) && (req.ActionType != 2) { //是否有除1或2的数字
-		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apiVars.ActionTypeRuleError),
-		}, nil
-	}
-
 	if req.Token == "" {
 		return &types.RelationActionResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

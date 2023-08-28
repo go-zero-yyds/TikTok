@@ -39,16 +39,6 @@ func NewPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pub
 func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *http.Request) (resp *types.PublishActionResponse, err error) {
 
 	// 参数检查
-	if req.Title == "" { //检查标题是否为空
-		return &types.PublishActionResponse{
-			RespStatus: types.RespStatus(apiVars.TitleRuleError),
-		}, nil
-	} else if req.Data == nil { //检查文件是否存在
-		return &types.PublishActionResponse{
-			RespStatus: types.RespStatus(apiVars.FileNotFound),
-		}, nil
-	}
-
 	if req.Token == "" {
 		return &types.PublishActionResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

@@ -31,11 +31,11 @@ func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.Us
 
 	// 参数检查
 	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]{1,32}$", req.Username) //是否符合用户名格式
-	if req.Username == "" || matched == false {
+	if matched == false {
 		return &types.UserRegisterResponse{
 			RespStatus: types.RespStatus(apiVars.UsernameRuleError),
 		}, nil
-	} else if len(req.Password) < 5 || len(req.Password) > 32 || req.Password == "" {
+	} else if len(req.Password) < 5 || len(req.Password) > 32 {
 		return &types.UserRegisterResponse{
 			RespStatus: types.RespStatus(apiVars.PasswordRuleError),
 		}, nil

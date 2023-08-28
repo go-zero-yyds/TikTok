@@ -2,14 +2,11 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"context"
 	"github.com/zeromicro/go-zero/core/mr"
-	"regexp"
-	"strconv"
-
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -31,13 +28,6 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *types.CommentListResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.VideoID, 10)) //是否为纯数字
-	if strconv.FormatInt(req.VideoID, 10) == "" || matched == false {
-		return &types.CommentListResponse{
-			RespStatus: types.RespStatus(apiVars.VideoIdRuleError),
-		}, nil
-	}
-
 	if req.Token == "" {
 		return &types.CommentListResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

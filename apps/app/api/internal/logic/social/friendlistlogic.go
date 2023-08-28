@@ -3,15 +3,12 @@ package social
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/logic/user"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/social/rpc/social"
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/mr"
-	"regexp"
-	"strconv"
-
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -33,13 +30,6 @@ func NewFriendListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Friend
 func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp *types.RelationFriendListResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.UserID, 10)) //是否为纯数字
-	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
-		return &types.RelationFriendListResponse{
-			RespStatus: types.RespStatus(apiVars.UserIdRuleError),
-		}, nil
-	}
-
 	if req.Token == "" {
 		return &types.RelationFriendListResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

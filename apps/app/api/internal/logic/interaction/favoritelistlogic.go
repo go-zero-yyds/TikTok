@@ -2,17 +2,14 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
-	"TikTok/apps/interaction/rpc/interaction"
-	"TikTok/apps/video/rpc/video"
-	"context"
-	"github.com/zeromicro/go-zero/core/mr"
-	"regexp"
-	"strconv"
-
 	videoApi "TikTok/apps/app/api/internal/logic/video"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
+	"TikTok/apps/interaction/rpc/interaction"
+	"TikTok/apps/video/rpc/video"
+	"context"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/mr"
 )
 
 type FavoriteListLogic struct {
@@ -32,13 +29,6 @@ func NewFavoriteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Favo
 func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *types.FavoriteListResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.UserID, 10)) //是否为纯数字
-	if strconv.FormatInt(req.UserID, 10) == "" || matched == false {
-		return &types.FavoriteListResponse{
-			RespStatus: types.RespStatus(apiVars.VideoIdRuleError),
-		}, nil
-	}
-
 	if req.Token == "" {
 		return &types.FavoriteListResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

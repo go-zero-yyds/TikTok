@@ -11,7 +11,6 @@ import (
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/mr"
 	"github.com/zeromicro/go-zero/core/threading"
-	"strconv"
 	"sync"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -32,16 +31,6 @@ func NewFeedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *FeedLogic {
 }
 
 func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err error) {
-
-	// 参数检查
-	timestamp, err := strconv.ParseInt(strconv.FormatInt(req.LatestTime, 10), 10, 64) //检查时间戳格式是否正确
-	timestampStr := strconv.FormatInt(timestamp, 10)
-	if (req.LatestTime != 0) && (len(timestampStr) != 13) == true {
-		return &types.FeedResponse{
-			RespStatus: types.RespStatus(apiVars.TimestampRuleError),
-		}, nil
-	}
-
 	respStatus := apiVars.Success
 	var feedReq video.FeedReq
 	if req.LatestTime != 0 {

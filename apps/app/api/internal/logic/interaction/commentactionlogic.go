@@ -10,7 +10,6 @@ import (
 	"TikTok/apps/video/rpc/video"
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -34,25 +33,9 @@ func NewCommentActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Com
 func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (resp *types.CommentActionResponse, err error) {
 
 	// 参数检查
-	matched, err := regexp.MatchString("^\\d+$", strconv.FormatInt(req.VideoID, 10)) //是否为纯数字
-	if strconv.FormatInt(req.VideoID, 10) == "" || matched == false {
-		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apiVars.VideoIdRuleError),
-		}, nil
-	} else if (req.ActionType != 1) && (req.ActionType != 2) { //是否有除1或2的数字
-		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apiVars.ActionTypeRuleError),
-		}, nil
-	}
-
-	matched, err = regexp.MatchString("^\\d+$", strconv.FormatInt(req.CommentID, 10)) //是否为纯数字
-	if req.ActionType == 1 && req.CommentText == "" {                                 //如为评论则校验评论是否规范
+	if req.ActionType == 1 && req.CommentText == "" { //如为评论则校验评论是否规范
 		return &types.CommentActionResponse{
 			RespStatus: types.RespStatus(apiVars.TextIsNull),
-		}, nil
-	} else if req.ActionType == 2 && matched == false { //如为删评则校验评论id是否规范
-		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apiVars.CommentIdRuleError),
 		}, nil
 	}
 
