@@ -77,6 +77,19 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 			Comment:    *commentInfo,
 		}, nil
 	}
+
+	_, err = l.svcCtx.VideoRPC.NotifyHotVideo(
+		l.ctx,
+		&video.NotifyHotVideoReq{
+			UserId:     tokenID,
+			VideoId:    req.VideoID,
+			ActionType: req.ActionType,
+		},
+	)
+	if err != nil {
+		l.Logger.Errorf("notify hot video failed: %v", err)
+	}
+
 	return &types.CommentActionResponse{
 		RespStatus: types.RespStatus(apiResp),
 	}, nil
