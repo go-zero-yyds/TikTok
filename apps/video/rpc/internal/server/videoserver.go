@@ -5,7 +5,8 @@ package server
 
 import (
 	"context"
-
+	"time"
+	
 	"TikTok/apps/video/rpc/internal/logic"
 	"TikTok/apps/video/rpc/internal/svc"
 	"TikTok/apps/video/rpc/video"
@@ -46,3 +47,29 @@ func (s *VideoServer) Detail(ctx context.Context, in *video.BasicVideoInfoReq) (
 	l := logic.NewDetailLogic(ctx, s.svcCtx)
 	return l.Detail(in)
 }
+
+// api中interaction中点赞和评论会调用
+func (s *VideoServer) NotifyHotVideo(ctx context.Context, in *video.NotifyHotVideoReq) (resp *video.NotifyHotVideoResp, err error) {
+	resp = &video.NotifyHotVideoResp{}
+	// 现在只有点赞、评论都是1分
+	hotVideoLogic := logic.NewHotVideoLogic(ctx, s.svcCtx)
+	scores := []logic.VideoScore{{VideoId: in.VideoId,Score:1}}
+	ctime := time.Now()
+	err = hotVideoLogic.ScoresIncr(scores,ctime)
+	return
+}
+
+// 是否是热门视频
+func (s *VideoServer) CheckHotVideo(ctx context.Context, in *video.CheckHotVideoReq) (*video.CheckHotVideoResp, error) {
+	resp := &video.CheckHotVideoResp{}
+	l := logic.NewHotVideoLogic(ctx, s.svcCtx)
+	isHotVideo ,err := l.IsHotVideo(in.VideoId)
+	if err != nil {
+		return resp,err
+	}
+	if isHotVideo {
+		resp.IsHotVideo = 1
+	}
+	return resp,nil
+}
+
