@@ -11,3 +11,21 @@ Cache:
 Snowflake:
   StartTime: 1288834974657
   Node: 1
+
+RedisConf:
+  Host: 127.0.0.1:6379
+  Type: node
+  Pass: ""
+
+HotVideoConf:
+  HotScore: 1000 # 热度分数，达到此值为热门视频
+  Windowsize: 5 # 计算多少分钟的累计热度值
+  ExpireMinute: 60 # window key过期时间 单位：分钟
+  JobSpec: "*/5 * * * *" # 定时任务，每5分钟计重新算一次热门视频
+
+Kafka:
+  Brokers:
+    - localhost:9095
+    - localhost:9094
+    - localhost:9093
+  Topic: video-topic
