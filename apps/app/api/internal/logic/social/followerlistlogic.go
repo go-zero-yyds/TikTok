@@ -3,6 +3,7 @@ package social
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/logic/user"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/social/rpc/social"
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
@@ -29,17 +30,8 @@ func NewFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Foll
 }
 
 func (l *FollowerListLogic) FollowerList(req *types.RelationFollowerListRequest) (resp *types.RelationFollowerListResponse, err error) {
-	if req.Token == "" {
-		return &types.RelationFollowerListResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-			UserList:   make([]types.User, 0),
-		}, nil
-	}
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
-	list, err := l.svcCtx.SocialRPC.GetRelationFollowerList(l.ctx, &social.RelationFollowerListReq{UserId: tokenID})
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
+	list, err := l.svcCtx.SocialRPC.GetRelationFollowerList(l.ctx, &social.RelationFollowerListReq{UserId: req.UserID})
 	if err != nil {
 		return nil, err
 	}

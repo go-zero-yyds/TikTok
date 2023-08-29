@@ -76,7 +76,6 @@ type FeedResponse struct {
 
 type PublishActionRequest struct {
 	Token string `form:"token"`
-	Data  []byte `form:"data"`
 	Title string `form:"title"`
 }
 
@@ -135,7 +134,7 @@ type Comment struct {
 }
 
 type CommentListRequest struct {
-	Token   string `form:"token"`
+	Token   string `form:"token,optional"`
 	VideoID int64  `form:"video_id,range=[0:]"`
 }
 

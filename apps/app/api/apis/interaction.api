@@ -54,7 +54,7 @@ type Comment struct {
 
 // - /douyin/comment/list/ - 视频评论列表
 type CommentListRequest struct {
-    Token   string `form:"token"`
+    Token   string `form:"token,optional"`
     VideoID int64  `form:"video_id,range=[0:]"`
 }
 

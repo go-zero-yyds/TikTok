@@ -2,6 +2,7 @@ package video
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/video/rpc/video"
@@ -37,11 +38,7 @@ func NewPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pub
 }
 
 func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *http.Request) (resp *types.PublishActionResponse, err error) {
-	// todo: add your logic here and delete this line
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 
 	file, err := l.Upload(r, "data")
 	if err != nil {
@@ -121,7 +118,7 @@ func ExampleReadFrameAsJpeg(inFile io.Reader) (io.Reader, error) {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input("pipe:0").
 		Filter("select", ffmpeg.Args{"eq(pict_type\\,I)"}).
-		Filter("random", ffmpeg.Args{"seed=42"}).
+		Filter("random", ffmpeg.Args{}).
 		Output("pipe:1", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
 		OverWriteOutput().
 		WithInput(inFile).

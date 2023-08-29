@@ -2,6 +2,7 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/video/rpc/video"
 	"context"
@@ -27,11 +28,7 @@ func NewFavoriteActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Fa
 }
 
 func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (resp *types.FavoriteActionResponse, err error) {
-	// todo: add your logic here and delete this line
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
 	if err != nil {
 		return nil, err
