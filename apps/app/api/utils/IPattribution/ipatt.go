@@ -58,14 +58,17 @@ func (r *GeoIPResolver) ResolveIP(ipString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if zh, exists := record.Subdivisions[0].Names["zh-CN"]; exists {
-		return zh, nil
+	if record.Subdivisions != nil {
+		if zh, exists := record.Subdivisions[0].Names["zh-CN"]; exists {
+			return zh, nil
+		}
+		if zh, exists := r.SubdivisionsData[record.Subdivisions[0].Names["en"]]; exists {
+			return zh.(string), nil
+		}
+		if en, exists := record.Subdivisions[0].Names["en"]; exists {
+			return en, nil
+		}
 	}
-	if zh, exists := r.SubdivisionsData[record.Subdivisions[0].Names["en"]]; exists {
-		return zh.(string), nil
-	}
-	if en, exists := record.Subdivisions[0].Names["en"]; exists {
-		return en, nil
-	}
+
 	return "", nil
 }

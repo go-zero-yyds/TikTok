@@ -42,7 +42,7 @@ func (j *JwtAuth) ParseToken(tokenString string) (int64, error) {
 		//fmt.Printf("%v %v", claims.ID, claims.RegisteredClaims.Issuer)
 		return claims.ID, nil
 	} else {
-		return -1, err
+		return -1, jwt.ErrTokenSignatureInvalid
 	}
 
 }

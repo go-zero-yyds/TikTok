@@ -35,21 +35,17 @@ SocialRPC:
 # Jwt
 JwtAuth:
   AccessSecret: secret_key
-  AccessExpire: 86400
+  AccessExpire: 100
 
 FS:
   Prefix: /tk/tk
-  #  AwsS3:
-  #    Endpoint: http://127.0.0.1:9000
-  #    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
-  #    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
-  #    Bucket: tiktok
-  Webdav:
-    URL:
-    User:
-    Password:
-    DownloadLinkPrefix:
+  AwsS3:
+    Endpoint: http://127.0.0.1:9000
+    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
+    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
+    Bucket: tiktok
+
 
 IP:
-  DbFilePath: ./utils/IPattribution/mmdb/dbip-city-lite.mmdb
-  JsonFilePath: ./utils/IPattribution/mmdb/city.json
+  DbFilePath: ./utils/IPattribution/data/dbip-city-lite.mmdb
+  JsonSubdivisionsPath: ./utils/IPattribution/data/subdivisions.json

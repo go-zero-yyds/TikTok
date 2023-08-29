@@ -32,11 +32,8 @@ func NewCommentActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Com
 }
 
 func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (resp *types.CommentActionResponse, err error) {
-	// todo: add your logic here and delete this line
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
+
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
 	if err != nil {
 		return nil, err

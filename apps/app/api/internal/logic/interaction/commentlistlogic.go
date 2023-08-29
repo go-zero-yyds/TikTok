@@ -4,6 +4,8 @@ import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/interaction/rpc/interaction"
 	"context"
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/zeromicro/go-zero/core/mr"
 
 	"TikTok/apps/app/api/internal/svc"
@@ -27,11 +29,16 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 }
 
 func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *types.CommentListResponse, err error) {
-	tokenID := int64(0)
+	tokenID := int64(-1)
 	if req.Token != "" {
 		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				err = nil
+			} else {
+				return nil, err
+			}
+
 		}
 	}
 	list, err := l.svcCtx.InteractionRPC.GetCommentList(l.ctx, &interaction.CommentListReq{
@@ -46,14 +53,14 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 	}
 	e := apiVars.Success
 	size := len(list.CommentList)
-	commentList, err := mr.MapReduce(func(source chan<- IdxComment) {
+	commentList, err := mr.MapReduce(func(source chan<- idxComment) {
 		for i, bv := range list.CommentList {
-			source <- IdxComment{
+			source <- idxComment{
 				Comment: bv,
 				idx:     i,
 			}
 		}
-	}, func(item IdxComment, writer mr.Writer[IdxApiComment], cancel func(error)) {
+	}, func(item idxComment, writer mr.Writer[idxApiComment], cancel func(error)) {
 		videoInfo, err := GetCommentInfo(item.Comment, tokenID, l.svcCtx, l.ctx)
 		if err != nil {
 			e = apiVars.SomeDataErr
@@ -61,11 +68,11 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 				return
 			}
 		}
-		writer.Write(IdxApiComment{
+		writer.Write(idxApiComment{
 			Comment: videoInfo,
 			idx:     item.idx,
 		})
-	}, func(pipe <-chan IdxApiComment, writer mr.Writer[[]types.Comment], cancel func(error)) {
+	}, func(pipe <-chan idxApiComment, writer mr.Writer[[]types.Comment], cancel func(error)) {
 		vs := make([]types.Comment, size)
 		for item := range pipe {
 			v := item
@@ -80,11 +87,11 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 	}, nil
 }
 
-type IdxComment struct {
+type idxComment struct {
 	*interaction.Comment
 	idx int
 }
-type IdxApiComment struct {
+type idxApiComment struct {
 	*types.Comment
 	idx int
 }

@@ -24,6 +24,7 @@ type ServiceContext struct {
 	SocialRPC          socialclient.Social
 	JwtAuth            auth.JwtAuth
 	FS                 FileSystem.FileSystem
+	Auth               rest.Middleware
 	ClientIPMiddleware rest.Middleware
 	GeoIPResolver      ipattr.GeoIPResolver
 }
@@ -36,19 +37,20 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		fs = FileSystem.New(c.FS.Webdav.URL, c.FS.Webdav.User, c.FS.Webdav.Password, c.FS.Prefix, c.FS.Webdav.DownloadLinkPrefix)
 	}
 	geoIPResolver, _ := ipattr.NewGeoIPResolver(c.IP.DbFilePath, c.IP.JsonSubdivisionsPath)
-
+	jwtAuth := auth.JwtAuth{
+		AccessSecret: []byte(c.JwtAuth.AccessSecret),
+		AccessExpire: c.JwtAuth.AccessExpire,
+	}
 	return &ServiceContext{
-		Config:         c,
-		UserRPC:        userclient.NewUser(zrpc.MustNewClient(c.UserRPC)),
-		VideoRPC:       videoclient.NewVideo(zrpc.MustNewClient(c.VideoRPC)),
-		InteractionRPC: interactionclient.NewInteraction(zrpc.MustNewClient(c.InteractionRPC)),
-		SocialRPC:      socialclient.NewSocial(zrpc.MustNewClient(c.SocialRPC)),
-		JwtAuth: auth.JwtAuth{
-			AccessSecret: []byte(c.JwtAuth.AccessSecret),
-			AccessExpire: c.JwtAuth.AccessExpire,
-		},
+		Config:             c,
+		UserRPC:            userclient.NewUser(zrpc.MustNewClient(c.UserRPC)),
+		VideoRPC:           videoclient.NewVideo(zrpc.MustNewClient(c.VideoRPC)),
+		InteractionRPC:     interactionclient.NewInteraction(zrpc.MustNewClient(c.InteractionRPC)),
+		SocialRPC:          socialclient.NewSocial(zrpc.MustNewClient(c.SocialRPC)),
+		JwtAuth:            jwtAuth,
 		FS:                 fs,
 		ClientIPMiddleware: middleware.NewClientIPMiddleware().Handle,
+		Auth:               middleware.NewAuthMiddleware(jwtAuth).Handle,
 		GeoIPResolver:      *geoIPResolver,
 	}
 }
