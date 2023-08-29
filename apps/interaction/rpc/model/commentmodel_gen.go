@@ -44,9 +44,9 @@ type (
 		VideoId    int64     `db:"video_id"`    // 视频id
 		CreateDate time.Time `db:"create_date"` // 创建日期
 		Content    string    `db:"content"`     // 用户评论内容
-		IsDeleted  string    `db:"is_deleted"`  // 0:未删除 1:已删除
 		IpAddress  string    `db:"ip_address"`  // 用户IP地址
 		Location   string    `db:"location"`    // IP地址归属地
+		IsDeleted  string    `db:"is_deleted"`  // 0:未删除 1:已删除
 	}
 )
 
@@ -94,7 +94,7 @@ func (m *defaultCommentModel) Insert(ctx context.Context, data *Comment) (sql.Re
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IsDeleted, data.IpAddress, data.Location)
+		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IpAddress, data.Location, data.IsDeleted)
 	}, commentCommentIdKey)
 	return ret, err
 }
@@ -103,7 +103,7 @@ func (m *defaultCommentModel) Update(ctx context.Context, data *Comment) error {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `comment_id` = ?", m.table, commentRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IsDeleted, data.IpAddress, data.Location, data.CommentId)
+		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IpAddress, data.Location, data.IsDeleted, data.CommentId)
 	}, commentCommentIdKey)
 	return err
 }
