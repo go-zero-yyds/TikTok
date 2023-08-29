@@ -11,7 +11,6 @@ import (
 	"TikTok/apps/video/rpc/video"
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -38,19 +37,20 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	if err != nil {
 		return nil, err
 	}
-	IPAddr := l.ctx.Value(middleware.IPKey).(string)
-	IPAttr, err := l.svcCtx.GeoIPResolver.ResolveIP(IPAddr)
-	if err != nil {
-		return nil, err
-	}
+
 	rpcReq := &interaction.CommentActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,
 		ActionType: req.ActionType,
-		IPAddr:     &IPAddr,
-		IPAttr:     &IPAttr,
 	}
 	if req.CommentID == 0 {
+		IPAddr := l.ctx.Value(middleware.IPKey).(string)
+		IPAttr, err := l.svcCtx.GeoIPResolver.ResolveIP(IPAddr)
+		if err != nil {
+			return nil, err
+		}
+		rpcReq.IPAddr = &IPAddr
+		rpcReq.IPAttr = &IPAttr
 		rpcReq.CommentText = &req.CommentText
 	} else {
 		rpcReq.CommentId = &req.CommentID
@@ -90,10 +90,7 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 
 func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *svc.ServiceContext, ctx context.Context) (*types.Comment, error) {
 	res := &types.Comment{}
-	timestamp, err := strconv.ParseInt(comment.CreateDate, 10, 64)
-	if err != nil {
-		return nil, err
-	}
+	timestamp := comment.CreateDate
 	if comment.Location != "" {
 		res.CreateDate = fmt.Sprintf("%s · IP 属地%s", FormatTimestamp(timestamp), comment.Location)
 	} else {
@@ -115,7 +112,7 @@ func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *s
 
 func FormatTimestamp(timestamp int64) string {
 	currentTime := time.Now()
-	timestampTime := time.Unix(timestamp, 0)
+	timestampTime := time.UnixMilli(timestamp)
 	year, month, day := currentTime.Year(), currentTime.Month(), currentTime.Day()
 	timestampYear, timestampMonth, timestampDay := timestampTime.Year(), timestampTime.Month(), timestampTime.Day()
 
