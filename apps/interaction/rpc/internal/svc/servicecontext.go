@@ -18,7 +18,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	r := redis.MustNewRedis(c.Redis.RedisConf)
 	return &ServiceContext{
 		Config:   c,
-		DBAction: model.NewDBAction(r, sqlx.NewMysql(c.DBSource), c.Cache),
+		DBAction: model.NewDBAction(sqlx.NewMysql(c.DBSource), c.Cache),
 		Rds:      r,
 	}, nil
 }
