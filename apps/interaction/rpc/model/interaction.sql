@@ -3,10 +3,10 @@ CREATE TABLE
         comment_id BIGINT NOT NULL COMMENT "雪花id",
         user_id BIGINT NOT NULL COMMENT "用户id",
         video_id BIGINT NOT NULL COMMENT "视频id",
-        create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT "创建日期",
         content TEXT NOT NULL COMMENT "用户评论内容",
         ip_address TEXT NOT NULL COMMENT "用户IP地址",
         location TEXT NOT NULL COMMENT "IP地址归属地",
+        create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT "创建日期",
         is_deleted ENUM('0', '1') NOT NULL DEFAULT '0' COMMENT "0:未删除 1:已删除",
         INDEX idx_video (video_id) COMMENT "查询视频评论列表",
         PRIMARY KEY (comment_id)

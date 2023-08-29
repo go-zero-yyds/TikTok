@@ -70,7 +70,7 @@ message Comment {
   int64 Id = 1;          // 视频评论id
   int64 UserId = 2;      // 评论用户id
   string Content = 3;    // 评论内容
-  string CreateDate = 4; // 评论发布日期，格式 mm-dd
+  int64 CreateDate = 4; // 评论发布日期时间戳
   string IpAddress = 5;
   string Location = 6;
 }

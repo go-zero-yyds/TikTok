@@ -1,12 +1,11 @@
 package logic
 
 import (
-	"TikTok/apps/interaction/rpc/model"
-	"context"
-	"fmt"
-
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/internal/svc"
+	"TikTok/apps/interaction/rpc/model"
+	"context"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -61,7 +60,7 @@ func (l *SendCommentActionLogic) SendCommentAction(in *interaction.CommentAction
 				Id:         c.CommentId,
 				UserId:     c.UserId,
 				Content:    c.Content,
-				CreateDate: fmt.Sprintf("%v", c.CreateDate.Unix()),
+				CreateDate: time.Now().UnixMilli(),
 				IpAddress:  c.IpAddress,
 				Location:   c.Location,
 			},
