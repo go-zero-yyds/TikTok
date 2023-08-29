@@ -14,8 +14,8 @@ type (
 	// and implement the added methods in customUserLikesModel.
 	UserLikesModel interface {
 		userLikesModel
-		TranIncrCount(ctx context.Context, s sqlx.Session, userId int64) error
-		TranDecrCount(ctx context.Context, s sqlx.Session, userId int64) error
+		TranIncrCount(ctx context.Context, s sqlx.Session, userId int64, keys *[]string) error
+		TranDecrCount(ctx context.Context, s sqlx.Session, userId int64, keys *[]string) error
 	}
 
 	customUserLikesModel struct {
@@ -30,26 +30,24 @@ func NewUserLikesModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Optio
 	}
 }
 
-func (m *defaultUserLikesModel) TranIncrCount(ctx context.Context, s sqlx.Session, userId int64) error {
+func (m *defaultUserLikesModel) TranIncrCount(ctx context.Context, s sqlx.Session, userId int64, keys *[]string) error {
+	userLikesUserIdKey := fmt.Sprintf("%s%v", cacheUserLikesUserIdPrefix, userId)
 	query := fmt.Sprintf(`
 		INSERT INTO %s (%s)
 		VALUES (?, 1)
 		ON DUPLICATE KEY UPDATE like_count = like_count + 1;`, m.table, userLikesRowsExpectAutoSet)
 	_, err := s.ExecCtx(ctx, query, userId)
-	if err != nil {
-		return err
-	}
-	return nil
+	*keys = append(*keys, userLikesUserIdKey)
+	return err
 }
 
-func (m *defaultUserLikesModel) TranDecrCount(ctx context.Context, s sqlx.Session, userId int64) error {
+func (m *defaultUserLikesModel) TranDecrCount(ctx context.Context, s sqlx.Session, userId int64, keys *[]string) error {
+	userLikesUserIdKey := fmt.Sprintf("%s%v", cacheUserLikesUserIdPrefix, userId)
 	query := fmt.Sprintf(`
 		UPDATE %s
 		SET like_count = like_count - 1
 		WHERE user_id = ?;`, m.table)
 	_, err := s.ExecCtx(ctx, query, userId)
-	if err != nil {
-		return err
-	}
-	return nil
+	*keys = append(*keys, userLikesUserIdKey)
+	return err
 }

@@ -90,9 +90,8 @@ func (d *DBAction) CommentCountByVideoId(ctx context.Context, videoId int64) (in
 // 只有出现未知错误是false否则都是true
 func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, actionType string) (bool, error) {
 	data := &Favorite{
-		UserId:   userId,
-		VideoId:  videoId,
-		Behavior: actionType,
+		UserId:  userId,
+		VideoId: videoId,
 	}
 	var res bool
 	keys := make([]string, 0)
@@ -101,9 +100,11 @@ func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, ac
 			result sql.Result
 			err    error
 		)
-		if actionType == "1" {
+		if actionType == FavoriteTypeFollowing {
+			data.Behavior = FavoriteTypeFollowing
 			result, err = d.favorite.TranInsertOrUpdate(ctx, session, data, &keys)
 		} else {
+			data.Behavior = FavoriteTypeNotFollowing
 			result, err = d.favorite.TranEmptyOrUpdate(ctx, session, data, &keys)
 		}
 		if err != nil {
@@ -117,12 +118,12 @@ func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, ac
 		if !res {
 			return nil
 		}
-		if actionType == "1" {
+		if actionType == FavoriteTypeFollowing {
 			err := d.videoStats.TranIncrLikeCount(ctx, session, videoId, &keys)
 			if err != nil {
 				return err
 			}
-			err = d.userLikes.TranIncrCount(ctx, session, userId)
+			err = d.userLikes.TranIncrCount(ctx, session, userId, &keys)
 			if err != nil {
 				return err
 			}
@@ -131,7 +132,7 @@ func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, ac
 			if err != nil {
 				return err
 			}
-			err = d.userLikes.TranDecrCount(ctx, session, userId)
+			err = d.userLikes.TranDecrCount(ctx, session, userId, &keys)
 			if err != nil {
 				return err
 			}
@@ -162,7 +163,7 @@ func (d *DBAction) FavoriteList(ctx context.Context, userId int64) ([]int64, err
 // 成功返回comment结构体，（评论成功 查询结果，取消成功 初始值）
 // 如果用户可选参数没有赋值，将会返回地址错误
 func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, actionType int32, commentText *string, IPaddr *string, IPattr *string, commentId *int64) (*Comment, error) {
-	var c *Comment = &Comment{
+	var c = &Comment{
 		UserId:     userId,
 		VideoId:    videoId,
 		IpAddress:  *IPaddr,
@@ -190,7 +191,10 @@ func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, act
 		}
 	} else if actionType == 2 {
 		c.CommentId = *commentId
-		_, err = d.comment.FindOneByCommentIdUserId(ctx, c.CommentId, c.UserId)
+		v, err := d.comment.FindOne(ctx, c.CommentId)
+		if v.UserId != userId {
+			return nil, ErrIllegalArgument
+		}
 		if err != nil {
 			return nil, err
 		}

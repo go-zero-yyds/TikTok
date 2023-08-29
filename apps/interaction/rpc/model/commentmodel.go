@@ -51,22 +51,20 @@ func (m *defaultCommentModel) CommentList(ctx context.Context, videoId int64) ([
 
 func (m *defaultCommentModel) TranInsert(ctx context.Context, s sqlx.Session, data *Comment, keys *[]string) (sql.Result, error) {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
-	commentCommentIdUserIdKey := fmt.Sprintf("%s%v:%v", cacheCommentCommentIdUserIdPrefix, data.CommentId, data.UserId)
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, "0", data.IpAddress, data.Location)
 	if err != nil {
 		return nil, err
 	}
-	*keys = append(*keys, commentCommentIdKey, commentCommentIdUserIdKey)
+	*keys = append(*keys, commentCommentIdKey)
 	return ret, err
 }
 
 func (m *defaultCommentModel) TranUpdateDel(ctx context.Context, s sqlx.Session, data *Comment, keys *[]string) error {
 
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
-	commentCommentIdUserIdKey := fmt.Sprintf("%s%v:%v", cacheCommentCommentIdUserIdPrefix, data.CommentId, data.UserId)
 	query := fmt.Sprintf("update %s set is_deleted = '1' where `comment_id` = ?", m.table)
 	_, err := s.ExecCtx(ctx, query, data.CommentId)
-	*keys = append(*keys, commentCommentIdKey, commentCommentIdUserIdKey)
+	*keys = append(*keys, commentCommentIdKey)
 	return err
 }

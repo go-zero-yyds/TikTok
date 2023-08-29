@@ -16,6 +16,12 @@ var (
 	_ FavoriteModel = (*customFavoriteModel)(nil)
 )
 
+// 定义关注类型常量
+const (
+	FavoriteTypeNotFollowing = "0"
+	FavoriteTypeFollowing    = "1"
+)
+
 type (
 	// FavoriteModel is an interface to be customized, add more methods here,
 	// and implement the added methods in customFavoriteModel.
@@ -43,7 +49,7 @@ func NewFavoriteModel(r *redis.Redis, conn sqlx.SqlConn, c cache.CacheConf, opts
 
 // FindVideos 查看用户点赞视频id列表
 func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '1'  ", m.table)
+	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '%s'", m.table, FavoriteTypeFollowing)
 	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
@@ -56,15 +62,15 @@ func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]
 	}
 }
 
-// FlushAndClean 删除数据库中所有behavior为2的值，减少冗余
+// FlushAndClean 删除数据库中所有behavior为 FavoriteTypeNotFollowing 的值，减少冗余
 func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
 	//这里不删除缓存中数据
-	query := fmt.Sprintf("delete from %s where behavior = '2' ", m.table)
+	query := fmt.Sprintf("delete from %s where behavior = '%s' ", m.table, FavoriteTypeNotFollowing)
 	_, err := m.ExecNoCacheCtx(ctx, query)
 	return err
 }
 
-// InsertOrUpdate 插入一条关注记录或者更新关注记录
+// TranInsertOrUpdate 插入一条关注记录或者更新关注记录
 func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Session, data *Favorite, keys *[]string) (sql.Result, error) {
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, data.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, data.UserId, data.VideoId)
@@ -78,7 +84,7 @@ func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Ses
 	return ret, err
 }
 
-// EmptyOrUpdate 更新关注记录没有则不操作
+// TranEmptyOrUpdate 更新关注记录没有则不操作
 func (m *defaultFavoriteModel) TranEmptyOrUpdate(ctx context.Context, s sqlx.Session, newData *Favorite, keys *[]string) (result sql.Result, err error) {
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, newData.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, newData.UserId, newData.VideoId)

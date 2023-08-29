@@ -11,7 +11,6 @@ CREATE TABLE
         ip_address TEXT NOT NULL COMMENT "用户IP地址",
         location TEXT NOT NULL COMMENT "IP地址归属地",
         INDEX idx_user_video (video_id, user_id) COMMENT "联合索引，video用的较多",
-        UNIQUE INDEX idx_comment_user (comment_id, user_id) COMMENT "唯一索引，用于确保每个用户对每条评论只能有一个记录",
         PRIMARY KEY (comment_id)
     );
 
@@ -20,7 +19,7 @@ CREATE TABLE
         favorite_id BIGINT NOT NULL AUTO_INCREMENT COMMENT "自增id，优化插入效率",
         user_id BIGINT NOT NULL COMMENT "用户id",
         video_id BIGINT NOT NULL COMMENT "视频id",
-        behavior ENUM('1', '2') NOT NULL COMMENT "1:点赞 2:未点赞",
+        behavior ENUM('0', '1') NOT NULL COMMENT "1:点赞 2:未点赞",
         PRIMARY KEY (favorite_id),
         UNIQUE INDEX idx_user_video (user_id, video_id) COMMENT "联合索引，联查或查userid使用",
         INDEX idx_video (video_id) COMMENT "查videoId使用"
