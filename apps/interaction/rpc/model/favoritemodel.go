@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/zeromicro/go-zero/core/stores/redis"
-
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -35,19 +33,17 @@ type (
 
 	customFavoriteModel struct {
 		*defaultFavoriteModel
-		rds *redis.Redis
 	}
 )
 
 // NewFavoriteModel returns a model for the database table.
-func NewFavoriteModel(r *redis.Redis, conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) FavoriteModel {
+func NewFavoriteModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) FavoriteModel {
 	return &customFavoriteModel{
 		defaultFavoriteModel: newFavoriteModel(conn, c, opts...),
-		rds:                  r,
 	}
 }
 
-// FindVideos 查看用户点赞视频id列表
+// FindVideos 查看用户点赞视频id列表, 因为没分页，限制1000条。
 func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]int64, error) {
 	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '%s' limit 1000", m.table, FavoriteTypeFollowing)
 	var resp []int64
@@ -65,7 +61,7 @@ func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]
 // FlushAndClean 删除数据库中所有behavior为 FavoriteTypeNotFollowing 的值，减少冗余
 func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
 	//这里不删除缓存中数据
-	query := fmt.Sprintf("delete from %s where behavior = '%s' LIMIT 1000", m.table, FavoriteTypeNotFollowing)
+	query := fmt.Sprintf("delete from %s where behavior = '%s' LIMIT 5000", m.table, FavoriteTypeNotFollowing)
 	_, err := m.ExecNoCacheCtx(ctx, query)
 	return err
 }

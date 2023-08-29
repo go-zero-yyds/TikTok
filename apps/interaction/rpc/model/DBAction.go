@@ -8,7 +8,6 @@ import (
 
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
@@ -22,10 +21,10 @@ type DBAction struct {
 }
 
 // NewDBAction 初始化数据库信息
-func NewDBAction(r *redis.Redis, conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
+func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 	ret := &DBAction{
-		favorite:   NewFavoriteModel(r, conn, c), //创建点赞表的接口
-		comment:    NewCommentModel(conn, c),     //创建评论表的接口
+		favorite:   NewFavoriteModel(conn, c), //创建点赞表的接口
+		comment:    NewCommentModel(conn, c),  //创建评论表的接口
 		userLikes:  NewUserLikesModel(conn, c),
 		videoStats: NewVideoStatsModel(conn, c),
 		conn:       sqlc.NewConn(conn, c),
@@ -42,7 +41,7 @@ func (d *DBAction) IsFavorite(ctx context.Context, userId, videoId int64) (bool,
 		logc.Error(ctx, userId, videoId, err)
 		return false, err
 	}
-	return f != nil && f.Behavior == "1", nil
+	return f != nil && f.Behavior == FavoriteTypeFollowing, nil
 }
 
 // FavoriteCountByUserId 查询，用户 点赞数量

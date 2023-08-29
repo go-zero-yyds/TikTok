@@ -35,8 +35,9 @@ func NewCommentModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option)
 	}
 }
 
+// CommentList 查看视频评论列表, 因为没分页，限制1000条。
 func (m *defaultCommentModel) CommentList(ctx context.Context, videoId int64) ([]*Comment, error) {
-	query := fmt.Sprintf("select * from %s where `video_id` = ? and is_deleted = '0' order by create_date desc ", m.table)
+	query := fmt.Sprintf("select * from %s where `video_id` = ? and is_deleted = '0' order by create_date desc limit 1000", m.table)
 	resp := make([]*Comment, 0)
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, videoId)
 	switch {
