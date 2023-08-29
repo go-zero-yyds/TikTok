@@ -58,8 +58,7 @@ message CommentActionReq {
   int64 UserId = 1;     // 调用接口的用户id
   int64 VideoId = 2;    // 视频id
   int32 ActionType = 3; // 1-发布评论，2-删除评论
-  optional string CommentText =
-      4; // 用户填写的评论内容，在action_type=1的时候使用
+  optional string CommentText = 4; // 用户填写的评论内容，在action_type=1的时候使用
   optional string IPAddr = 5; // 用户ip地址，在action_type=1的时候使用
   optional string IPAttr = 6; // 用户ip所在地，在action_type=1的时候使用
   optional int64 CommentId = 7; // 要删除的评论id，在action_type=2的时候使用

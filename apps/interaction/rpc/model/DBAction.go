@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"time"
-
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
@@ -161,18 +159,10 @@ func (d *DBAction) FavoriteList(ctx context.Context, userId int64) ([]int64, err
 // CommentAction 执行评论/取消操作
 // 成功返回comment结构体，（评论成功 查询结果，取消成功 初始值）
 // 如果用户可选参数没有赋值，将会返回地址错误
-func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, actionType int32, commentText *string, IPaddr *string, IPattr *string, commentId *int64) (*Comment, error) {
-	var c = &Comment{
-		UserId:     userId,
-		VideoId:    videoId,
-		IpAddress:  *IPaddr,
-		Location:   *IPattr,
-		CreateDate: time.Now(),
-	}
+func (d *DBAction) CommentAction(ctx context.Context, c *Comment, actionType int32) error {
 	var err error
 	keys := make([]string, 0)
 	if actionType == 1 {
-		c.Content = *commentText
 		err = d.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
 			_, err := d.comment.TranInsert(ctx, session, c, &keys)
 			if err != nil {
@@ -186,16 +176,17 @@ func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, act
 			return nil
 		})
 		if err != nil {
-			return nil, err
+			return err
 		}
 	} else if actionType == 2 {
-		c.CommentId = *commentId
+
 		v, err := d.comment.FindOne(ctx, c.CommentId)
-		if v.UserId != userId {
-			return nil, ErrIllegalArgument
+
+		if err != nil || v.UserId != c.UserId {
+			return ErrIllegalArgument
 		}
 		if err != nil {
-			return nil, err
+			return err
 		}
 		err = d.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
 			err := d.comment.TranUpdateDel(ctx, session, c, &keys)
@@ -210,16 +201,16 @@ func (d *DBAction) CommentAction(ctx context.Context, userId, videoId int64, act
 			return nil
 		})
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	if err != nil {
-		logc.Error(ctx, commentId, actionType)
-		return nil, err
+		logc.Error(ctx, c.CommentId, actionType)
+		return err
 	}
 	_ = d.conn.DelCacheCtx(ctx, keys...)
-	return c, nil
+	return nil
 }
 
 func (d *DBAction) CommentList(ctx context.Context, videoId int64) ([]*Comment, error) {

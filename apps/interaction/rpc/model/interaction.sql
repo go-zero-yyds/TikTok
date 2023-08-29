@@ -1,6 +1,6 @@
 CREATE TABLE
     comment (
-        comment_id BIGINT NOT NULL AUTO_INCREMENT COMMENT "自增id",
+        comment_id BIGINT NOT NULL COMMENT "雪花id",
         user_id BIGINT NOT NULL COMMENT "用户id",
         video_id BIGINT NOT NULL COMMENT "视频id",
         create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT "创建日期",

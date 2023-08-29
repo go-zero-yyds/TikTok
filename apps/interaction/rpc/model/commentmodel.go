@@ -52,8 +52,8 @@ func (m *defaultCommentModel) CommentList(ctx context.Context, videoId int64) ([
 
 func (m *defaultCommentModel) TranInsert(ctx context.Context, s sqlx.Session, data *Comment, keys *[]string) (sql.Result, error) {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
-	ret, err := s.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, "0", data.IpAddress, data.Location)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
+	ret, err := s.ExecCtx(ctx, query, data.CommentId, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IpAddress, data.Location, "0")
 	if err != nil {
 		return nil, err
 	}

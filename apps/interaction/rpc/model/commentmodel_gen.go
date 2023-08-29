@@ -19,7 +19,7 @@ import (
 var (
 	commentFieldNames          = builder.RawFieldNames(&Comment{})
 	commentRows                = strings.Join(commentFieldNames, ",")
-	commentRowsExpectAutoSet   = strings.Join(stringx.Remove(commentFieldNames, "`comment_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
+	commentRowsExpectAutoSet   = strings.Join(stringx.Remove(commentFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	commentRowsWithPlaceHolder = strings.Join(stringx.Remove(commentFieldNames, "`comment_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
 
 	cacheCommentCommentIdPrefix = "cache:comment:commentId:"
@@ -39,7 +39,7 @@ type (
 	}
 
 	Comment struct {
-		CommentId  int64     `db:"comment_id"`  // 自增id
+		CommentId  int64     `db:"comment_id"`  // 雪花id
 		UserId     int64     `db:"user_id"`     // 用户id
 		VideoId    int64     `db:"video_id"`    // 视频id
 		CreateDate time.Time `db:"create_date"` // 创建日期
@@ -93,8 +93,8 @@ func (m *defaultCommentModel) FindOne(ctx context.Context, commentId int64) (*Co
 func (m *defaultCommentModel) Insert(ctx context.Context, data *Comment) (sql.Result, error) {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IpAddress, data.Location, data.IsDeleted)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.CommentId, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IpAddress, data.Location, data.IsDeleted)
 	}, commentCommentIdKey)
 	return ret, err
 }

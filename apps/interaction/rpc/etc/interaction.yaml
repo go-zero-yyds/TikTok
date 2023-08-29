@@ -14,4 +14,8 @@ Redis:
   Type: node
   Key: interaction.rpc
 
+Snowflake:
+  StartTime: 1288834974657
+  Node: 1
+
 CleanTime: "3 4 * * *"

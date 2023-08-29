@@ -38,19 +38,20 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	if err != nil {
 		return nil, err
 	}
-	IPAddr := l.ctx.Value(middleware.IPKey).(string)
-	IPAttr, err := l.svcCtx.GeoIPResolver.ResolveIP(IPAddr)
-	if err != nil {
-		return nil, err
-	}
+
 	rpcReq := &interaction.CommentActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,
 		ActionType: req.ActionType,
-		IPAddr:     &IPAddr,
-		IPAttr:     &IPAttr,
 	}
 	if req.CommentID == 0 {
+		IPAddr := l.ctx.Value(middleware.IPKey).(string)
+		IPAttr, err := l.svcCtx.GeoIPResolver.ResolveIP(IPAddr)
+		if err != nil {
+			return nil, err
+		}
+		rpcReq.IPAddr = &IPAddr
+		rpcReq.IPAttr = &IPAttr
 		rpcReq.CommentText = &req.CommentText
 	} else {
 		rpcReq.CommentId = &req.CommentID
