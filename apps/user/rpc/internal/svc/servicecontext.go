@@ -10,10 +10,9 @@ import (
 )
 
 type ServiceContext struct {
-	Config    config.Config
-	UserModel model.UserModel
-	Snowflake *snowflake.Node
-	//测试
+	Config         config.Config
+	UserModel      model.UserModel
+	Snowflake      *snowflake.Node
 	KqPusherClient *kq.Pusher
 }
 

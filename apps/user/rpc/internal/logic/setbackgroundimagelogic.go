@@ -1,12 +1,10 @@
 package logic
 
 import (
-	"context"
-	"encoding/json"
-	"strconv"
-
 	"TikTok/apps/user/rpc/internal/svc"
+	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,18 +25,12 @@ func NewSetBackgroundImageLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 
 func (l *SetBackgroundImageLogic) SetBackgroundImage(in *user.SetBackgroundImageReq) (*user.SetBackgroundImageResp, error) {
 	isSucceed := true
-	err := l.svcCtx.UserModel.UpdateByUserId(l.ctx, strconv.FormatInt(in.UserId, 10), "background_image", in.Url)
-	if err != nil {
-		isSucceed = false
-	}
+	err := l.svcCtx.UserModel.UpdateByUserId(l.ctx, &model.User{
+		UserId:          in.UserId,
+		BackgroundImage: in.Url,
+	}, "backgroundImage")
 
-	//callback
-	mqMap := make(map[string][]string, 10)
-	mqMap[strconv.FormatInt(in.UserId, 10)] = []string{"backgroundImage", strconv.FormatBool(isSucceed)}
-	marshal, _ := json.Marshal(mqMap)
-	callbackJSON := string(marshal)
-	if err := l.svcCtx.KqPusherClient.Push(callbackJSON); err != nil {
-		logx.Errorf("KqPusherClient Push Error , err :%v", err)
+	if err != nil {
 		isSucceed = false
 	}
 

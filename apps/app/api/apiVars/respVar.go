@@ -81,8 +81,8 @@ var (
 		StatusCode: 409,
 		StatusMsg:  "commentId格式不符合规范",
 	}
-	TextIsNull = RespErr{
+	TextRuleError = RespErr{
 		StatusCode: 410,
-		StatusMsg:  "内容为空",
+		StatusMsg:  "内容格式不符合规范",
 	}
 )

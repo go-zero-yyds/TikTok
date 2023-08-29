@@ -1,11 +1,10 @@
 package logic
 
 import (
-	"context"
-	"fmt"
-
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/internal/svc"
+	"context"
+	"fmt"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

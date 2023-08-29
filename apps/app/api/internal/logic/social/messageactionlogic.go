@@ -27,6 +27,12 @@ func NewMessageActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Mes
 func (l *MessageActionLogic) MessageAction(req *types.MessageActionRequest) (resp *types.MessageActionResponse, err error) {
 
 	// 参数检查
+	if req.Content == "" || len(req.Content) > 100 { //内容是否为符合规范
+		return &types.MessageActionResponse{
+			RespStatus: types.RespStatus(apiVars.TextRuleError),
+		}, nil
+	}
+
 	if req.Token == "" {
 		return &types.MessageActionResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

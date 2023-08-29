@@ -31,14 +31,12 @@ func NewCommentActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Com
 }
 
 func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (resp *types.CommentActionResponse, err error) {
-
 	// 参数检查
-	if req.ActionType == 1 && req.CommentText == "" { //如为评论则校验评论是否规范
+	if req.ActionType == 1 && (req.CommentText == "" || len(req.CommentText) > 100) { //如为评论则校验评论是否规范
 		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apiVars.TextIsNull),
+			RespStatus: types.RespStatus(apiVars.TextRuleError),
 		}, nil
 	}
-
 	if req.Token == "" {
 		return &types.CommentActionResponse{
 			RespStatus: types.RespStatus(apiVars.NotLogged),

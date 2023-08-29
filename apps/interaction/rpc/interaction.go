@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var configFile = flag.String("f", "apps/interaction/rpc/etc/interaction.yaml", "the config file")
+var configFile = flag.String("f", "etc/interaction.yaml", "the config file")
 
 func main() {
 	var cfg logx.LogConf

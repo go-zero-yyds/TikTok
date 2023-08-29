@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"google.golang.org/grpc/status"
 )
@@ -12,4 +13,8 @@ var (
 	UserValidation    = status.Error(200, "密码错误")
 	DuplicateUsername = status.Error(300, "用户已存在")
 	UnmarshalError    = status.Error(400, "解析错误")
+)
+
+var (
+	PushError = errors.New("推送错误")
 )

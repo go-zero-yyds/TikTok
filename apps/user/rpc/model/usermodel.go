@@ -2,7 +2,6 @@ package model
 
 import (
 	"context"
-	"fmt"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
@@ -14,7 +13,7 @@ type (
 	// and implement the added methods in customUserModel.
 	UserModel interface {
 		userModel
-		UpdateByUserId(ctx context.Context, userId, field, value string) error
+		UpdateByUserId(ctx context.Context, data *User, field string) error
 	}
 
 	customUserModel struct {
@@ -29,13 +28,26 @@ func NewUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) Us
 	}
 }
 
-func (m *defaultUserModel) UpdateByUserId(ctx context.Context, userId, field, value string) error {
-	var result int64
-	update := fmt.Sprintf("UPDATE %s SET %s = ? WHERE user_id = ?", m.table, field)
-	err := m.QueryRowsNoCacheCtx(ctx, &result, update, value, userId)
+func (m *defaultUserModel) UpdateByUserId(ctx context.Context, user *User, field string) error {
+	data, err := m.FindOne(ctx, user.UserId)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if data != nil {
+		switch field {
+		case "avatar":
+			data.Avatar = user.Avatar
+		case "backgroundImage":
+			data.BackgroundImage = user.BackgroundImage
+		case "signature":
+			data.Signature = user.Signature
+		}
+		err := m.Update(ctx, data)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
 }
