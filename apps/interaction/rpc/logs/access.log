@@ -1,0 +1,2 @@
+{"@timestamp":"2023-08-30T20:10:12.848+08:00","caller":"sqlx/stmt.go:132","content":"sql exec: delete from `favorite` where behavior = '0' LIMIT 5000","duration":"15.0ms","level":"info","span":"6b3b1ae1785cc419","trace":"3f9bb569564dda6724779d09dbde91bc"}
+{"@timestamp":"2023-08-30T20:10:12.849+08:00","caller":"cron/cron.go:18","content":"clean favorite data ","level":"info"}
