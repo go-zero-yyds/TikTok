@@ -7,8 +7,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `user_stats`;
 CREATE TABLE `user_stats` (
                               `user_id` bigint(20) unsigned NOT NULL COMMENT '用户ID',
-                              `follow_count` int(11) NOT NULL DEFAULT 0 COMMENT '关注数',
-                              `follower_count` int(11) NOT NULL DEFAULT 0 COMMENT '粉丝数',
+                              `follow_count` bigint(20) NOT NULL DEFAULT 0 COMMENT '关注数',
+                              `follower_count` bigint(20) NOT NULL DEFAULT 0 COMMENT '粉丝数',
                               PRIMARY KEY (`user_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_as_ci;
 
