@@ -3,6 +3,7 @@ package mqs
 import (
 	"TikTok/apps/user/rpc/internal/svc"
 	"TikTok/apps/user/rpc/model"
+	"TikTok/pkg/tool"
 	"context"
 	"encoding/json"
 	"errors"
@@ -33,7 +34,9 @@ func (l *PersonalSuccess) Consume(key, val string) error {
 	}
 
 	for key, value := range mqMap {
+
 		userId, err := strconv.ParseInt(key, 10, 64)
+
 		if err == nil && len(value) == 2 {
 			actionType := value[0]
 			value := value[1]
@@ -55,13 +58,44 @@ func (l *PersonalSuccess) Consume(key, val string) error {
 				if err != nil {
 					return err
 				}
-			}
 
+			case "username":
+				err := l.ToRegisterBot(userId, value)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 			return err
 		}
 	}
+	return nil
+}
 
+// ToRegisterBot 注册机器人
+func (l *PersonalSuccess) ToRegisterBot(userId int64, username string) error {
+	_, err := l.svcCtx.UserModel.FindOneByUsername(l.ctx, username)
+	// 用户已注册
+	if err == nil {
+		return model.DuplicateUsername
+	} else if !errors.Is(err, model.ErrNotFound) { // 错误
+		return err
+	} else { // 注册
+		pwdHash, err := tool.HashAndSalt("0") // 加盐加密（机器人默认密码为0，因此无法登录机器人）
+		if err != nil {
+			return err
+		}
+
+		_, errInsert := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
+			UserId:   userId,
+			Username: username,
+			Password: pwdHash,
+		})
+
+		if errInsert != nil {
+			return errInsert
+		}
+	}
 	return nil
 }
 
