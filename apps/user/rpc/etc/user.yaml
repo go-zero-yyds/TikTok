@@ -1,6 +1,11 @@
 Name: user.rpc
 ListenOn: 0.0.0.0:8001
-
+#链路追踪
+Telemetry:
+  Name: user-rpc
+  Endpoint: http://localhost:9411/api/v2/spans
+  Sampler: 1.0
+  Batcher: zipkin
 DBSource: root:12345678@tcp(localhost:3306)/tiktok_user?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
 Etcd:
   Hosts:

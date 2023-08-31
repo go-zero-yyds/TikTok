@@ -30,7 +30,7 @@ CREATE TABLE `favorite` (
                             `favorite_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增id，优化插入效率',
                             `user_id` bigint(20) unsigned NOT NULL COMMENT '用户id',
                             `video_id` bigint(20) unsigned NOT NULL COMMENT '视频id',
-                            `behavior` enum('0','1') NOT NULL COMMENT '1:点赞 2:未点赞',
+                            `behavior` enum('0','1') NOT NULL COMMENT '0:未点赞 1:点赞',
                             PRIMARY KEY (`favorite_id`),
                             UNIQUE KEY `idx_user_video` (`user_id`,`video_id`) COMMENT '联合索引，联查或查userid使用'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_as_ci;

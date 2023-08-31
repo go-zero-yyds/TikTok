@@ -24,7 +24,7 @@ func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 		follow:     NewFollowModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
 		message:    NewMessageModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
 		userStatus: NewUserStatsModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
-		conn:       sqlc.NewConn(conn, c),
+		conn:       sqlc.NewConn(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
 	}
 	return ret
 }
