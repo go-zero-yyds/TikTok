@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
-	"time"
 )
 
 var (
-	cacheMessageUserIdToUserIdPrefix = "cache:message:id:userId:toUserId:"
+	_                                    MessageModel = (*customMessageModel)(nil)
+	cacheMessageUserIdToUserIdPrefix                  = "cache:message:id:userId:toUserId:"
+	cacheMessageUserIdToUserIdListPrefix              = "cache:message:id:userId:toUserId:list"
 )
-
-var _ MessageModel = (*customMessageModel)(nil)
 
 type (
 	// MessageModel is an interface to be customized, add more methods here,
@@ -98,6 +99,12 @@ func (m *defaultMessageModel) FindNowMessage(ctx context.Context, userId int64, 
 
 func (m *defaultMessageModel) FindMessageList(ctx context.Context, userId int64, toUserId, preTime int64) ([]Message, error) {
 	t := time.UnixMilli(preTime)
+	var resp []Message
+	key := fmt.Sprintf("%s%v", cacheMessageUserIdToUserIdListPrefix, userId, toUserId)
+	if err := m.CachedConn.GetCache(key, &resp); err == nil {
+		return resp, nil
+	}
+
 	query := fmt.Sprintf(`
 		SELECT %s
 		FROM %s m
@@ -105,10 +112,10 @@ func (m *defaultMessageModel) FindMessageList(ctx context.Context, userId int64,
 		   OR (m.from_user_id = ? AND m.to_user_id = ? AND m.create_time > ?)
 		ORDER BY m.create_time ASC LIMIT 1000;
 	`, messageRows, m.table)
-	var resp []Message
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId, toUserId, t, toUserId, userId, t)
 	switch {
 	case err == nil:
+		m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return resp, ErrNotFound
