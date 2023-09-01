@@ -2,6 +2,8 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
+	"strconv"
 
 	"TikTok/apps/social/rpc/internal/svc"
 	"TikTok/apps/social/rpc/social"
@@ -28,11 +30,19 @@ func (l *SendMessageActionLogic) SendMessageAction(in *social.MessageActionReq) 
 	if err != nil {
 		return nil, err
 	}
-	//返回true代表有bot执行了操作，否则未执行
-	action, data, err := l.svcCtx.Bot.ProcessIfMessageForRobot(l.ctx, in.UserId, in.ToUserId, in.Content, l.svcCtx.KqPusherClient, l.svcCtx.FS)
-	if err == nil && action {
-		if data != "" { // 机器人回发消息
-			l.svcCtx.DBAction.SendMessage(l.ctx, in.ToUserId, in.UserId, data)
+	
+	if in.ToUserId < l.svcCtx.Config.RobotMaxId { 
+		message := make(map[string][]string)
+		message[strconv.FormatInt(in.UserId, 10)] = []string{strconv.FormatInt(in.ToUserId, 10), in.Content}
+		data, err := json.Marshal(message)
+		if err == nil {
+			//推送消息
+			err = l.svcCtx.KqPusherClient.Push(string(data))
+		}
+		if err != nil {
+			return &social.MessageActionResp{
+				IsSucceed: false,
+			}, nil
 		}
 	}
 	return &social.MessageActionResp{

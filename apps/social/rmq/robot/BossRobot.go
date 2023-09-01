@@ -1,9 +1,12 @@
-package Robot
+package robot
 
 import (
 	"context"
 	"fmt"
+
+	"github.com/zeromicro/go-queue/kq"
 )
+
 // 添加其他机器人时要写run 和 DisplayPrologue 函数
 //    在NewBossRobot中添加映射key就是bots的userid
 
@@ -22,11 +25,17 @@ type (
 )
 
 // ！每增加一个bot需在这里添加信息
-func NewBossRobot() *BossRobot {
+func NewBossRobot(KqPusherClient *kq.Pusher) *BossRobot {
 	ret := &BossRobot{}
 	ret.Robots = make(map[int64]Temp, 1)
-	ret.Robots[0] = NewSetPersonInfoRobot()
+	k , v := NewSetPersonInfoRobot(KqPusherClient)
+	ret.Robots[k] = v
 	return ret
+}
+
+
+func RegisterRobotsToUser(){
+	
 }
 
 // 对外接口

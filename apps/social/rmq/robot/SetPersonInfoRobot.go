@@ -1,4 +1,4 @@
-package Robot
+package robot
 
 import (
 	"TikTok/pkg/FileSystem"
@@ -32,8 +32,18 @@ type SetPersonInfoRobot struct {
 	prologue string
 }
 
-func NewSetPersonInfoRobot() *SetPersonInfoRobot{
-	return &SetPersonInfoRobot{prologue: "你好呀,我是一个可以修改头像、背景大图、个性签名的机器人呀,请输入help查看命令。"}
+func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher)(int64, *SetPersonInfoRobot){
+	message := make(map[int64][]string)
+	message[0] =[]string{"username" , "@抖音1号"}
+	data , err := json.Marshal(message)
+	if err != nil{
+		panic("robots start error")
+	}
+	err = KqPusherClient.Push(string(data))
+	if err != nil{
+		panic("robots start error")
+	}
+	return 0 , &SetPersonInfoRobot{prologue: "你好呀,我是一个可以修改头像、背景大图、个性签名的机器人呀,请输入help查看命令。"}
 }
 
 func (s *SetPersonInfoRobot) DisplayPrologue() string{
@@ -94,7 +104,7 @@ func (s *SetPersonInfoRobot) deal(ctx context.Context, userId int64, content str
 	if !ret{
 		return "啊哦,不认识这个语法 请输入help查看支持命令" , nil
 	}
-	return "正在设置中...请稍后", nil
+	return "修改已提交", nil
 }
 
 func (s *SetPersonInfoRobot) parse(key string) map[string]string {
@@ -190,11 +200,11 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string , fs FileSystem.FileSys
 	}
 	defer resp.Body.Close()
 
-	//将头像数据保存到oss
-	err = fs.Upload(resp.Body , "avatar" , qqnumber)
-	if err != nil{
-		return "", err
-	}
+	// //将头像数据保存到oss
+	// err = fs.Upload(resp.Body , "avatar" , qqnumber)
+	// if err != nil{
+	// 	return "", err
+	// }
 
 	return filepath.Join("avatar", qqnumber) , nil
 }
@@ -212,11 +222,11 @@ func (t *SetPersonInfoRobot) getBackgrounImage(url string ,fs FileSystem.FileSys
 	}
 	defer resp.Body.Close()
 
-	//将背景图片数据保存到oss
-	err = fs.Upload(resp.Body , "backgroundImage", url )
-	if err != nil{
-		return "", err
-	}
+	// //将背景图片数据保存到oss
+	// err = fs.Upload(resp.Body , "backgroundImage", url )
+	// if err != nil{
+	// 	return "", err
+	// }
 
 	return filepath.Join("backgroundImage", url) , nil
 }

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 
 	"TikTok/apps/social/rpc/internal/config"
 	"TikTok/apps/social/rpc/internal/server"
 	"TikTok/apps/social/rpc/internal/svc"
-	"TikTok/apps/social/rpc/mqs"
 	"TikTok/apps/social/rpc/social"
 
 	"github.com/zeromicro/go-zero/core/conf"
@@ -35,19 +33,6 @@ func main() {
 		}
 	})
 	defer s.Stop()
-
-	serviceGroup := service.NewServiceGroup()
-	defer serviceGroup.Stop()
-
-	for _, mq := range mqs.Consumers(c, context.Background(), ctx) {
-		serviceGroup.Add(mq)
-		fmt.Println(mq)
-	}
-
-	go func() {
-		fmt.Println("start message")
-		serviceGroup.Start()
-	}()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
 	s.Start()
