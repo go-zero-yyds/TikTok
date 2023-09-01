@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -96,7 +95,7 @@ func (l *PublishActionLogic) uploadVideoToOSS(today, name, extension string, fil
 
 func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error) {
 	//_ = r.ParseMultipartForm(maxFileSize)
-	file, handler, err := r.FormFile(key)
+	file, _, err := r.FormFile(key)
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +103,9 @@ func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error)
 		_ = file.Close()
 
 	}(file)
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
-	fmt.Printf("MIME Header: %+v\n", handler.Header)
+	//fmt.Printf("Uploaded File: %+v\n", handler.Filename)
+	//fmt.Printf("File Size: %+v\n", handler.Size)
+	//fmt.Printf("MIME Header: %+v\n", handler.Header)
 
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {
