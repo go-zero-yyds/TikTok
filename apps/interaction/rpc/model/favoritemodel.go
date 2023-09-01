@@ -5,13 +5,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 var (
-	_ FavoriteModel = (*customFavoriteModel)(nil)
+	_                               FavoriteModel = (*customFavoriteModel)(nil)
+	cacheFavoriteUserIdVideosPrefix               = "cache:userLikes:userId:videos:"
 )
 
 // 定义关注类型常量
@@ -45,11 +47,17 @@ func NewFavoriteModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option
 
 // FindVideos 查看用户点赞视频id列表, 因为没分页，限制1000条。
 func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '%s' limit 1000", m.table, FavoriteTypeFollowing)
 	var resp []int64
+	key := fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, userId)
+	if err := m.CachedConn.GetCache(key, &resp); err == nil {
+		return resp, nil
+	}
+
+	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '%s' limit 1000", m.table, FavoriteTypeFollowing)
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
+		m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -77,6 +85,7 @@ func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Ses
 		`, m.table, favoriteRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.UserId, data.VideoId, data.Behavior, data.Behavior)
 	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
+	m.OnChangeDeleteCache(ctx, data.UserId)
 	return ret, err
 }
 
@@ -87,5 +96,13 @@ func (m *defaultFavoriteModel) TranEmptyOrUpdate(ctx context.Context, s sqlx.Ses
 	query := fmt.Sprintf("update %s set %s where `user_id` = ? and video_id = ?", m.table, favoriteRowsWithPlaceHolder)
 	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.UserId, newData.VideoId)
 	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
+	m.OnChangeDeleteCache(ctx, newData.UserId)
 	return ret, err
+}
+
+func (m *defaultFavoriteModel) OnChangeDeleteCache(ctx context.Context, userId int64) {
+	deleteKeys := []string{
+		fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, userId),
+	}
+	m.CachedConn.DelCacheCtx(ctx, deleteKeys...)
 }
