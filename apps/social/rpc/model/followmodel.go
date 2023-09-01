@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -24,7 +25,10 @@ const (
 	FollowTypeFollowing    = "1"
 )
 
-var _ FollowModel = (*customFollowModel)(nil)
+var (
+	_                           FollowModel = (*customFollowModel)(nil)
+	cacheFollowUserIdFindPrefix             = "cache:follow:userId:find:"
+)
 
 type (
 	// FollowModel is an interface to be customized, add more methods here,
@@ -82,6 +86,7 @@ func (m *defaultFollowModel) TranInsert(ctx context.Context, s sqlx.Session, dat
 		return nil, err
 	}
 	*keys = append(*keys, followIdKey, followUserIdToUserIdKey)
+	m.OnChangeDeleteCache(ctx, data.UserId)
 	return ret, err
 }
 
@@ -92,17 +97,24 @@ func (m *defaultFollowModel) TranUpdate(ctx context.Context, s sqlx.Session, new
 	query := fmt.Sprintf("update %s set %s where `user_id` = ? and to_user_id = ?", m.table, followRowsWithPlaceHolder)
 	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.ToUserId, newData.Behavior, newData.Attribute, newData.UserId, newData.ToUserId)
 	*keys = append(*keys, followIdKey)
+	m.OnChangeDeleteCache(ctx, newData.UserId)
 	return ret, err
 }
 
 // FindFollowList 查看用户关注id列表
 func (m *defaultFollowModel) FindFollowList(ctx context.Context, userId int64) ([]int64, error) {
+	var resp []int64
+	key := fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId)
+	if err := m.CachedConn.GetCache(key, &resp); err == nil {
+		return resp, nil
+	}
+
 	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and (attribute = '%s' or attribute = '%s') LIMIT 1000",
 		m.table, StatusFollow, StatusFriend)
-	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
+		m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -113,12 +125,18 @@ func (m *defaultFollowModel) FindFollowList(ctx context.Context, userId int64) (
 
 // FindFollowerList 查看用户粉丝id列表
 func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64) ([]int64, error) {
+	var resp []int64
+	key := fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId)
+	if err := m.CachedConn.GetCache(key, &resp); err == nil {
+		return resp, nil
+	}
+
 	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and (attribute = '%s' or attribute = '%s') LIMIT 1000",
 		m.table, StatusFan, StatusFriend)
-	var resp []int64
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
+		m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -129,11 +147,17 @@ func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64)
 
 // FindFriendList 查看用户好友id列表
 func (m *defaultFollowModel) FindFriendList(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and attribute = '%s' LIMIT 1000", m.table, StatusFriend)
 	var resp []int64
+	key := fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId)
+	if err := m.CachedConn.GetCache(key, &resp); err == nil {
+		return resp, nil
+	}
+
+	query := fmt.Sprintf("select to_user_id from %s where `user_id` = ? and attribute = '%s' LIMIT 1000", m.table, StatusFriend)
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
+		m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -183,4 +207,11 @@ func (m *defaultFollowModel) StateMachine(userStatus, userFollowType string) (ne
 	}
 
 	return newUserStatus, newToUserStatus
+}
+
+func (m *defaultFollowModel) OnChangeDeleteCache(ctx context.Context, userId int64) {
+	deleteKeys := []string{
+		fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId),
+	}
+	m.CachedConn.DelCacheCtx(ctx, deleteKeys...)
 }
