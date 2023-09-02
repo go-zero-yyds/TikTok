@@ -33,11 +33,6 @@ func NewBossRobot(KqPusherClient *kq.Pusher) *BossRobot {
 	return ret
 }
 
-
-func RegisterRobotsToUser(){
-	
-}
-
 // 对外接口
 // v 一般是 kpusher(queue)    FS(oss)
 //返回值：

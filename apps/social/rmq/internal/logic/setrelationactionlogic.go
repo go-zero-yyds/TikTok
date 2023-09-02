@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+
+	"github.com/zeromicro/go-zero/core/threading"
 )
 
 type PersonalSuccess struct {
@@ -39,7 +41,7 @@ func (l *PersonalSuccess) Consume(key, val string) error {
 		if err != nil || !isSuccess {
 			continue
 		}
-		go func(userid int64) {
+		threading.GoSafeCtx(l.ctx , func() {
 			// auto follow bots
 			for botId := range l.svcCtx.Bot.Robots {
 				l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
@@ -58,7 +60,7 @@ func (l *PersonalSuccess) Consume(key, val string) error {
 					Content:  l.svcCtx.Bot.Robots[botId].DisplayPrologue(),
 				})
 			}
-		}(userId)
+		})
 	}
 	return nil
 }

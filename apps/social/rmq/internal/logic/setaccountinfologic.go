@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+
+	"github.com/zeromicro/go-zero/core/threading"
 )
 
 type RobotsResponse struct {
@@ -39,7 +41,7 @@ func (l *RobotsResponse) Consume(key, val string) error {
 		if err != nil {
 			continue
 		}
-		go func(userId  , touserId int64 , v []string) {
+		threading.GoSafeCtx(l.ctx , func() {
 			action, data, err := l.svcCtx.Bot.ProcessIfMessageForRobot(l.ctx, userId, touserId, v[1], l.svcCtx.KqPusherClient, l.svcCtx.FS)
 			if err == nil && action {
 				if data != "" { // 机器人回发消息
@@ -51,7 +53,7 @@ func (l *RobotsResponse) Consume(key, val string) error {
 					})
 				}
 			}
-		}(userId , touserId , v)
+		})
 	}
 	return nil
 }

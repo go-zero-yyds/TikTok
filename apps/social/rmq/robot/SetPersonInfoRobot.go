@@ -125,6 +125,9 @@ func (s *SetPersonInfoRobot) parse(key string) map[string]string {
 
 // 设置头像并返回用于发送给user的oss的key
 func (s *SetPersonInfoRobot) ToSetAvatar(ctx context.Context, userId int64, qqnumber string , v... any) error {
+	if ok  , _  := regexp.MatchString("^[0-9]+$" , qqnumber); !ok{
+		return ErrorParam
+	}
 	KqPusherClient , ok := v[0].(*kq.Pusher)
 	if !ok{
 		return ErrorKqPusher
@@ -195,16 +198,16 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string , fs FileSystem.FileSys
 	// 发起 HTTP 请求获取头像
 	resp, err := http.Get(qqAvatarURL)
 	if err != nil {
-		fmt.Println("Error:", err)
 		return "",ErrorGetAvatar
 	}
 	defer resp.Body.Close()
 
-	// //将头像数据保存到oss
-	// err = fs.Upload(resp.Body , "avatar" , qqnumber)
-	// if err != nil{
-	// 	return "", err
-	// }
+
+	//将头像数据保存到oss
+	err = fs.Upload(resp.Body , "avatar" , qqnumber)
+	if err != nil{
+		return "", err
+	}
 
 	return filepath.Join("avatar", qqnumber) , nil
 }
@@ -212,7 +215,6 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string , fs FileSystem.FileSys
 func (t *SetPersonInfoRobot) getBackgrounImage(url string ,fs FileSystem.FileSystem) (string , error){
 	pattern := `^(https?|http)://[^\s/$.?#].[^\s]*$`
 	matched, err := regexp.MatchString(pattern, url)
-	fmt.Println(matched)
 	if err != nil || !matched{
 		return "" , ErrorParam
 	}
