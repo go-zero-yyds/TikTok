@@ -8,6 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zeromicro/go-zero/core/logx"
+	"image"
+	"image/color"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -31,6 +36,8 @@ var (
 	ErrorParam   = errors.New("param error")
 )
 
+const token = "Client-ID x_q4MjED1PCQY4mcHgiFZ1pxSxl7nP_fk3UICVGa01s"
+
 // 功能是 接收用户信息参数，返回需要发送给user的数据包
 
 // 格式是json包的map[string][]string   【uid】{修改字段，key}
@@ -47,7 +54,7 @@ type SetPersonInfoRobot struct {
 
 func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher) (int64, *SetPersonInfoRobot) {
 	message := make(map[int64][]string)
-	message[0] = []string{"username", "@抖音1号"}
+	message[0] = []string{"username", "🤖抖音1号"}
 	data, err := json.Marshal(message)
 	if err != nil {
 		panic("robots start error")
@@ -58,7 +65,7 @@ func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher) (int64, *SetPersonInfoRobo
 	}
 
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: "Client-ID x_q4MjED1PCQY4mcHgiFZ1pxSxl7nP_fk3UICVGa01s"},
+		&oauth2.Token{AccessToken: token},
 	)
 	clnt := oauth2.NewClient(context.TODO(), ts)
 	unpas := unsplash.New(clnt)
@@ -223,9 +230,62 @@ func (t *SetPersonInfoRobot) ToSetSignature(userId int64, Signature string, v ..
 	return KqPusherClient.Push(string(data))
 }
 
+func toRound(inputFile io.Reader, outputFileFormat string) ([]byte, error) {
+	img, _, err := image.Decode(inputFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建一个新的空白图像，大小与原始图像相同
+	bounds := img.Bounds()
+	outputImg := image.NewRGBA(bounds)
+
+	// 计算圆形的半径
+	radius := bounds.Dx() / 2
+
+	// 循环遍历像素，将非圆形部分设置为透明
+	for x := bounds.Min.X; x < bounds.Max.X; x++ {
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			dx := x - bounds.Min.X - radius
+			dy := y - bounds.Min.Y - radius
+			distance := dx*dx + dy*dy
+
+			if distance <= radius*radius {
+				outputImg.Set(x, y, img.At(x, y))
+			} else {
+				outputImg.Set(x, y, color.Transparent)
+			}
+		}
+	}
+
+	// 创建输出文件
+	//outputFileName := "output." + outputFileFormat
+	//outputFile, err := os.Create(outputFileName)
+	if err != nil {
+		return nil, err
+	}
+	//defer outputFile.Close()
+	buf := bytes.NewBuffer(nil)
+
+	// 根据输出图像格式保存图像
+	switch outputFileFormat {
+	case "png":
+		err = png.Encode(buf, outputImg)
+	case "jpeg":
+		err = jpeg.Encode(buf, outputImg, nil)
+	default:
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
 func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSystem) (string, error) {
 	// 构建 QQ 头像 API URL
-	qqAvatarURL := fmt.Sprintf("https://q1.qlogo.cn/g?b=qq&nk=%s&s=100", qqnumber)
+	qqAvatarURL := fmt.Sprintf("https://q1.qlogo.cn/g?b=qq&nk=%s&s=640", qqnumber)
 
 	// 发起 HTTP 请求获取头像
 	resp, err := http.Get(qqAvatarURL)
@@ -236,7 +296,7 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSyst
 		_ = Body.Close()
 	}(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("HTTP请求返回非200状态码:", resp.Status)
+		logx.Errorf("HTTP请求返回非200状态码:", resp.Status)
 		return "", errors.New("HTTP请求返回非200状态码")
 	}
 	// 读取响应主体数据到内存缓冲
@@ -245,7 +305,7 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSyst
 		return "", err
 	}
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		logx.Errorf("Error reading response body:", err)
 		return "", err
 	}
 	// 检查
@@ -254,18 +314,21 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSyst
 	if !strings.HasPrefix(mime.String(), "image/") {
 		return "", errors.New("不是图片")
 	}
-
+	p, err := toRound(buf, "png")
+	if err != nil {
+		return "", err
+	}
 	//将图片转成sha1码
 	// 将图片转成 SHA-256 哈希值
 	sha := sha1.New()
-	sha.Write(buf.Bytes())
+	sha.Write(p)
 	sha1Value := fmt.Sprintf("%x", sha.Sum(nil))
 
 	key := filepath.Join("avatar", sha1Value)
 	//如果oss不存在这个图片
 	if ok, _ := fs.FileExists(key); !ok {
 		// 将头像数据上传至OSS
-		err = fs.Upload(bytes.NewReader(buf.Bytes()), "avatar", sha1Value)
+		err = fs.Upload(bytes.NewReader(p), "avatar", sha1Value)
 		if err != nil {
 			return "", err
 		}
@@ -287,7 +350,7 @@ func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs FileSystem.FileSys
 		_ = Body.Close()
 	}(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("HTTP请求返回非200状态码:", resp.Status)
+		logx.Errorf("HTTP请求返回非200状态码:", resp.Status)
 		return "", errors.New("HTTP请求返回非200状态码")
 	}
 	// 读取响应主体数据到内存缓冲
@@ -296,7 +359,7 @@ func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs FileSystem.FileSys
 		return "", err
 	}
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		logx.Errorf("Error reading response body:", err)
 		return "", err
 	}
 	// 检查
@@ -307,7 +370,7 @@ func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs FileSystem.FileSys
 	}
 
 	//将图片转成sha1码
-	// 将图片转成 SHA-256 哈希值
+	// 将图片转成 SHA-1 哈希值
 	sha := sha1.New()
 	sha.Write(buf.Bytes())
 	sha1Value := fmt.Sprintf("%x", sha.Sum(nil))
