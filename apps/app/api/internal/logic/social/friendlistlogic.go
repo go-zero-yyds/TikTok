@@ -4,13 +4,12 @@ import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/middleware"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/social/rpc/social"
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/mr"
-
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -30,6 +29,7 @@ func NewFriendListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Friend
 }
 
 func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp *types.RelationFriendListResponse, err error) {
+
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	if tokenID != req.UserID {
 		return &types.RelationFriendListResponse{

@@ -3,15 +3,17 @@ package svc
 import (
 	"TikTok/apps/user/rpc/internal/config"
 	"TikTok/apps/user/rpc/model"
+	"github.com/zeromicro/go-queue/kq"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 type ServiceContext struct {
-	Config    config.Config
-	UserModel model.UserModel
-	Snowflake *snowflake.Node
+	Config         config.Config
+	UserModel      model.UserModel
+	Snowflake      *snowflake.Node
+	KqPusherClient *kq.Pusher
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {

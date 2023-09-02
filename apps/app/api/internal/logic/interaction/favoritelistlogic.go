@@ -2,17 +2,16 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	videoApi "TikTok/apps/app/api/internal/logic/video"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/video/rpc/video"
 	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/zeromicro/go-zero/core/mr"
-
-	videoApi "TikTok/apps/app/api/internal/logic/video"
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/mr"
 )
 
 type FavoriteListLogic struct {
@@ -30,8 +29,8 @@ func NewFavoriteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Favo
 }
 
 func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *types.FavoriteListResponse, err error) {
-	tokenID := int64(-1)
 
+	tokenID := int64(-1)
 	if req.Token != "" {
 		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)
 		if err != nil {
@@ -40,7 +39,6 @@ func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *
 			} else {
 				return nil, err
 			}
-
 		}
 	}
 

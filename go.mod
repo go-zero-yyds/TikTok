@@ -1,6 +1,6 @@
 module TikTok
 
-go 1.20
+go 1.19
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.20.1
@@ -17,6 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/studio-b12/gowebdav v0.9.0
 	github.com/u2takey/ffmpeg-go v0.5.0
+	github.com/zeromicro/go-queue v1.1.8
 	github.com/zeromicro/go-zero v1.5.4
 	golang.org/x/crypto v0.12.0
 	google.golang.org/grpc v1.57.0

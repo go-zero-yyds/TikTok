@@ -8,7 +8,6 @@ import (
 	"TikTok/apps/video/rpc/video"
 	"bytes"
 	"context"
-	"errors"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -38,6 +37,7 @@ func NewPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pub
 }
 
 func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *http.Request) (resp *types.PublishActionResponse, err error) {
+
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 
 	file, err := l.Upload(r, "data")
@@ -47,7 +47,9 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 	mime := mimetype.Detect(file)
 
 	if !strings.HasPrefix(mime.String(), "video/") {
-		return nil, errors.New("不是视频")
+		return &types.PublishActionResponse{
+			RespStatus: types.RespStatus(apiVars.DataNotVideo),
+		}, nil
 	}
 
 	name := uuid.New().String()

@@ -1,6 +1,7 @@
 Name: social.rpc
 Timeout: 100000 # 100s
 ListenOn: 0.0.0.0:8004
+
 #链路追踪
 Telemetry:
   Name: social-rpc

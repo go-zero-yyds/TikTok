@@ -9,32 +9,32 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type SetBackgroundImageLogic struct {
+type SetSignatureLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	logx.Logger
 }
 
-func NewSetBackgroundImageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SetBackgroundImageLogic {
-	return &SetBackgroundImageLogic{
+func NewSetSignatureLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SetSignatureLogic {
+	return &SetSignatureLogic{
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		Logger: logx.WithContext(ctx),
 	}
 }
 
-func (l *SetBackgroundImageLogic) SetBackgroundImage(in *user.SetBackgroundImageReq) (*user.SetBackgroundImageResp, error) {
+func (l *SetSignatureLogic) SetSignature(in *user.SetSignatureReq) (*user.SetSignatureResp, error) {
 	isSucceed := true
 	err := l.svcCtx.UserModel.UpdateByUserId(l.ctx, &model.User{
-		UserId:          in.UserId,
-		BackgroundImage: in.Url,
-	}, "backgroundImage")
+		UserId:    in.UserId,
+		Signature: in.Content,
+	}, "signature")
 
 	if err != nil {
 		isSucceed = false
 	}
 
-	return &user.SetBackgroundImageResp{
+	return &user.SetSignatureResp{
 		IsSucceed: isSucceed,
 	}, err
 

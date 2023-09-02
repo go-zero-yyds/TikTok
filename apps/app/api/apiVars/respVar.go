@@ -20,14 +20,17 @@ var (
 		StatusCode: 120,
 		StatusMsg:  "部分数据异常",
 	}
-	// InternalError 内部异常造成的错误
-	InternalError = RespErr{
-		StatusCode: 500,
-		StatusMsg:  "内部错误",
-	}
 	UserNotFound = RespErr{
 		StatusCode: 100,
 		StatusMsg:  "用户不存在",
+	}
+	VideoNotFound = RespErr{
+		StatusCode: 120,
+		StatusMsg:  "视频不存在",
+	}
+	DataNotVideo = RespErr{
+		StatusCode: 130,
+		StatusMsg:  "不是视频",
 	}
 	UserValidation = RespErr{
 		StatusCode: 200,
@@ -48,5 +51,22 @@ var (
 	IllegalArgument = RespErr{
 		StatusCode: 700,
 		StatusMsg:  "非法的请求",
+	}
+	// InternalError 内部异常造成的错误
+	InternalError = RespErr{
+		StatusCode: 500,
+		StatusMsg:  "内部错误",
+	}
+	UsernameRuleError = RespErr{
+		StatusCode: 401,
+		StatusMsg:  "用户名格式不符合规范",
+	}
+	PasswordRuleError = RespErr{
+		StatusCode: 402,
+		StatusMsg:  "密码格式不符合规范",
+	}
+	TextRuleError = RespErr{
+		StatusCode: 410,
+		StatusMsg:  "内容格式不符合规范",
 	}
 )

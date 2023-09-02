@@ -1,14 +1,12 @@
 package logic
 
 import (
-	"context"
-	"errors"
-
 	"TikTok/apps/user/rpc/internal/svc"
 	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
 	"TikTok/pkg/tool"
-
+	"context"
+	"errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -27,6 +25,7 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
+
 	res, err := l.svcCtx.UserModel.FindOneByUsername(l.ctx, in.Username)
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {
@@ -43,5 +42,4 @@ func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
 	return &user.LoginResp{
 		UserId: res.UserId,
 	}, nil
-	// return &user.LoginResp{}, nil
 }

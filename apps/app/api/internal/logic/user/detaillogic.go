@@ -34,6 +34,14 @@ func NewDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetailLogi
 }
 
 func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, err error) {
+
+	// 参数检查
+	if req.Token == "" {
+		return &types.UserResponse{
+			RespStatus: types.RespStatus(apiVars.NotLogged),
+		}, nil
+	}
+
 	// 解析token
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	userInfo, err := TryGetUserInfo(tokenID, req.UserID, l.svcCtx, l.ctx)

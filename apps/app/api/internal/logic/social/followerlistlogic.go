@@ -4,15 +4,13 @@ import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/middleware"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/social/rpc/social"
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
-	"github.com/zeromicro/go-zero/core/mr"
-
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
-
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/mr"
 )
 
 type FollowerListLogic struct {
@@ -30,8 +28,10 @@ func NewFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Foll
 }
 
 func (l *FollowerListLogic) FollowerList(req *types.RelationFollowerListRequest) (resp *types.RelationFollowerListResponse, err error) {
+
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	list, err := l.svcCtx.SocialRPC.GetRelationFollowerList(l.ctx, &social.RelationFollowerListReq{UserId: req.UserID})
+
 	if err != nil {
 		return nil, err
 	}

@@ -22,3 +22,16 @@ Cache:
 Snowflake:
   StartTime: 1288834974657
   Node: 1
+
+
+
+KqConsumerConf:
+  Name: userConsumer
+  Brokers:
+    - 127.0.0.1:9092
+  Group: personalConsumer
+  Topic: personal-success
+  Offset: first
+  Consumers: 16
+  Processors: 16
+
