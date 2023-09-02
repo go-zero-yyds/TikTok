@@ -101,7 +101,7 @@ func (t *SetPersonInfoRobot) deal(ctx context.Context, userId int64, content str
 
 		//设置背景大图 支持qq
 		if value, ok := infoMap["backgroundimage"]; ok {
-			if value == "range" {
+			if value == "random" {
 				err := t.ToSetBackgroundImage(ctx, userId, v...)
 				if err != nil {
 					logc.Error(ctx, userId, err)
@@ -122,7 +122,7 @@ func (t *SetPersonInfoRobot) deal(ctx context.Context, userId int64, content str
 		}
 	}
 	if len(content) >= 4 && strings.ToLower(content[:4]) == "help" {
-		return "set \n\t --avatar=qqnum  设置头像为qq号num的头像 \n\t --backgroundimage=range 设置背景大图为随机图片(目前只支持随机) \n\t" +
+		return "set \n\t --avatar=qq num  设置头像为qq号num的头像 \n\t --backgroundimage=random 设置背景大图为随机图片\n\t" +
 			" --signature=str 设置个性签名为str\n\n", nil
 	}
 	if !ret {
