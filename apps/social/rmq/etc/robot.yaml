@@ -33,14 +33,9 @@ SocialRPC:
 
 FS:
   Prefix: /tk/tk
-  #  AwsS3:
-  #    Endpoint: http://127.0.0.1:9000
-  #    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
-  #    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
-  #    Bucket: tiktok
-  Webdav:
-    URL: 
-    User: 
-    Password: 
-    DownloadLinkPrefix: 
+  AwsS3:
+    Endpoint: http://192.168.1.12:9000
+    AccessKeyID: pCiDSegbNrJXS2ZtfTTB
+    AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
+    Bucket: tiktok
 
