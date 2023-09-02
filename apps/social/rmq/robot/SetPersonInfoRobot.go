@@ -60,7 +60,7 @@ func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher) (int64, *SetPersonInfoRobo
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: "Client-ID x_q4MjED1PCQY4mcHgiFZ1pxSxl7nP_fk3UICVGa01s"},
 	)
-	clnt := oauth2.NewClient(oauth2.NoContext, ts)
+	clnt := oauth2.NewClient(context.TODO(), ts)
 	unpas := unsplash.New(clnt)
 
 	return 0, &SetPersonInfoRobot{
