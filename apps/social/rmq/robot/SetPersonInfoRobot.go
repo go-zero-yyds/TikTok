@@ -4,10 +4,10 @@ import (
 	"TikTok/pkg/FileSystem"
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gabriel-vasile/mimetype"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -15,15 +15,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
+	"golang.org/x/oauth2"
+
+	"github.com/hbagdi/go-unsplash/unsplash"
 	"github.com/zeromicro/go-queue/kq"
 	"github.com/zeromicro/go-zero/core/logc"
 )
 
 var (
-	ErrorKqPusher  = errors.New("not KqPusher type")
-	ErrorGetAvatar = errors.New("get qq avatar error from http")
-	ErrorFileOss   = errors.New("oss error")
-	ErrorParam     = errors.New("param error")
+	ErrorKqPusher      = errors.New("not KqPusher type")
+	ErrorGetAvatar     = errors.New("get qq avatar error from http")
+	ErrorGetBackground = errors.New("get background")
+	ErrorFileOss       = errors.New("oss error")
+	ErrorParam         = errors.New("param error")
 )
 
 // 功能是 接收用户信息参数，返回需要发送给user的数据包
@@ -35,6 +40,8 @@ var (
 //	     signature       个性签名
 type SetPersonInfoRobot struct {
 	prologue string
+	unsplash *unsplash.Unsplash
+	client   *http.Client
 }
 
 func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher) (int64, *SetPersonInfoRobot) {
@@ -48,7 +55,18 @@ func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher) (int64, *SetPersonInfoRobo
 	if err != nil {
 		panic("robots start error")
 	}
-	return 0, &SetPersonInfoRobot{prologue: "你好呀,我是一个可以修改头像、背景大图、个性签名的机器人呀,请输入help查看命令。"}
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: "Client-ID x_q4MjED1PCQY4mcHgiFZ1pxSxl7nP_fk3UICVGa01s"},
+	)
+	clnt := oauth2.NewClient(oauth2.NoContext, ts)
+	unpas := unsplash.New(clnt)
+
+	return 0, &SetPersonInfoRobot{
+		prologue: "你好呀,我是一个可以修改头像、背景大图、个性签名的机器人呀,请输入help查看命令。",
+		client:   clnt,
+		unsplash: unpas,
+	}
 }
 
 func (s *SetPersonInfoRobot) DisplayPrologue() string {
@@ -74,7 +92,7 @@ func (s *SetPersonInfoRobot) deal(ctx context.Context, userId int64, content str
 				err := s.ToSetAvatar(ctx, userId, value[2:], v...)
 				if err != nil {
 					logc.Error(ctx, userId, err)
-					return "设置错误,请检查参数是否正确，或等会再试", nil
+					return "设置错误,请检查参数是否正确,或等会再试", nil
 				}
 				ret = true
 			}
@@ -82,11 +100,11 @@ func (s *SetPersonInfoRobot) deal(ctx context.Context, userId int64, content str
 
 		//设置背景大图 支持qq
 		if value, ok := infoMap["backgroundimage"]; ok {
-			if value[0:3] == "url" {
-				err := s.ToSetBackgroundImage(ctx, userId, value[3:], v...)
+			if value == "range" {
+				err := s.ToSetBackgroundImage(ctx, userId, v...)
 				if err != nil {
 					logc.Error(ctx, userId, err)
-					return "设置错误,请检查参数是否正确，或等会再试", nil
+					return "设置错误,请检查参数是否正确,或等会再试", nil
 				}
 				ret = true
 			}
@@ -97,44 +115,44 @@ func (s *SetPersonInfoRobot) deal(ctx context.Context, userId int64, content str
 			err := s.ToSetSignature(ctx, userId, value, v...)
 			if err != nil {
 				logc.Error(ctx, userId, err)
-				return "设置错误,请检查参数是否正确，或等会再试", nil
+				return "设置错误,请检查参数是否正确,或等会再试", nil
 			}
 			ret = true
 		}
 	}
 	if len(content) >= 4 && strings.ToLower(content[:4]) == "help" {
-		return "set \n\t -avatar=qqnum  设置头像为qq号num的头像 \n\t -backgroundimage=urlhttp://xxx  设置背景大图为xxx图片 \n\t" +
-			" -signature=str 设置个性签名为str\n\n", nil
+		return "set \n\t --avatar=qqnum  设置头像为qq号num的头像 \n\t --backgroundimage=range 设置背景大图为随机图片(目前只支持随机) \n\t" +
+			" --signature=str 设置个性签名为str\n\n", nil
 	}
 	if !ret {
 		return "啊哦,不认识这个语法 请输入help查看支持命令", nil
 	}
-	return "修改已提交", nil
+	return "设置成功", nil
 }
 
 func (s *SetPersonInfoRobot) parse(key string) map[string]string {
 	infoMap := make(map[string]string)
 	// 拆分每个键值对
-	keyValuePairs := strings.Split(key, " -")
+	keyValuePairs := strings.Split(key, " --")
 	for _, pair := range keyValuePairs {
 		// 拆分键和值
 		parts := strings.Split(pair, "=")
 		if len(parts) == 2 {
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
+			key := strings.ReplaceAll(parts[0], " ", "")
+			value := strings.ReplaceAll(parts[1], " ", "")
 			infoMap[key] = value
 		}
 	}
 	return infoMap
 }
 
-// 设置头像并返回用于发送给user的oss的key
-func (s *SetPersonInfoRobot) ToSetAvatar(ctx context.Context, userId int64, qqnumber string , v... any) error {
-	if ok  , _  := regexp.MatchString("^[0-9]+$" , qqnumber); !ok{
+// 设置头像并发送给user的oss的key
+func (s *SetPersonInfoRobot) ToSetAvatar(ctx context.Context, userId int64, qqnumber string, v ...any) error {
+	if ok, _ := regexp.MatchString("^[0-9]+$", qqnumber); !ok {
 		return ErrorParam
 	}
-	KqPusherClient , ok := v[0].(*kq.Pusher)
-	if !ok{
+	KqPusherClient, ok := v[0].(*kq.Pusher)
+	if !ok {
 		return ErrorFileOss
 	}
 	FS, ok := v[1].(FileSystem.FileSystem)
@@ -155,8 +173,8 @@ func (s *SetPersonInfoRobot) ToSetAvatar(ctx context.Context, userId int64, qqnu
 	return KqPusherClient.Push(string(data))
 }
 
-// 设置背景图片并返回用于发送给user的oss的key
-func (s *SetPersonInfoRobot) ToSetBackgroundImage(ctx context.Context, userId int64, url string, v ...any) error {
+// 设置背景图片并发送给user的oss的key
+func (s *SetPersonInfoRobot) ToSetBackgroundImage(ctx context.Context, userId int64, v ...any) error {
 	KqPusherClient, ok := v[0].(*kq.Pusher)
 	if !ok {
 		return ErrorKqPusher
@@ -165,6 +183,14 @@ func (s *SetPersonInfoRobot) ToSetBackgroundImage(ctx context.Context, userId in
 	if !ok {
 		return ErrorFileOss
 	}
+
+	photos, _, err := s.unsplash.Photos.Random(nil)
+	if photos == nil || len(*photos) != 1 {
+		logc.Error(ctx, err)
+	}
+	photo := (*photos)[0]
+	url := photo.Links.Download.String()
+
 	key, err := s.getBackgrounImage(url, FS)
 	if err != nil || len(key) == 0 {
 		return err
@@ -227,13 +253,21 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSyst
 	if !strings.HasPrefix(mime.String(), "image/") {
 		return "", errors.New("不是图片")
 	}
-	// 将头像数据上传至OSS
-	err = fs.Upload(bytes.NewReader(buf.Bytes()), "avatar", qqnumber)
-	if err != nil {
-		return "", err
-	}
 
-	return filepath.Join("avatar", qqnumber), nil
+	//将图片转成hash码
+	hash := sha256.New()
+	hashValue := hash.Sum(buf.Bytes())
+
+	key := filepath.Join("avatar", string(hashValue))
+	//如果oss不存在这个图片
+	if ok, _ := fs.FileExists(key); !ok {
+		// 将头像数据上传至OSS
+		err = fs.Upload(bytes.NewReader(buf.Bytes()), "avatar", string(hashValue))
+		if err != nil {
+			return "", err
+		}
+	}
+	return key, nil
 }
 
 func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs FileSystem.FileSystem) (string, error) {
@@ -268,11 +302,19 @@ func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs FileSystem.FileSys
 	if !strings.HasPrefix(mime.String(), "image/") {
 		return "", errors.New("不是图片")
 	}
-	//将背景图片数据保存到oss
-	err = fs.Upload(resp.Body, "backgroundImage", url)
-	if err != nil {
-		return "", err
-	}
+	
+	//将图片转成hash码
+	hash := sha256.New()
+	hashValue := hash.Sum(buf.Bytes())
 
-	return filepath.Join("backgroundImage", url), nil
+	key := filepath.Join("backgroundImage", string(hashValue))
+	// 如果oss不存在这个图片
+	if ok, _ := fs.FileExists(key); !ok {
+		// 将头像数据上传至OSS
+		err = fs.Upload(bytes.NewReader(buf.Bytes()), "backgroundImage", string(hashValue))
+		if err != nil {
+			return "", err
+		}
+	}
+	return key, nil
 }
