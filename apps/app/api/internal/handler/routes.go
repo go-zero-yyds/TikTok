@@ -31,13 +31,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodGet,
-				Path:    "/",
-				Handler: user.DetailHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.Auth},
+			[]rest.Route{
+				{
+					Method:  http.MethodGet,
+					Path:    "/",
+					Handler: user.DetailHandler(serverCtx),
+				},
+			}...,
+		),
 		rest.WithPrefix("/douyin/user"),
 	)
 
@@ -48,85 +51,109 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/feed",
 				Handler: video.FeedHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/publish/list",
+				Handler: video.PublishListHandler(serverCtx),
+			},
 		},
 		rest.WithPrefix("/douyin"),
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodPost,
-				Path:    "/action",
-				Handler: video.PublishActionHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/list",
-				Handler: video.PublishListHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.Auth},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/action",
+					Handler: video.PublishActionHandler(serverCtx),
+				},
+			}...,
+		),
 		rest.WithPrefix("/douyin/publish"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
 			{
-				Method:  http.MethodPost,
-				Path:    "/favorite/action",
-				Handler: interaction.FavoriteActionHandler(serverCtx),
+				Method:  http.MethodGet,
+				Path:    "/comment/list",
+				Handler: interaction.CommentListHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodGet,
 				Path:    "/favorite/list",
 				Handler: interaction.FavoriteListHandler(serverCtx),
 			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/comment/action",
-				Handler: interaction.CommentActionHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/comment/list",
-				Handler: interaction.CommentListHandler(serverCtx),
-			},
 		},
 		rest.WithPrefix("/douyin"),
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodPost,
-				Path:    "/relation/action",
-				Handler: social.RelationActionHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/relation/follow/list",
-				Handler: social.FollowListHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/relation/follower/list",
-				Handler: social.FollowerListHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/relation/friend/list",
-				Handler: social.FriendListHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/message/chat",
-				Handler: social.MessageChatHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/message/action",
-				Handler: social.MessageActionHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.Auth, serverCtx.ClientIPMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/comment/action",
+					Handler: interaction.CommentActionHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/douyin"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.Auth},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/favorite/action",
+					Handler: interaction.FavoriteActionHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/douyin"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.Auth},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/relation/action",
+					Handler: social.RelationActionHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/relation/follow/list",
+					Handler: social.FollowListHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/relation/follower/list",
+					Handler: social.FollowerListHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/relation/friend/list",
+					Handler: social.FriendListHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/message/chat",
+					Handler: social.MessageChatHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/message/action",
+					Handler: social.MessageActionHandler(serverCtx),
+				},
+			}...,
+		),
 		rest.WithPrefix("/douyin"),
 	)
 }

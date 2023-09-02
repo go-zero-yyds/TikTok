@@ -19,18 +19,16 @@ import (
 var (
 	commentFieldNames          = builder.RawFieldNames(&Comment{})
 	commentRows                = strings.Join(commentFieldNames, ",")
-	commentRowsExpectAutoSet   = strings.Join(stringx.Remove(commentFieldNames, "`comment_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
+	commentRowsExpectAutoSet   = strings.Join(stringx.Remove(commentFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	commentRowsWithPlaceHolder = strings.Join(stringx.Remove(commentFieldNames, "`comment_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
 
-	cacheCommentCommentIdPrefix       = "cache:comment:commentId:"
-	cacheCommentCommentIdUserIdPrefix = "cache:comment:commentId:userId:"
+	cacheCommentCommentIdPrefix = "cache:comment:commentId:"
 )
 
 type (
 	commentModel interface {
 		Insert(ctx context.Context, data *Comment) (sql.Result, error)
 		FindOne(ctx context.Context, commentId int64) (*Comment, error)
-		FindOneByCommentIdUserId(ctx context.Context, commentId int64, userId int64) (*Comment, error)
 		Update(ctx context.Context, data *Comment) error
 		Delete(ctx context.Context, commentId int64) error
 	}
@@ -41,11 +39,13 @@ type (
 	}
 
 	Comment struct {
-		CommentId  int64     `db:"comment_id"`  // 自增id
+		CommentId  int64     `db:"comment_id"`  // 雪花id
 		UserId     int64     `db:"user_id"`     // 用户id
 		VideoId    int64     `db:"video_id"`    // 视频id
-		CreateDate time.Time `db:"create_date"` // 创建日期
 		Content    string    `db:"content"`     // 用户评论内容
+		IpAddress  string    `db:"ip_address"`  // 用户IP地址
+		Location   string    `db:"location"`    // IP地址归属地
+		CreateTime time.Time `db:"create_time"` // 创建日期
 		IsDeleted  string    `db:"is_deleted"`  // 0:未删除 1:已删除
 	}
 )
@@ -65,17 +65,11 @@ func (m *defaultCommentModel) withSession(session sqlx.Session) *defaultCommentM
 }
 
 func (m *defaultCommentModel) Delete(ctx context.Context, commentId int64) error {
-	data, err := m.FindOne(ctx, commentId)
-	if err != nil {
-		return err
-	}
-
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, commentId)
-	commentCommentIdUserIdKey := fmt.Sprintf("%s%v:%v", cacheCommentCommentIdUserIdPrefix, data.CommentId, data.UserId)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where `comment_id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, commentId)
-	}, commentCommentIdKey, commentCommentIdUserIdKey)
+	}, commentCommentIdKey)
 	return err
 }
 
@@ -96,48 +90,21 @@ func (m *defaultCommentModel) FindOne(ctx context.Context, commentId int64) (*Co
 	}
 }
 
-func (m *defaultCommentModel) FindOneByCommentIdUserId(ctx context.Context, commentId int64, userId int64) (*Comment, error) {
-	commentCommentIdUserIdKey := fmt.Sprintf("%s%v:%v", cacheCommentCommentIdUserIdPrefix, commentId, userId)
-	var resp Comment
-	err := m.QueryRowIndexCtx(ctx, &resp, commentCommentIdUserIdKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v any) (i any, e error) {
-		query := fmt.Sprintf("select %s from %s where `comment_id` = ? and `user_id` = ? limit 1", commentRows, m.table)
-		if err := conn.QueryRowCtx(ctx, &resp, query, commentId, userId); err != nil {
-			return nil, err
-		}
-		return resp.CommentId, nil
-	}, m.queryPrimary)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
-
 func (m *defaultCommentModel) Insert(ctx context.Context, data *Comment) (sql.Result, error) {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
-	commentCommentIdUserIdKey := fmt.Sprintf("%s%v:%v", cacheCommentCommentIdUserIdPrefix, data.CommentId, data.UserId)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.CreateDate, data.Content, data.IsDeleted)
-	}, commentCommentIdKey, commentCommentIdUserIdKey)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.CommentId, data.UserId, data.VideoId, data.Content, data.IpAddress, data.Location, data.IsDeleted)
+	}, commentCommentIdKey)
 	return ret, err
 }
 
-func (m *defaultCommentModel) Update(ctx context.Context, newData *Comment) error {
-	data, err := m.FindOne(ctx, newData.CommentId)
-	if err != nil {
-		return err
-	}
-
+func (m *defaultCommentModel) Update(ctx context.Context, data *Comment) error {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
-	commentCommentIdUserIdKey := fmt.Sprintf("%s%v:%v", cacheCommentCommentIdUserIdPrefix, data.CommentId, data.UserId)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `comment_id` = ?", m.table, commentRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.CreateDate, newData.Content, newData.IsDeleted, newData.CommentId)
-	}, commentCommentIdKey, commentCommentIdUserIdKey)
+		return conn.ExecCtx(ctx, query, data.UserId, data.VideoId, data.Content, data.IpAddress, data.Location, data.IsDeleted, data.CommentId)
+	}, commentCommentIdKey)
 	return err
 }
 

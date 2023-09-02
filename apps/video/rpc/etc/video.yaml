@@ -1,5 +1,16 @@
 Name: video.rpc
 ListenOn: 0.0.0.0:8002
+#链路追踪
+Telemetry:
+  Name: video-rpc
+  Endpoint: http://localhost:9411/api/v2/spans
+  Sampler: 1.0
+  Batcher: zipkin
+#指标监控
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9082
+  Path: /metrics
 Etcd:
   Hosts:
     - 127.0.0.1:2379

@@ -76,25 +76,31 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 		return make([]types.Video, 0), nil
 	}
 	var e *apiVars.RespErr
-
-	feedList, err := mr.MapReduce(func(source chan<- *video.BasicVideoInfo) {
-		for _, bv := range feedBasicList {
-			source <- bv
+	size := len(feedBasicList)
+	feedList, err := mr.MapReduce(func(source chan<- IdxVideo) {
+		for i, bv := range feedBasicList {
+			source <- IdxVideo{
+				BasicVideoInfo: bv,
+				idx:            i,
+			}
 		}
-	}, func(item *video.BasicVideoInfo, writer mr.Writer[*types.Video], cancel func(error)) {
-		videoInfo, err := TryGetVideoInfo(tokenID, item, svcCtx, ctx)
+	}, func(item IdxVideo, writer mr.Writer[IdxApiVideo], cancel func(error)) {
+		videoInfo, err := TryGetVideoInfo(tokenID, item.BasicVideoInfo, svcCtx, ctx)
 		if err != nil {
 			e = &apiVars.SomeDataErr
 			if err != apiVars.SomeDataErr {
 				return
 			}
 		}
-		writer.Write(videoInfo)
-	}, func(pipe <-chan *types.Video, writer mr.Writer[[]types.Video], cancel func(error)) {
-		vs := make([]types.Video, 0)
+		writer.Write(IdxApiVideo{
+			Video: videoInfo,
+			idx:   item.idx,
+		})
+	}, func(pipe <-chan IdxApiVideo, writer mr.Writer[[]types.Video], cancel func(error)) {
+		vs := make([]types.Video, size)
 		for item := range pipe {
 			v := item
-			vs = append(vs, *v)
+			vs[v.idx] = *v.Video
 		}
 		writer.Write(vs)
 	})
@@ -232,4 +238,13 @@ func GetIsFavorite(svcCtx *svc.ServiceContext, ctx context.Context, tokenID int6
 		return false, err
 	}
 	return isFavorite.IsFavorite, nil
+}
+
+type IdxVideo struct {
+	*video.BasicVideoInfo
+	idx int
+}
+type IdxApiVideo struct {
+	*types.Video
+	idx int
 }

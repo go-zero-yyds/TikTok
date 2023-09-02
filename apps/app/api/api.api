@@ -35,6 +35,7 @@ service api-api {
 @server(
 	prefix: douyin/user
 	group: user
+	middleware: Auth
 )
 service api-api {
 	@doc "info"
@@ -52,42 +53,61 @@ service api-api {
 	@doc "feed"
 	@handler feed
 	get /feed (FeedRequest) returns (FeedResponse)
+	@doc "publishList"
+	@handler publishList
+	get /publish/list (PublishListRequest) returns (PublishListResponse)
 }
 
 //need login
 @server(
 	prefix: douyin/publish
 	group: video
+	middleware: Auth
 )
 service api-api {
 	@doc "publishAction"
 	@handler publishAction
 	post /action (PublishActionRequest) returns (PublishActionResponse)
-	@doc "publishList"
-	@handler publishList
-	get /list (PublishListRequest) returns (PublishListResponse)
+
 }
 
 // ==> interaction v1 <==
-//need login
+//no need login
 @server(
 	prefix: douyin
 	group: interaction
 )
 service api-api {
-	@doc "favoriteAction"
-	@handler favoriteAction
-	post /favorite/action (FavoriteActionRequest) returns (FavoriteActionResponse)
-	@doc "favoriteList"
-	@handler favoriteList
-	get /favorite/list (FavoriteListRequest) returns (FavoriteListResponse)
-
-	@doc "commentAction"
-	@handler commentAction
-	post /comment/action (CommentActionRequest) returns (CommentActionResponse)
 	@doc "commentList"
 	@handler commentList
 	get /comment/list (CommentListRequest) returns (CommentListResponse)
+
+	@doc "favoriteList"
+	@handler favoriteList
+	get /favorite/list (FavoriteListRequest) returns (FavoriteListResponse)
+}
+
+//need login
+@server(
+	prefix: douyin
+	group: interaction
+	middleware: Auth, ClientIPMiddleware
+)
+service api-api {
+	@doc "commentAction"
+	@handler commentAction
+	post /comment/action (CommentActionRequest) returns (CommentActionResponse)
+}
+
+@server(
+	prefix: douyin
+	group: interaction
+	middleware: Auth
+)
+service api-api {
+	@doc "favoriteAction"
+	@handler favoriteAction
+	post /favorite/action (FavoriteActionRequest) returns (FavoriteActionResponse)
 }
 
 // ==> social v1 <==
@@ -95,6 +115,7 @@ service api-api {
 @server(
 	prefix: douyin
 	group: social
+	middleware: Auth
 )
 service api-api {
 	@doc "relationAction"

@@ -5,6 +5,8 @@ import (
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/video/rpc/video"
 	"context"
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/zeromicro/go-zero/core/mr"
 
 	videoApi "TikTok/apps/app/api/internal/logic/video"
@@ -28,15 +30,18 @@ func NewFavoriteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Favo
 }
 
 func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *types.FavoriteListResponse, err error) {
-	if req.Token == "" {
-		return &types.FavoriteListResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-			VideoList:  make([]types.Video, 0),
-		}, nil
-	}
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
+	tokenID := int64(-1)
+
+	if req.Token != "" {
+		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)
+		if err != nil {
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				err = nil
+			} else {
+				return nil, err
+			}
+
+		}
 	}
 
 	list, err := l.svcCtx.InteractionRPC.GetFavoriteList(l.ctx, &interaction.FavoriteListReq{UserId: req.UserID})

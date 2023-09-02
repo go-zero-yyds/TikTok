@@ -2,13 +2,13 @@ package video
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/video/rpc/video"
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type PublishActionLogic struct {
@@ -37,11 +38,7 @@ func NewPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pub
 }
 
 func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *http.Request) (resp *types.PublishActionResponse, err error) {
-	// todo: add your logic here and delete this line
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 
 	file, err := l.Upload(r, "data")
 	if err != nil {
@@ -54,15 +51,16 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 	}
 
 	name := uuid.New().String()
-	err = l.uploadVideoToOSS(name, mime.Extension(), file)
+	today := time.Now().Format("2006-01-02")
+	err = l.uploadVideoToOSS(today, name, mime.Extension(), file)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = l.svcCtx.VideoRPC.SendPublishAction(l.ctx, &video.PublishActionReq{
 		UserId:   tokenID,
-		PlayUrl:  filepath.Join("video", name+mime.Extension()),
-		CoverUrl: filepath.Join("img", name+".jpeg"),
+		PlayUrl:  filepath.Join("video", today, name+mime.Extension()),
+		CoverUrl: filepath.Join("img", today, name+".jpeg"),
 		Title:    req.Title,
 	})
 	if err != nil {
@@ -74,17 +72,18 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 	}, nil
 }
 
-func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byte) error {
+func (l *PublishActionLogic) uploadVideoToOSS(today, name, extension string, file []byte) error {
 	img, err := ExampleReadFrameAsJpeg(bytes.NewReader(file))
 	if err != nil {
 		return err
 	}
-	err = l.svcCtx.FS.Upload(bytes.NewReader(file), "video", name+extension)
+
+	err = l.svcCtx.FS.Upload(bytes.NewReader(file), "video", today, name+extension)
 	if err != nil {
 		return err
 	}
 
-	err = l.svcCtx.FS.Upload(img, "img", name+".jpeg")
+	err = l.svcCtx.FS.Upload(img, "img", today, name+".jpeg")
 	if err != nil {
 		return err
 	}
@@ -96,7 +95,7 @@ func (l *PublishActionLogic) uploadVideoToOSS(name, extension string, file []byt
 
 func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error) {
 	//_ = r.ParseMultipartForm(maxFileSize)
-	file, handler, err := r.FormFile(key)
+	file, _, err := r.FormFile(key)
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +103,9 @@ func (l *PublishActionLogic) Upload(r *http.Request, key string) ([]byte, error)
 		_ = file.Close()
 
 	}(file)
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
-	fmt.Printf("MIME Header: %+v\n", handler.Header)
+	//fmt.Printf("Uploaded File: %+v\n", handler.Filename)
+	//fmt.Printf("File Size: %+v\n", handler.Size)
+	//fmt.Printf("MIME Header: %+v\n", handler.Header)
 
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {

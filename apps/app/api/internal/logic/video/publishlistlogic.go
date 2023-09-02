@@ -4,6 +4,8 @@ import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/video/rpc/video"
 	"context"
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -26,16 +28,18 @@ func NewPublishListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Publi
 }
 
 func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *types.PublishListResponse, err error) {
-	if req.Token == "" {
-		return &types.PublishListResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-			VideoList:  make([]types.Video, 0),
-		}, nil
-	}
-	// 解析token
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
+	tokenID := int64(-1)
+
+	if req.Token != "" {
+		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)
+		if err != nil {
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				err = nil
+			} else {
+				return nil, err
+			}
+
+		}
 	}
 	publishList, err := l.svcCtx.VideoRPC.GetPublishList(l.ctx, &video.PublishListReq{UserId: req.UserID})
 

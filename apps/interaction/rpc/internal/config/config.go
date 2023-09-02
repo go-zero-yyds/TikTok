@@ -10,4 +10,9 @@ type Config struct {
 	DBSource  string
 	Cache     cache.CacheConf
 	CleanTime string
+	Snowflake SnowflakeConf
+}
+type SnowflakeConf struct {
+	StartTime int64
+	Node      int64
 }
