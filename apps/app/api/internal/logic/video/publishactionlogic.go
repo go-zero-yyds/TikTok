@@ -7,7 +7,6 @@ import (
 	"TikTok/apps/video/rpc/video"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
@@ -57,7 +56,9 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 	mime := mimetype.Detect(file)
 
 	if !strings.HasPrefix(mime.String(), "video/") {
-		return nil, errors.New("不是视频")
+		return &types.PublishActionResponse{
+			RespStatus: types.RespStatus(apiVars.DataNotVideo),
+		}, nil
 	}
 
 	name := uuid.New().String()

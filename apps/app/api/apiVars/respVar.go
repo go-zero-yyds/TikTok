@@ -28,6 +28,10 @@ var (
 		StatusCode: 120,
 		StatusMsg:  "视频不存在",
 	}
+	DataNotVideo = RespErr{
+		StatusCode: 130,
+		StatusMsg:  "不是视频",
+	}
 	UserValidation = RespErr{
 		StatusCode: 200,
 		StatusMsg:  "密码错误",
