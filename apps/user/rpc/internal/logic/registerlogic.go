@@ -41,9 +41,12 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 		}
 
 		_, errInsert := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
-			UserId:   snowId,
-			Username: in.Username,
-			Password: pwdHash,
+			UserId:          snowId,
+			Username:        in.Username,
+			Password:        pwdHash,
+			Avatar:          "avatar/default",
+			BackgroundImage: "backgroundImage/default",
+			Signature:       "这个人很懒，还没有签名。",
 		})
 
 		if errInsert != nil {

@@ -24,9 +24,8 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	}
 	conn := sqlx.NewMysql(c.DBSource)
 	return &ServiceContext{
-		Config:         c,
-		UserModel:      model.NewUserModel(conn, c.Cache),
-		Snowflake:      node,
-		KqPusherClient: kq.NewPusher(c.KqPusherConf.Brokers, c.KqPusherConf.Topic),
+		Config:    c,
+		UserModel: model.NewUserModel(conn, c.Cache),
+		Snowflake: node,
 	}, nil
 }
