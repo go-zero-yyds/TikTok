@@ -7,6 +7,11 @@ import (
 
 type Config struct {
 	zrpc.RpcServerConf
-	DBSource string
-	Cache    cache.CacheConf
+	DBSource     string
+	Cache        cache.CacheConf
+	KqPusherConf struct {
+		Brokers []string
+		Topic   string
+	}
+	RobotMaxId int64
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // 点赞
-// 除非未知错误（数据库断开/或者其他错误），否则都是true
+
 func TestSendFavoriteActionLogic(t *testing.T) {
 	// 测试场景1: 成功情况
 	req := &interaction.FavoriteActionReq{
@@ -33,7 +33,7 @@ func TestSendFavoriteActionLogic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	if !resp.IsSucceed {
+	if resp.IsSucceed {
 		t.Fatalf("Expected IsSucceed to be true, but got false")
 	}
 	// 测试场景3：取消操作

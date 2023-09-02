@@ -2,6 +2,7 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"errors"
 	videoApi "TikTok/apps/app/api/internal/logic/video"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -28,19 +29,19 @@ func NewFavoriteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Favo
 
 func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *types.FavoriteListResponse, err error) {
 
-	// 参数检查
-	if req.Token == "" {
-		return &types.FavoriteListResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-			VideoList:  make([]types.Video, 0),
-		}, nil
-	}
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
+	tokenID := int64(-1)
+	if req.Token != "" {
+		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)
+		if err != nil {
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				err = nil
+			} else {
+				return nil, err
+			}
+		}
 	}
 
-	list, err := l.svcCtx.InteractionRPC.GetFavoriteList(l.ctx, &interaction.FavoriteListReq{UserId: tokenID})
+	list, err := l.svcCtx.InteractionRPC.GetFavoriteList(l.ctx, &interaction.FavoriteListReq{UserId: req.UserID})
 	if err != nil {
 		return nil, err
 	}

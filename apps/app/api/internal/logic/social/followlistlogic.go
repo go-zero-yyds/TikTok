@@ -2,6 +2,7 @@ package social
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/social/rpc/social"
@@ -26,18 +27,8 @@ func NewFollowListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Follow
 
 func (l *FollowListLogic) FollowList(req *types.RelationFollowListRequest) (resp *types.RelationFollowListResponse, err error) {
 
-	// 参数检查
-	if req.Token == "" {
-		return &types.RelationFollowListResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-			UserList:   make([]types.User, 0),
-		}, nil
-	}
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
-	list, err := l.svcCtx.SocialRPC.GetRelationFollowList(l.ctx, &social.RelationFollowListReq{UserId: tokenID})
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
+	list, err := l.svcCtx.SocialRPC.GetRelationFollowList(l.ctx, &social.RelationFollowListReq{UserId: req.UserID})
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package user
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
@@ -42,10 +43,7 @@ func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, 
 	}
 
 	// 解析token
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	userInfo, err := TryGetUserInfo(tokenID, req.UserID, l.svcCtx, l.ctx)
 	if errors.Is(err, model.UserNotFound) {
 		return &types.UserResponse{
@@ -82,7 +80,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 	var wg sync.WaitGroup
 	wg.Add(5)
 
-	if tokenID != 0 {
+	if tokenID != -1 {
 		threading.GoSafeCtx(ctx, func() {
 			defer wg.Done()
 			// 错误降级, 不影响获取user的基本信息。
@@ -239,6 +237,14 @@ func GetBasicUserInfo(svcCtx *svc.ServiceContext, ctx context.Context, toUserId 
 		Avatar:          basicUserInfo.User.GetAvatar(),
 		BackgroundImage: basicUserInfo.User.GetBackgroundImage(),
 		Signature:       basicUserInfo.User.Signature,
+	}
+	res.Avatar, err = svcCtx.FS.GetDownloadLink(res.Avatar)
+	if err != nil {
+		return nil, err
+	}
+	res.BackgroundImage, err = svcCtx.FS.GetDownloadLink(res.BackgroundImage)
+	if err != nil {
+		return nil, err
 	}
 	return res, nil
 }

@@ -2,6 +2,7 @@ package social
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/social/rpc/social"
@@ -33,16 +34,8 @@ func (l *MessageActionLogic) MessageAction(req *types.MessageActionRequest) (res
 		}, nil
 	}
 
-	if req.Token == "" {
-		return &types.MessageActionResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-		}, nil
-	}
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
 	_, err = l.svcCtx.SocialRPC.SendMessageAction(l.ctx, &social.MessageActionReq{
 		UserId:     tokenID,
 		ToUserId:   req.ToUserID,

@@ -24,6 +24,7 @@ Snowflake:
   Node: 1
 
 
+
 KqConsumerConf:
   Name: userConsumer
   Brokers:
@@ -33,3 +34,4 @@ KqConsumerConf:
   Offset: first
   Consumers: 16
   Processors: 16
+

@@ -6,6 +6,8 @@ import (
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"context"
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/zeromicro/go-zero/core/mr"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -27,18 +29,16 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 
 func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *types.CommentListResponse, err error) {
 
-	// 参数检查
-	if req.Token == "" {
-		return &types.CommentListResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-		}, nil
-	}
-
-	tokenID := int64(0)
+	tokenID := int64(-1)
 	if req.Token != "" {
 		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				err = nil
+			} else {
+				return nil, err
+			}
+
 		}
 	}
 	list, err := l.svcCtx.InteractionRPC.GetCommentList(l.ctx, &interaction.CommentListReq{
@@ -52,24 +52,31 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 		list.CommentList = make([]*interaction.Comment, 0)
 	}
 	e := apiVars.Success
-	commentList, err := mr.MapReduce(func(source chan<- *interaction.Comment) {
-		for _, bv := range list.CommentList {
-			source <- bv
+	size := len(list.CommentList)
+	commentList, err := mr.MapReduce(func(source chan<- idxComment) {
+		for i, bv := range list.CommentList {
+			source <- idxComment{
+				Comment: bv,
+				idx:     i,
+			}
 		}
-	}, func(item *interaction.Comment, writer mr.Writer[*types.Comment], cancel func(error)) {
-		videoInfo, err := GetCommentInfo(item, tokenID, l.svcCtx, l.ctx)
+	}, func(item idxComment, writer mr.Writer[idxApiComment], cancel func(error)) {
+		videoInfo, err := GetCommentInfo(item.Comment, tokenID, l.svcCtx, l.ctx)
 		if err != nil {
 			e = apiVars.SomeDataErr
 			if err != apiVars.SomeDataErr {
 				return
 			}
 		}
-		writer.Write(videoInfo)
-	}, func(pipe <-chan *types.Comment, writer mr.Writer[[]types.Comment], cancel func(error)) {
-		var vs []types.Comment
+		writer.Write(idxApiComment{
+			Comment: videoInfo,
+			idx:     item.idx,
+		})
+	}, func(pipe <-chan idxApiComment, writer mr.Writer[[]types.Comment], cancel func(error)) {
+		vs := make([]types.Comment, size)
 		for item := range pipe {
 			v := item
-			vs = append(vs, *v)
+			vs[v.idx] = *v.Comment
 		}
 		writer.Write(vs)
 	})
@@ -78,4 +85,13 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 		RespStatus:  types.RespStatus(e),
 		CommentList: commentList,
 	}, nil
+}
+
+type idxComment struct {
+	*interaction.Comment
+	idx int
+}
+type idxApiComment struct {
+	*types.Comment
+	idx int
 }

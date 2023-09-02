@@ -5,6 +5,7 @@ import (
 	"TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/social/rpc/social"
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
@@ -29,16 +30,11 @@ func NewFriendListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Friend
 
 func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp *types.RelationFriendListResponse, err error) {
 
-	// 参数检查
-	if req.Token == "" {
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
+	if tokenID != req.UserID {
 		return &types.RelationFriendListResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
+			RespStatus: types.RespStatus(apiVars.IllegalArgument),
 		}, nil
-	}
-
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
 	}
 	list, err := l.svcCtx.SocialRPC.GetRelationFriendList(l.ctx, &social.RelationFriendListReq{UserId: tokenID})
 	if err != nil {

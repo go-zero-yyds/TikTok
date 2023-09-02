@@ -2,13 +2,14 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
+	"TikTok/apps/video/rpc/video"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/video/rpc/model"
 	"context"
 	"errors"
-
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -28,17 +29,8 @@ func NewFavoriteActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Fa
 
 func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (resp *types.FavoriteActionResponse, err error) {
 
-	// 参数检查
-	if req.Token == "" {
-		return &types.FavoriteActionResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-		}, nil
-	}
-
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
+	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
 	if errors.Is(err, model.ErrVideoNotFound) {
 		return &types.FavoriteActionResponse{
 			RespStatus: types.RespStatus(apiVars.VideoNotFound),

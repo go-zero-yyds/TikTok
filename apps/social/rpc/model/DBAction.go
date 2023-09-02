@@ -6,20 +6,25 @@ import (
 	"errors"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"time"
 )
 
 type DBAction struct {
-	follow  FollowModel
-	message MessageModel
+	follow     FollowModel
+	message    MessageModel
+	userStatus UserStatsModel
+	conn       sqlc.CachedConn
 }
 
 // NewDBAction 初始化数据库信息
 func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 	ret := &DBAction{
-		follow:  NewFollowModel(conn, c, cache.WithExpiry(time.Minute)),
-		message: NewMessageModel(conn, c, cache.WithExpiry(time.Minute)),
+		follow:     NewFollowModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
+		message:    NewMessageModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
+		userStatus: NewUserStatsModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
+		conn:       sqlc.NewConn(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
 	}
 	return ret
 }
@@ -28,19 +33,152 @@ func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 // 并对数据库actionType操作
 // 出现未知错误和没有修改是false否则都是true
 func (d *DBAction) FollowAction(ctx context.Context, userId, toUserId int64, actionType string) (bool, error) {
-	result, err := d.follow.InsertOrUpdate(ctx, &Follow{
-		UserId:   userId,
-		ToUserId: toUserId,
-		Behavior: actionType,
+	if actionType == FollowTypeFollowing {
+		return d.DoFollow(ctx, userId, toUserId)
+	} else {
+		return d.UnFollow(ctx, userId, toUserId)
+	}
+}
+
+// DoFollow 关注对方
+func (d *DBAction) DoFollow(ctx context.Context, userId, toUserId int64) (bool, error) {
+
+	var res bool
+	keys := make([]string, 0)
+
+	err := d.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+		user := &Follow{
+			UserId:   userId,
+			ToUserId: toUserId,
+			Behavior: FollowTypeFollowing,
+		}
+		toUser := &Follow{
+			UserId:   toUserId,
+			ToUserId: userId,
+			Behavior: FollowTypeNotFollowing,
+		}
+		var follows []Follow
+		follows, err := d.follow.TranLockByUserIdToUserId(ctx, session, userId, toUserId)
+		if err != nil {
+			return err
+		}
+		oldUserStatus := StatusStranger
+		for _, v := range follows {
+			if v.UserId == userId {
+				if v.Behavior == FollowTypeFollowing {
+					return nil
+				}
+				user.Id = v.Id
+				oldUserStatus = v.Attribute
+			} else {
+				toUser.Id = v.Id
+				toUser.Behavior = v.Behavior
+			}
+		}
+		user.Attribute, toUser.Attribute = d.follow.StateMachine(oldUserStatus, FollowTypeFollowing)
+
+		// 创建或修改记录
+		if len(follows) == 0 {
+			err = nil
+			_, err := d.follow.TranInsert(ctx, session, user, &keys)
+			if err != nil {
+				return err
+			}
+			_, err = d.follow.TranInsert(ctx, session, toUser, &keys)
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err := d.follow.TranUpdate(ctx, session, user, &keys)
+			if err != nil {
+				return err
+			}
+			_, err = d.follow.TranUpdate(ctx, session, toUser, &keys)
+			if err != nil {
+				return err
+			}
+		}
+		// 更新记数
+		err = d.userStatus.TranIncrCount(ctx, session, userId, toUserId, &keys)
+		if err != nil {
+			return err
+		}
+		res = true
+		_ = d.conn.DelCacheCtx(ctx, keys...)
+		return nil
 	})
 	if err != nil {
 		return false, err
 	}
-	affected, err := result.RowsAffected()
+
+	return res, nil
+}
+
+// UnFollow 取消关注对方
+func (d *DBAction) UnFollow(ctx context.Context, userId, toUserId int64) (bool, error) {
+
+	var res bool
+	keys := make([]string, 0)
+
+	err := d.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+		user := &Follow{
+			UserId:   userId,
+			ToUserId: toUserId,
+			Behavior: FollowTypeNotFollowing,
+		}
+		toUser := &Follow{
+			UserId:   toUserId,
+			ToUserId: userId,
+			Behavior: FollowTypeNotFollowing,
+		}
+		var follows []Follow
+		follows, err := d.follow.TranLockByUserIdToUserId(ctx, session, userId, toUserId)
+		if errors.Is(err, ErrNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		oldUserStatus := StatusStranger
+		for _, v := range follows {
+			if v.UserId == userId {
+				if v.Behavior == FollowTypeNotFollowing {
+					return nil
+				}
+				user.Id = v.Id
+				oldUserStatus = v.Attribute
+			} else {
+				toUser.Id = v.Id
+				toUser.Behavior = v.Behavior
+			}
+		}
+		user.Attribute, toUser.Attribute = d.follow.StateMachine(oldUserStatus, FollowTypeNotFollowing)
+
+		// 修改记录
+
+		_, err = d.follow.TranUpdate(ctx, session, user, &keys)
+		if err != nil {
+			return err
+		}
+		_, err = d.follow.TranUpdate(ctx, session, toUser, &keys)
+		if err != nil {
+			return err
+		}
+
+		// 更新记数
+		err = d.userStatus.TranDecrCount(ctx, session, userId, toUserId, &keys)
+		if err != nil {
+			return err
+		}
+		res = true
+		_ = d.conn.DelCacheCtx(ctx, keys...)
+		return nil
+	})
 	if err != nil {
 		return false, err
 	}
-	return affected != int64(0), nil
+
+	return res, nil
 }
 
 // IsFollow 调用favorite对数据库查询函数,查询是否点赞
@@ -57,22 +195,28 @@ func (d *DBAction) IsFollow(ctx context.Context, userId, toUserId int64) (bool, 
 
 // FollowCount 对数据库查询关注数量
 func (d *DBAction) FollowCount(ctx context.Context, userId int64) (int64, error) {
-	count, err := d.follow.FindByFollowCount(ctx, userId)
-	if err != nil && !errors.Is(err, ErrNotFound) {
-		logc.Error(ctx, userId, err)
+	count, err := d.userStatus.FindOne(ctx, userId)
+	if errors.Is(err, ErrNotFound) {
+		return 0, nil
+	}
+	if err != nil {
+		logc.Error(ctx, userId)
 		return 0, err
 	}
-	return count, nil
+	return count.FollowCount, nil
 }
 
 // FollowerCount 对数据库查询关注数量
 func (d *DBAction) FollowerCount(ctx context.Context, userId int64) (int64, error) {
-	count, err := d.follow.FindByFollowerCount(ctx, userId)
-	if err != nil && !errors.Is(err, ErrNotFound) {
-		logc.Error(ctx, userId, err)
+	count, err := d.userStatus.FindOne(ctx, userId)
+	if errors.Is(err, ErrNotFound) {
+		return 0, nil
+	}
+	if err != nil {
+		logc.Error(ctx, userId)
 		return 0, err
 	}
-	return count, nil
+	return count.FollowerCount, nil
 }
 
 // FollowList 调用favorite对数据库查询用户点赞视频列表
@@ -153,7 +297,14 @@ func (d *DBAction) MessageList(ctx context.Context, userId, toUserId, preTime in
 }
 
 func (d *DBAction) SendMessage(ctx context.Context, userId, toUserId int64, content string) error {
-	_, err := d.message.Insert(ctx, &Message{
+	follow, err := d.follow.FindOneByUserIdToUserId(ctx, userId, toUserId)
+	if err != nil {
+		return err
+	}
+	if follow.Attribute != StatusFriend {
+		return ErrNotFriend
+	}
+	_, err = d.message.Insert(ctx, &Message{
 		FromUserId: userId,
 		ToUserId:   toUserId,
 		Content:    content,
@@ -161,5 +312,6 @@ func (d *DBAction) SendMessage(ctx context.Context, userId, toUserId int64, cont
 	if err != nil {
 		return err
 	}
+	_ = d.conn.DelCacheCtx(ctx, d.message.GetNowMessageCacheKey(userId, toUserId))
 	return nil
 }

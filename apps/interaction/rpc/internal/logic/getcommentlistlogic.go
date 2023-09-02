@@ -1,11 +1,9 @@
 package logic
 
 import (
-	"context"
-	"fmt"
-
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/internal/svc"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -36,7 +34,9 @@ func (l *GetCommentListLogic) GetCommentList(in *interaction.CommentListReq) (*i
 			Id:         v.CommentId,
 			UserId:     v.UserId,
 			Content:    v.Content,
-			CreateDate: fmt.Sprintf("%v", v.CreateDate.Unix()),
+			CreateDate: v.CreateTime.UnixMilli(),
+			IpAddress:  v.IpAddress,
+			Location:   v.Location,
 		})
 	}
 	return &interaction.CommentListResp{

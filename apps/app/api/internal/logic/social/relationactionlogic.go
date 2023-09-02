@@ -2,6 +2,7 @@ package social
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/social/rpc/social"
@@ -29,18 +30,6 @@ func NewRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Re
 
 func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (resp *types.RelationActionResponse, err error) {
 
-	// 参数检查
-	if req.Token == "" {
-		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apiVars.NotLogged),
-		}, nil
-	}
-
-	tokenID, err := l.svcCtx.JwtAuth.ParseToken(req.Token)
-	if err != nil {
-		return nil, err
-	}
-
 	_, err = l.svcCtx.UserRPC.Detail(l.ctx, &user.BasicUserInfoReq{UserId: req.ToUserID})
 	if errors.Is(err, model.UserNotFound) {
 		return &types.RelationActionResponse{
@@ -50,6 +39,8 @@ func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (
 	if err != nil {
 		return nil, err
 	}
+
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	_, err = l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
 		UserId:     tokenID,
 		ToUserId:   req.ToUserID,

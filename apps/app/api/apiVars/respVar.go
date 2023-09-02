@@ -42,7 +42,15 @@ var (
 	}
 	NotLogged = RespErr{
 		StatusCode: 400,
-		StatusMsg:  "用户未登录",
+		StatusMsg:  "请登录",
+	}
+	TokenSignatureInvalid = RespErr{
+		StatusCode: 600,
+		StatusMsg:  "token无效，尝试重新登录",
+	}
+	IllegalArgument = RespErr{
+		StatusCode: 700,
+		StatusMsg:  "非法的请求",
 	}
 	// InternalError 内部异常造成的错误
 	InternalError = RespErr{
