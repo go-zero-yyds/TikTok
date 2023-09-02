@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -257,8 +256,10 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSyst
 	}
 
 	//将图片转成sha1码
+	// 将图片转成 SHA-256 哈希值
 	sha := sha1.New()
-	sha1Value := hex.EncodeToString(sha.Sum(buf.Bytes()))
+	sha.Write(buf.Bytes())
+	sha1Value := fmt.Sprintf("%x", sha.Sum(nil))
 
 	key := filepath.Join("avatar", sha1Value)
 	//如果oss不存在这个图片
@@ -306,8 +307,10 @@ func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs FileSystem.FileSys
 	}
 
 	//将图片转成sha1码
+	// 将图片转成 SHA-256 哈希值
 	sha := sha1.New()
-	sha1Value := hex.EncodeToString(sha.Sum(buf.Bytes()))
+	sha.Write(buf.Bytes())
+	sha1Value := fmt.Sprintf("%x", sha.Sum(nil))
 
 	key := filepath.Join("backgroundImage", sha1Value)
 	// 如果oss不存在这个图片
