@@ -1,5 +1,16 @@
 Name: interaction.rpc
 ListenOn: 127.0.0.1:8003
+#链路追踪
+Telemetry:
+  Name: interaction-rpc
+  Endpoint: http://localhost:9411/api/v2/spans
+  Sampler: 1.0
+  Batcher: zipkin
+#指标监控
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9083
+  Path: /metrics
 DBSource: "root:12345678@tcp(127.0.0.1:3306)/tiktok_interaction?charset=utf8mb4&parseTime=True&loc=Local"
 Etcd:
   Hosts:

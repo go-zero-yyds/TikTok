@@ -230,5 +230,13 @@ func GetBasicUserInfo(svcCtx *svc.ServiceContext, ctx context.Context, toUserId 
 		BackgroundImage: basicUserInfo.User.GetBackgroundImage(),
 		Signature:       basicUserInfo.User.Signature,
 	}
+	res.Avatar, err = svcCtx.FS.GetDownloadLink(res.Avatar)
+	if err != nil {
+		return nil, err
+	}
+	res.BackgroundImage, err = svcCtx.FS.GetDownloadLink(res.BackgroundImage)
+	if err != nil {
+		return nil, err
+	}
 	return res, nil
 }

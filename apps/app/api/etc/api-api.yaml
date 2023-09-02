@@ -3,6 +3,18 @@ Host: 0.0.0.0
 Port: 8080
 MaxBytes: 104857600 # 100MIB
 Timeout: 100000 # 100s
+
+#链路追踪
+Telemetry:
+  Name: api-api
+  Endpoint: http://localhost:9411/api/v2/spans
+  Sampler: 1.0
+  Batcher: zipkin
+#指标监控
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9080
+  Path: /metrics
 # RPC
 UserRPC:
   Etcd:

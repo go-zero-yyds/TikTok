@@ -8,6 +8,7 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"time"
 )
 
 type DBAction struct {
@@ -21,10 +22,10 @@ type DBAction struct {
 // NewDBAction 初始化数据库信息
 func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 	ret := &DBAction{
-		favorite:   NewFavoriteModel(conn, c), //创建点赞表的接口
-		comment:    NewCommentModel(conn, c),  //创建评论表的接口
-		userLikes:  NewUserLikesModel(conn, c),
-		videoStats: NewVideoStatsModel(conn, c),
+		favorite:   NewFavoriteModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)), //创建点赞表的接口
+		comment:    NewCommentModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),  //创建评论表的接口
+		userLikes:  NewUserLikesModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
+		videoStats: NewVideoStatsModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
 		conn:       sqlc.NewConn(conn, c),
 	}
 	return ret
