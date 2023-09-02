@@ -2,13 +2,14 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
-	"errors"
 	videoApi "TikTok/apps/app/api/internal/logic/video"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/video/rpc/video"
 	"context"
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/mr"
 )

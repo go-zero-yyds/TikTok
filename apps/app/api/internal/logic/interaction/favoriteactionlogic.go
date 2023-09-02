@@ -3,11 +3,11 @@ package interaction
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/middleware"
-	"TikTok/apps/video/rpc/video"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/video/rpc/model"
+	"TikTok/apps/video/rpc/video"
 	"context"
 	"errors"
 	"github.com/zeromicro/go-zero/core/logx"

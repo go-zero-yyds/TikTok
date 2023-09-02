@@ -8,7 +8,6 @@ import (
 	"TikTok/apps/video/rpc/video"
 	"bytes"
 	"context"
-	"errors"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -40,7 +39,6 @@ func NewPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pub
 func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *http.Request) (resp *types.PublishActionResponse, err error) {
 
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
-
 
 	file, err := l.Upload(r, "data")
 	if err != nil {

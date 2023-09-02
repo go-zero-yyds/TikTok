@@ -2,12 +2,12 @@ package video
 
 import (
 	"TikTok/apps/app/api/apiVars"
-	"errors"
-	"github.com/golang-jwt/jwt/v5"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/video/rpc/video"
 	"context"
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
