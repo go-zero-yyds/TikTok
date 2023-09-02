@@ -24,6 +24,10 @@ var (
 		StatusCode: 100,
 		StatusMsg:  "用户不存在",
 	}
+	VideoNotFound = RespErr{
+		StatusCode: 120,
+		StatusMsg:  "视频不存在",
+	}
 	UserValidation = RespErr{
 		StatusCode: 200,
 		StatusMsg:  "密码错误",
@@ -41,10 +45,6 @@ var (
 		StatusCode: 500,
 		StatusMsg:  "内部错误",
 	}
-)
-
-// 请求参数检查
-var (
 	UsernameRuleError = RespErr{
 		StatusCode: 401,
 		StatusMsg:  "用户名格式不符合规范",
@@ -52,34 +52,6 @@ var (
 	PasswordRuleError = RespErr{
 		StatusCode: 402,
 		StatusMsg:  "密码格式不符合规范",
-	}
-	UserIdRuleError = RespErr{
-		StatusCode: 403,
-		StatusMsg:  "userId格式不符合规范",
-	}
-	TimestampRuleError = RespErr{
-		StatusCode: 404,
-		StatusMsg:  "时间戳格式不符合规范",
-	}
-	TitleRuleError = RespErr{
-		StatusCode: 405,
-		StatusMsg:  "标题格式不符合规范",
-	}
-	FileNotFound = RespErr{
-		StatusCode: 406,
-		StatusMsg:  "文件不存在",
-	}
-	VideoIdRuleError = RespErr{
-		StatusCode: 407,
-		StatusMsg:  "videoId格式不符合规范",
-	}
-	ActionTypeRuleError = RespErr{
-		StatusCode: 408,
-		StatusMsg:  "操作类型格式不符合规范",
-	}
-	CommentIdRuleError = RespErr{
-		StatusCode: 409,
-		StatusMsg:  "commentId格式不符合规范",
 	}
 	TextRuleError = RespErr{
 		StatusCode: 410,

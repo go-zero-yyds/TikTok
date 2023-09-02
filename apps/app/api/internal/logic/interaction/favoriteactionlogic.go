@@ -5,8 +5,9 @@ import (
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
-	"TikTok/apps/video/rpc/video"
+	"TikTok/apps/video/rpc/model"
 	"context"
+	"errors"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -38,9 +39,10 @@ func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (
 	if err != nil {
 		return nil, err
 	}
-	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
-	if err != nil {
-		return nil, err
+	if errors.Is(err, model.ErrVideoNotFound) {
+		return &types.FavoriteActionResponse{
+			RespStatus: types.RespStatus(apiVars.VideoNotFound),
+		}, nil
 	}
 	_, err = l.svcCtx.InteractionRPC.SendFavoriteAction(l.ctx, &interaction.FavoriteActionReq{
 		UserId:     tokenID,

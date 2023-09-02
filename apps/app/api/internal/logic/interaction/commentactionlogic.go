@@ -7,8 +7,10 @@ import (
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"TikTok/apps/interaction/rpc/interactionclient"
+	"TikTok/apps/video/rpc/model"
 	"TikTok/apps/video/rpc/video"
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -32,7 +34,7 @@ func NewCommentActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Com
 
 func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (resp *types.CommentActionResponse, err error) {
 	// 参数检查
-	if req.ActionType == 1 && (req.CommentText == "" || len(req.CommentText) > 100) { //如为评论则校验评论是否规范
+	if req.ActionType == 1 && (req.CommentText == "" || len(req.CommentText) > 500) { //如为评论则校验评论是否规范
 		return &types.CommentActionResponse{
 			RespStatus: types.RespStatus(apiVars.TextRuleError),
 		}, nil
@@ -48,8 +50,10 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 		return nil, err
 	}
 	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
-	if err != nil {
-		return nil, err
+	if errors.Is(err, model.ErrVideoNotFound) {
+		return &types.CommentActionResponse{
+			RespStatus: types.RespStatus(apiVars.VideoNotFound),
+		}, nil
 	}
 	rpcReq := &interaction.CommentActionReq{
 		UserId:     tokenID,
