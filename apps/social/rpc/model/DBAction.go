@@ -8,6 +8,7 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"time"
 )
 
 type DBAction struct {
@@ -20,9 +21,9 @@ type DBAction struct {
 // NewDBAction 初始化数据库信息
 func NewDBAction(conn sqlx.SqlConn, c cache.ClusterConf) *DBAction {
 	ret := &DBAction{
-		follow:     NewFollowModel(conn, c),
-		message:    NewMessageModel(conn, c),
-		userStatus: NewUserStatsModel(conn, c),
+		follow:     NewFollowModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
+		message:    NewMessageModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
+		userStatus: NewUserStatsModel(conn, c, cache.WithExpiry(24*time.Hour), cache.WithNotFoundExpiry(24*time.Hour)),
 		conn:       sqlc.NewConn(conn, c),
 	}
 	return ret
@@ -113,7 +114,7 @@ func (d *DBAction) DoFollow(ctx context.Context, userId, toUserId int64) (bool, 
 	return res, nil
 }
 
-// UnFollow 关注对方
+// UnFollow 取消关注对方
 func (d *DBAction) UnFollow(ctx context.Context, userId, toUserId int64) (bool, error) {
 
 	var res bool
@@ -311,5 +312,6 @@ func (d *DBAction) SendMessage(ctx context.Context, userId, toUserId int64, cont
 	if err != nil {
 		return err
 	}
+	_ = d.conn.DelCacheCtx(ctx, d.message.GetNowMessageCacheKey(userId, toUserId))
 	return nil
 }
