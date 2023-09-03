@@ -57,7 +57,7 @@ func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
-		m.CachedConn.SetCacheCtx(ctx, key, &resp)
+		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -76,6 +76,7 @@ func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
 
 // TranInsertOrUpdate 插入一条关注记录或者更新关注记录
 func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Session, data *Favorite, keys *[]string) (sql.Result, error) {
+	listKey := fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, data.UserId)
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, data.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, data.UserId, data.VideoId)
 	query := fmt.Sprintf(`
@@ -84,25 +85,17 @@ func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Ses
 			ON DUPLICATE KEY UPDATE behavior = ?;
 		`, m.table, favoriteRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.UserId, data.VideoId, data.Behavior, data.Behavior)
-	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
-	m.OnChangeDeleteCache(ctx, data.UserId)
+	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, listKey)
 	return ret, err
 }
 
 // TranEmptyOrUpdate 更新关注记录没有则不操作
 func (m *defaultFavoriteModel) TranEmptyOrUpdate(ctx context.Context, s sqlx.Session, newData *Favorite, keys *[]string) (result sql.Result, err error) {
+	listKey := fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, newData.UserId)
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, newData.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, newData.UserId, newData.VideoId)
 	query := fmt.Sprintf("update %s set %s where `user_id` = ? and video_id = ?", m.table, favoriteRowsWithPlaceHolder)
 	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.UserId, newData.VideoId)
-	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
-	m.OnChangeDeleteCache(ctx, newData.UserId)
+	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, listKey)
 	return ret, err
-}
-
-func (m *defaultFavoriteModel) OnChangeDeleteCache(ctx context.Context, userId int64) {
-	deleteKeys := []string{
-		fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, userId),
-	}
-	m.CachedConn.DelCacheCtx(ctx, deleteKeys...)
 }
