@@ -26,8 +26,10 @@ const (
 )
 
 var (
-	_                           FollowModel = (*customFollowModel)(nil)
-	cacheFollowUserIdFindPrefix             = "cache:follow:userId:find:"
+	_                               FollowModel = (*customFollowModel)(nil)
+	cacheFollowUserIdFollowPrefix               = "cache:follow:userId:follow:"
+	cacheFollowUserIdFollowerPrefix             = "cache:follow:userId:follower:"
+	cacheFollowUserIdFriendPrefix               = "cache:follow:userId:friend:"
 )
 
 type (
@@ -104,7 +106,7 @@ func (m *defaultFollowModel) TranUpdate(ctx context.Context, s sqlx.Session, new
 // FindFollowList 查看用户关注id列表
 func (m *defaultFollowModel) FindFollowList(ctx context.Context, userId int64) ([]int64, error) {
 	var resp []int64
-	key := fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId)
+	key := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, userId)
 	if err := m.CachedConn.GetCache(key, &resp); err == nil {
 		return resp, nil
 	}
@@ -126,7 +128,7 @@ func (m *defaultFollowModel) FindFollowList(ctx context.Context, userId int64) (
 // FindFollowerList 查看用户粉丝id列表
 func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64) ([]int64, error) {
 	var resp []int64
-	key := fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId)
+	key := fmt.Sprintf("%s%v", cacheFollowUserIdFollowerPrefix, userId)
 	if err := m.CachedConn.GetCache(key, &resp); err == nil {
 		return resp, nil
 	}
@@ -148,7 +150,7 @@ func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64)
 // FindFriendList 查看用户好友id列表
 func (m *defaultFollowModel) FindFriendList(ctx context.Context, userId int64) ([]int64, error) {
 	var resp []int64
-	key := fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId)
+	key := fmt.Sprintf("%s%v", cacheFollowUserIdFriendPrefix, userId)
 	if err := m.CachedConn.GetCache(key, &resp); err == nil {
 		return resp, nil
 	}
@@ -207,11 +209,4 @@ func (m *defaultFollowModel) StateMachine(userStatus, userFollowType string) (ne
 	}
 
 	return newUserStatus, newToUserStatus
-}
-
-func (m *defaultFollowModel) OnChangeDeleteCache(ctx context.Context, userId int64) {
-	deleteKeys := []string{
-		fmt.Sprintf("%s%v", cacheFollowUserIdFindPrefix, userId),
-	}
-	m.CachedConn.DelCacheCtx(ctx, deleteKeys...)
 }
