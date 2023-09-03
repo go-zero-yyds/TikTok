@@ -1,5 +1,5 @@
 Name: api-api
-Host: 127.0.0.1
+Host: 0.0.0.0
 Port: 8080
 MaxBytes: 104857600 # 100MIB
 Timeout: 100000 # 100s

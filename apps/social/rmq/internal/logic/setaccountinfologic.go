@@ -22,8 +22,8 @@ func NewRobotsResponse(ctx context.Context, svcCtx *svc.ServiceContext) *RobotsR
 	}
 }
 
-// userid  touserid content
-func (l *RobotsResponse) Consume(key, val string) error {
+// Consume userId  toUserId content
+func (l *RobotsResponse) Consume(_, val string) error {
 	var message map[string][]string
 	err := json.Unmarshal([]byte(val), &message)
 	if err != nil {
@@ -41,11 +41,11 @@ func (l *RobotsResponse) Consume(key, val string) error {
 		if err != nil {
 			continue
 		}
-		threading.GoSafeCtx(l.ctx , func() {
+		threading.GoSafeCtx(l.ctx, func() {
 			action, data, err := l.svcCtx.Bot.ProcessIfMessageForRobot(l.ctx, userId, touserId, v[1], l.svcCtx.KqPusherClient, l.svcCtx.FS)
 			if err == nil && action {
 				if data != "" { // 机器人回发消息
-					l.svcCtx.SocialRPC.SendMessageAction(l.ctx, &social.MessageActionReq{
+					_, _ = l.svcCtx.SocialRPC.SendMessageAction(l.ctx, &social.MessageActionReq{
 						UserId:     touserId,
 						ToUserId:   userId,
 						Content:    data,

@@ -22,7 +22,7 @@ func NewPersonalSuccess(ctx context.Context, svcCtx *svc.ServiceContext) *Person
 	}
 }
 
-func (l *PersonalSuccess) Consume(key, val string) error {
+func (l *PersonalSuccess) Consume(_, val string) error {
 	var message map[string][]string
 	err := json.Unmarshal([]byte(val), &message)
 	if err != nil {
@@ -41,21 +41,21 @@ func (l *PersonalSuccess) Consume(key, val string) error {
 		if err != nil || !isSuccess {
 			continue
 		}
-		threading.GoSafeCtx(l.ctx , func() {
+		threading.GoSafeCtx(l.ctx, func() {
 			// auto follow bots
 			for botId := range l.svcCtx.Bot.Robots {
-				l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
+				_, _ = l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
 					UserId:     userId,
-					ToUserId:   int64(botId),
+					ToUserId:   botId,
 					ActionType: 1,
 				})
-				l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
-					UserId:     int64(botId),
+				_, _ = l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
+					UserId:     botId,
 					ToUserId:   userId,
 					ActionType: 1,
 				})
-				l.svcCtx.SocialRPC.SendMessageAction(l.ctx, &social.MessageActionReq{
-					UserId:   int64(botId),
+				_, _ = l.svcCtx.SocialRPC.SendMessageAction(l.ctx, &social.MessageActionReq{
+					UserId:   botId,
 					ToUserId: userId,
 					Content:  l.svcCtx.Bot.Robots[botId].DisplayPrologue(),
 				})

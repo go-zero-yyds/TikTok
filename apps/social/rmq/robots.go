@@ -21,13 +21,12 @@ func main() {
 	conf.MustLoad(*configFile, &c)
 	ctx := svc.NewServiceContext(c)
 
-
 	serviceGroup := service.NewServiceGroup()
 	defer serviceGroup.Stop()
 
 	for _, mq := range consumer.Consumers(c, context.Background(), ctx) {
 		serviceGroup.Add(mq)
-		fmt.Println(mq)
+		//fmt.Println(mq)
 	}
 	fmt.Printf("Starting bots server ...\n")
 	serviceGroup.Start()

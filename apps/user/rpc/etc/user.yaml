@@ -35,3 +35,7 @@ KqConsumerConf:
   Consumers: 16
   Processors: 16
 
+KqPusherConf:
+  Brokers:
+    - 127.0.0.1:9092
+  Topic: personal-callback

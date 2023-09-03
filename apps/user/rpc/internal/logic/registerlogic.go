@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/threading"
 	"strconv"
 )
 
@@ -54,7 +55,7 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 		}
 
 		// callback (这里只有注册没问题才会发送)
-		go func() {
+		threading.GoSafe(func() {
 			mqMap := make(map[string][]string, 10)
 			mqMap[strconv.FormatInt(snowId, 10)] = []string{"register", "true"}
 			marshal, _ := json.Marshal(mqMap)
@@ -62,7 +63,7 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 			if err := l.svcCtx.KqPusherClient.Push(callbackJSON); err != nil {
 				logx.Errorf("KqPusherClient Push Error , err :%v", err)
 			}
-		}()
+		})
 
 		return &user.RegisterResp{
 			UserId: snowId,
