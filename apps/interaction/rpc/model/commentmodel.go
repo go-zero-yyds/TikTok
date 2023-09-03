@@ -13,7 +13,7 @@ import (
 
 var (
 	_                               CommentModel = (*customCommentModel)(nil)
-	cacheCommentCommentIdListPrefix              = "cache:comment:commentId:list"
+	cacheCommentCommentIdListPrefix              = "cache:comment:commentId:list:"
 )
 
 type (
@@ -50,7 +50,7 @@ func (m *defaultCommentModel) CommentList(ctx context.Context, videoId int64) ([
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, videoId)
 	switch {
 	case err == nil:
-		m.CachedConn.SetCacheCtx(ctx, key, &resp)
+		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -61,29 +61,21 @@ func (m *defaultCommentModel) CommentList(ctx context.Context, videoId int64) ([
 
 func (m *defaultCommentModel) TranInsert(ctx context.Context, s sqlx.Session, data *Comment, keys *[]string) (sql.Result, error) {
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
+	listKey := fmt.Sprintf("%s%v", cacheCommentCommentIdListPrefix, data.VideoId)
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.CommentId, data.UserId, data.VideoId, data.Content, data.IpAddress, data.Location, "0")
 	if err != nil {
 		return nil, err
 	}
-	*keys = append(*keys, commentCommentIdKey)
-	m.OnChangeDeleteCache(ctx, data.VideoId)
+	*keys = append(*keys, commentCommentIdKey, listKey)
 	return ret, err
 }
 
 func (m *defaultCommentModel) TranUpdateDel(ctx context.Context, s sqlx.Session, data *Comment, keys *[]string) error {
-
+	listKey := fmt.Sprintf("%s%v", cacheCommentCommentIdListPrefix, data.VideoId)
 	commentCommentIdKey := fmt.Sprintf("%s%v", cacheCommentCommentIdPrefix, data.CommentId)
 	query := fmt.Sprintf("update %s set is_deleted = '1' where `comment_id` = ?", m.table)
 	_, err := s.ExecCtx(ctx, query, data.CommentId)
-	*keys = append(*keys, commentCommentIdKey)
-	m.OnChangeDeleteCache(ctx, data.VideoId)
+	*keys = append(*keys, commentCommentIdKey, listKey)
 	return err
-}
-
-func (m *defaultCommentModel) OnChangeDeleteCache(ctx context.Context, videoId int64) {
-	deleteKeys := []string{
-		fmt.Sprintf("%s%v", cacheCommentCommentIdListPrefix, videoId),
-	}
-	m.CachedConn.DelCacheCtx(ctx, deleteKeys...)
 }
