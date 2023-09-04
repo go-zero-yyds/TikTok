@@ -44,6 +44,7 @@ type (
 		TranInsert(ctx context.Context, s sqlx.Session, data *Follow, keys *[]string) (sql.Result, error)
 		TranUpdate(ctx context.Context, s sqlx.Session, newData *Follow, keys *[]string) (sql.Result, error)
 		StateMachine(userStatus, userFollowType string) (newUserStatus string, newToUserStatus string)
+		AddFriendKey(userId, toUserId int64, keys *[]string)
 	}
 
 	customFollowModel struct {
@@ -82,24 +83,30 @@ func (m *defaultFollowModel) TranLockByUserIdToUserId(ctx context.Context, s sql
 func (m *defaultFollowModel) TranInsert(ctx context.Context, s sqlx.Session, data *Follow, keys *[]string) (sql.Result, error) {
 	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
 	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
+	followListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, data.UserId)
+	followerListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, data.ToUserId)
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, followRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior, data.Attribute)
 	if err != nil {
 		return nil, err
 	}
-	*keys = append(*keys, followIdKey, followUserIdToUserIdKey)
-	m.OnChangeDeleteCache(ctx, data.UserId)
+	*keys = append(*keys, followIdKey, followUserIdToUserIdKey, followListKey, followerListKey)
 	return ret, err
+}
+func (m *defaultFollowModel) AddFriendKey(userId, toUserId int64, keys *[]string) {
+	*keys = append(*keys, fmt.Sprintf("%s%v", cacheFollowUserIdFriendPrefix, userId),
+		fmt.Sprintf("%s%v", cacheFollowUserIdFriendPrefix, toUserId))
 }
 
 // TranUpdate 更新关注记录没有则不操作
 func (m *defaultFollowModel) TranUpdate(ctx context.Context, s sqlx.Session, newData *Follow, keys *[]string) (result sql.Result, err error) {
 	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, newData.Id)
 	//followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, newData.UserId, newData.ToUserId)
+	followListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, newData.UserId)
+	followerListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, newData.ToUserId)
 	query := fmt.Sprintf("update %s set %s where `user_id` = ? and to_user_id = ?", m.table, followRowsWithPlaceHolder)
 	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.ToUserId, newData.Behavior, newData.Attribute, newData.UserId, newData.ToUserId)
-	*keys = append(*keys, followIdKey)
-	m.OnChangeDeleteCache(ctx, newData.UserId)
+	*keys = append(*keys, followIdKey, followListKey, followerListKey)
 	return ret, err
 }
 
@@ -116,7 +123,7 @@ func (m *defaultFollowModel) FindFollowList(ctx context.Context, userId int64) (
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
-		m.CachedConn.SetCacheCtx(ctx, key, &resp)
+		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -138,7 +145,7 @@ func (m *defaultFollowModel) FindFollowerList(ctx context.Context, userId int64)
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
-		m.CachedConn.SetCacheCtx(ctx, key, &resp)
+		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -159,7 +166,7 @@ func (m *defaultFollowModel) FindFriendList(ctx context.Context, userId int64) (
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
-		m.CachedConn.SetCacheCtx(ctx, key, &resp)
+		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
