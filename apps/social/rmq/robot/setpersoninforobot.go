@@ -1,7 +1,7 @@
 package robot
 
 import (
-	"TikTok/pkg/FileSystem"
+	"TikTok/pkg/filesystem"
 	"bytes"
 	"context"
 	"crypto/sha1"
@@ -163,7 +163,7 @@ func (t *SetPersonInfoRobot) ToSetAvatar(userId int64, qqnumber string, v ...any
 	if !ok {
 		return ErrorFileOss
 	}
-	FS, ok := v[1].(FileSystem.FileSystem)
+	FS, ok := v[1].(filesystem.FileSystem)
 	if !ok {
 		return ErrorFileOss
 	}
@@ -187,7 +187,7 @@ func (t *SetPersonInfoRobot) ToSetBackgroundImage(ctx context.Context, userId in
 	if !ok {
 		return ErrorKqPusher
 	}
-	FS, ok := v[1].(FileSystem.FileSystem)
+	FS, ok := v[1].(filesystem.FileSystem)
 	if !ok {
 		return ErrorFileOss
 	}
@@ -283,7 +283,7 @@ func toRound(inputFile io.Reader, outputFileFormat string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSystem) (string, error) {
+func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs filesystem.FileSystem) (string, error) {
 	// 构建 QQ 头像 API URL
 	qqAvatarURL := fmt.Sprintf("https://q1.qlogo.cn/g?b=qq&nk=%s&s=640", qqnumber)
 
@@ -336,7 +336,7 @@ func (t *SetPersonInfoRobot) getQQAvatar(qqnumber string, fs FileSystem.FileSyst
 	return key, nil
 }
 
-func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs FileSystem.FileSystem) (string, error) {
+func (t *SetPersonInfoRobot) getBackgrounImage(url string, fs filesystem.FileSystem) (string, error) {
 	pattern := `^(https?|http)://[^\s/$.?#].[^\s]*$`
 	matched, err := regexp.MatchString(pattern, url)
 	if err != nil || !matched {

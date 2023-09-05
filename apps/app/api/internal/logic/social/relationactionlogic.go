@@ -1,7 +1,7 @@
 package social
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -31,7 +31,7 @@ func NewRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Re
 func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (resp *types.RelationActionResponse, err error) {
 	if errors.Is(err, model.UserNotFound) {
 		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apiVars.UserNotFound),
+			RespStatus: types.RespStatus(apivars.UserNotFound),
 		}, nil
 	}
 	if err != nil {
@@ -41,7 +41,7 @@ func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	if tokenID == req.ToUserID {
 		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apiVars.NoFollowMyself),
+			RespStatus: types.RespStatus(apivars.NoFollowMyself),
 		}, nil
 	}
 	_, err = l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
@@ -51,13 +51,13 @@ func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (
 	})
 	if errors.Is(err, sm.ErrNotFriend) {
 		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apiVars.ErrNotFriend),
+			RespStatus: types.RespStatus(apivars.ErrNotFriend),
 		}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	return &types.RelationActionResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 	}, nil
 }

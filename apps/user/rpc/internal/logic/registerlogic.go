@@ -4,7 +4,7 @@ import (
 	"TikTok/apps/user/rpc/internal/svc"
 	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
-	"TikTok/pkg/tool"
+	"TikTok/pkg/passbcrypt"
 	"context"
 	"encoding/json"
 	"errors"
@@ -35,8 +35,8 @@ func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, erro
 	} else if !errors.Is(err, model.ErrNotFound) { // 错误
 		return nil, err
 	} else { // 注册
-		snowId := l.svcCtx.Snowflake.Generate().Int64() // 雪花算法生成id
-		pwdHash, err := tool.HashAndSalt(in.Password)   // 加盐加密
+		snowId := l.svcCtx.Snowflake.Generate().Int64()     // 雪花算法生成id
+		pwdHash, err := passbcrypt.HashAndSalt(in.Password) // 加盐加密
 		if err != nil {
 			return nil, err
 		}

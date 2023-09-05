@@ -1,4 +1,4 @@
-package FileSystem
+package filesystem
 
 import (
 	"github.com/studio-b12/gowebdav"

@@ -1,7 +1,7 @@
 package user
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/user/rpc/model"
@@ -33,11 +33,11 @@ func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.Us
 	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]{1,32}$", req.Username) //是否符合用户名格式
 	if matched == false {
 		return &types.UserRegisterResponse{
-			RespStatus: types.RespStatus(apiVars.UsernameRuleError),
+			RespStatus: types.RespStatus(apivars.UsernameRuleError),
 		}, nil
 	} else if len(req.Password) < 5 || len(req.Password) > 32 {
 		return &types.UserRegisterResponse{
-			RespStatus: types.RespStatus(apiVars.PasswordRuleError),
+			RespStatus: types.RespStatus(apivars.PasswordRuleError),
 		}, nil
 	}
 
@@ -47,7 +47,7 @@ func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.Us
 	})
 	if errors.Is(err, model.DuplicateUsername) {
 		return &types.UserRegisterResponse{
-			RespStatus: types.RespStatus(apiVars.DuplicateUsername),
+			RespStatus: types.RespStatus(apivars.DuplicateUsername),
 		}, nil
 	}
 	if err != nil {
@@ -58,7 +58,7 @@ func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.Us
 		return nil, err
 	}
 	return &types.UserRegisterResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		UserID:     userID.UserId,
 		Token:      token,
 	}, nil

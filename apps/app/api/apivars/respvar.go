@@ -1,4 +1,4 @@
-package apiVars
+package apivars
 
 type RespErr struct {
 	StatusCode int32

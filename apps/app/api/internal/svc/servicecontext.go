@@ -4,13 +4,13 @@ import (
 	"TikTok/apps/app/api/internal/config"
 	"TikTok/apps/app/api/internal/middleware"
 
-	ipattr "TikTok/apps/app/api/utils/IPattribution"
 	"TikTok/apps/app/api/utils/auth"
+	ipattr "TikTok/apps/app/api/utils/ipattribution"
 	"TikTok/apps/interaction/rpc/interactionclient"
 	"TikTok/apps/social/rpc/socialclient"
 	"TikTok/apps/user/rpc/userclient"
 	"TikTok/apps/video/rpc/videoclient"
-	"TikTok/pkg/FileSystem"
+	"TikTok/pkg/filesystem"
 
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -23,18 +23,18 @@ type ServiceContext struct {
 	InteractionRPC     interactionclient.Interaction
 	SocialRPC          socialclient.Social
 	JwtAuth            auth.JwtAuth
-	FS                 FileSystem.FileSystem
+	FS                 filesystem.FileSystem
 	Auth               rest.Middleware
 	ClientIPMiddleware rest.Middleware
 	GeoIPResolver      ipattr.GeoIPResolver
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	var fs FileSystem.FileSystem
+	var fs filesystem.FileSystem
 	if c.FS.AwsS3.Endpoint != "" {
-		fs = FileSystem.NewS3(c.FS.AwsS3.Endpoint, c.FS.AwsS3.Bucket, c.FS.Prefix, c.FS.AwsS3.AccessKeyID, c.FS.AwsS3.AccessKeySecret)
+		fs = filesystem.NewS3(c.FS.AwsS3.Endpoint, c.FS.AwsS3.Bucket, c.FS.Prefix, c.FS.AwsS3.AccessKeyID, c.FS.AwsS3.AccessKeySecret)
 	} else {
-		fs = FileSystem.New(c.FS.Webdav.URL, c.FS.Webdav.User, c.FS.Webdav.Password, c.FS.Prefix, c.FS.Webdav.DownloadLinkPrefix)
+		fs = filesystem.New(c.FS.Webdav.URL, c.FS.Webdav.User, c.FS.Webdav.Password, c.FS.Prefix, c.FS.Webdav.DownloadLinkPrefix)
 	}
 	geoIPResolver, _ := ipattr.NewGeoIPResolver(c.IP.DbFilePath, c.IP.JsonSubdivisionsPath)
 	jwtAuth := auth.JwtAuth{

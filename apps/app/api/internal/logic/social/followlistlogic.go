@@ -1,7 +1,7 @@
 package social
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -37,7 +37,7 @@ func (l *FollowListLogic) FollowList(req *types.RelationFollowListRequest) (resp
 		return nil, err
 	}
 	return &types.RelationFollowListResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		UserList:   infoList,
 	}, nil
 }

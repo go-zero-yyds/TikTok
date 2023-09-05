@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/app/api/utils/auth"
 	"context"
@@ -28,12 +28,12 @@ func (m *AuthMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
 			token = r.PostFormValue("token")
 		}
 		if token == "" {
-			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apiVars.NotLogged))
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.NotLogged))
 			return
 		}
 		tokenID, err := m.JwtAuth.ParseToken(token)
 		if err != nil {
-			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apiVars.TokenSignatureInvalid))
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.TokenSignatureInvalid))
 			return
 		}
 		reqCtx := r.Context()

@@ -1,7 +1,7 @@
 package interaction
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
@@ -37,7 +37,7 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	// 参数检查
 	if req.ActionType == 1 && (req.CommentText == "" || len(req.CommentText) > 500) { //如为评论则校验评论是否规范
 		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apiVars.TextRuleError),
+			RespStatus: types.RespStatus(apivars.TextRuleError),
 		}, nil
 	}
 
@@ -46,7 +46,7 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
 	if errors.Is(err, model.ErrVideoNotFound) {
 		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apiVars.VideoNotFound),
+			RespStatus: types.RespStatus(apivars.VideoNotFound),
 		}, nil
 	}
 
@@ -72,20 +72,20 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 		return nil, err
 	}
 
-	apiResp := apiVars.Success
+	apiResp := apivars.Success
 
 	var commentInfo *types.Comment
 	if req.CommentID == 0 {
 		commentInfo, err = GetCommentInfo(sendCommentAction.Comment, tokenID, l.svcCtx, l.ctx)
 
-		if err == apiVars.SomeDataErr {
+		if err == apivars.SomeDataErr {
 			return &types.CommentActionResponse{
 				RespStatus: types.RespStatus(apiResp),
 				Comment:    *commentInfo,
 			}, nil
 		}
 
-		if err != nil && err != apiVars.SomeDataErr {
+		if err != nil && err != apivars.SomeDataErr {
 			return nil, err
 		}
 
@@ -111,12 +111,12 @@ func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *s
 	res.ID = comment.Id
 	res.Content = comment.Content
 	userInfo, err := user.TryGetUserInfo(tokenID, comment.UserId, svcCtx, ctx)
-	if err != nil && err != apiVars.SomeDataErr {
+	if err != nil && err != apivars.SomeDataErr {
 		return nil, err
 	}
 	res.User = *userInfo
-	if err == apiVars.SomeDataErr {
-		return res, apiVars.SomeDataErr
+	if err == apivars.SomeDataErr {
+		return res, apivars.SomeDataErr
 	}
 
 	return res, nil

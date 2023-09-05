@@ -1,7 +1,7 @@
 package social
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -46,7 +46,7 @@ func (l *MessageChatLogic) MessageChat(req *types.MessageChatRequest) (resp *typ
 		}
 	}
 	return &types.MessageChatResponse{
-		RespStatus:  types.RespStatus(apiVars.Success),
+		RespStatus:  types.RespStatus(apivars.Success),
 		MessageList: res,
 	}, nil
 }

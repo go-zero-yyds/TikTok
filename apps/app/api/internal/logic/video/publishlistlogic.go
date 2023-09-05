@@ -1,7 +1,7 @@
 package video
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/video/rpc/video"
@@ -44,9 +44,9 @@ func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *typ
 
 	videoInfoList, err := GetVideoInfoList(publishList.VideoList, &tokenID, l.svcCtx, l.ctx)
 
-	if err == apiVars.SomeDataErr {
+	if err == apivars.SomeDataErr {
 		return &types.PublishListResponse{
-			RespStatus: types.RespStatus(apiVars.SomeDataErr),
+			RespStatus: types.RespStatus(apivars.SomeDataErr),
 			VideoList:  videoInfoList,
 		}, nil
 	}
@@ -56,7 +56,7 @@ func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *typ
 	}
 
 	return &types.PublishListResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		VideoList:  videoInfoList,
 	}, nil
 }

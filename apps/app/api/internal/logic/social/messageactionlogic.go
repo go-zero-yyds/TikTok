@@ -1,7 +1,7 @@
 package social
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -30,7 +30,7 @@ func (l *MessageActionLogic) MessageAction(req *types.MessageActionRequest) (res
 	// 参数检查
 	if len(req.Content) > 15000 { //内容是否为符合规范
 		return &types.MessageActionResponse{
-			RespStatus: types.RespStatus(apiVars.TextRuleError),
+			RespStatus: types.RespStatus(apivars.TextRuleError),
 		}, nil
 	}
 
@@ -46,5 +46,5 @@ func (l *MessageActionLogic) MessageAction(req *types.MessageActionRequest) (res
 		return nil, err
 	}
 
-	return &types.MessageActionResponse{RespStatus: types.RespStatus(apiVars.Success)}, nil
+	return &types.MessageActionResponse{RespStatus: types.RespStatus(apivars.Success)}, nil
 }

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	apiVideo "TikTok/apps/app/api/internal/logic/video"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/test/mock"
@@ -38,7 +38,7 @@ func TestVideoFeedEmpty(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &types.FeedResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		VideoList:  make([]types.Video, 0),
 		NextTime:   0,
 	}, feed)
@@ -101,7 +101,7 @@ func TestVideoFeed(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &types.FeedResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		VideoList: []types.Video{
 			{
 				ID: v.Id,
@@ -195,7 +195,7 @@ func TestVideoPublishList(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &types.PublishListResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		VideoList: []types.Video{
 			{
 				ID: v.Id,
@@ -250,7 +250,7 @@ func TestVideoPublishListEmpty(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &types.PublishListResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		VideoList:  make([]types.Video, 0),
 	}, publishList)
 }

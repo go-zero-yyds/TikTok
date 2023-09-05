@@ -1,7 +1,7 @@
 package social
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
@@ -40,7 +40,7 @@ func (l *FollowerListLogic) FollowerList(req *types.RelationFollowerListRequest)
 		return nil, err
 	}
 	return &types.RelationFollowerListResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		UserList:   infoList,
 	}, nil
 }
@@ -52,7 +52,7 @@ func GetUserInfoList(userList []int64,
 	if userList == nil {
 		return make([]types.User, 0), nil
 	}
-	var e *apiVars.RespErr
+	var e *apivars.RespErr
 
 	userInfoList, err := mr.MapReduce(func(source chan<- int64) {
 		for _, bv := range userList {
@@ -61,8 +61,8 @@ func GetUserInfoList(userList []int64,
 	}, func(item int64, writer mr.Writer[*types.User], cancel func(error)) {
 		userInfo, err := user.TryGetUserInfo(userID, item, svcCtx, ctx)
 		if err != nil {
-			e = &apiVars.SomeDataErr
-			if err != apiVars.SomeDataErr {
+			e = &apivars.SomeDataErr
+			if err != apivars.SomeDataErr {
 				return
 			}
 		}

@@ -3,7 +3,7 @@ package mqs
 import (
 	"TikTok/apps/user/rpc/internal/svc"
 	"TikTok/apps/user/rpc/model"
-	"TikTok/pkg/tool"
+	"TikTok/pkg/passbcrypt"
 	"context"
 	"encoding/json"
 	"errors"
@@ -80,7 +80,7 @@ func (l *PersonalSuccess) ToRegisterBot(userId int64, username string) error {
 	} else if !errors.Is(err, model.ErrNotFound) { // 错误
 		return err
 	} else { // 注册
-		pwdHash, err := tool.HashAndSalt("0") // 加盐加密（机器人默认密码为0，因此无法登录机器人）
+		pwdHash, err := passbcrypt.HashAndSalt("0") // 加盐加密（机器人默认密码为0，因此无法登录机器人）
 		if err != nil {
 			return err
 		}

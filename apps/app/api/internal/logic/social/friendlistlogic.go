@@ -1,7 +1,7 @@
 package social
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
@@ -33,7 +33,7 @@ func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	if tokenID != req.UserID {
 		return &types.RelationFriendListResponse{
-			RespStatus: types.RespStatus(apiVars.IllegalArgument),
+			RespStatus: types.RespStatus(apivars.IllegalArgument),
 		}, nil
 	}
 	list, err := l.svcCtx.SocialRPC.GetRelationFriendList(l.ctx, &social.RelationFriendListReq{UserId: tokenID})
@@ -45,7 +45,7 @@ func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp
 		return nil, err
 	}
 	return &types.RelationFriendListResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		UserList:   infoList,
 	}, nil
 }
@@ -55,9 +55,9 @@ func GetFriendInfoList(userList []*social.FriendUser,
 	userID int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.FriendUser, error) {
 
 	if userList == nil {
-		return nil, apiVars.InternalError
+		return nil, apivars.InternalError
 	}
-	var e *apiVars.RespErr
+	var e *apivars.RespErr
 
 	userInfoList, err := mr.MapReduce(func(source chan<- *social.FriendUser) {
 		for _, bv := range userList {
@@ -66,8 +66,8 @@ func GetFriendInfoList(userList []*social.FriendUser,
 	}, func(item *social.FriendUser, writer mr.Writer[*types.FriendUser], cancel func(error)) {
 		userInfo, err := user.TryGetUserInfo(userID, item.UserId, svcCtx, ctx)
 		if err != nil {
-			e = &apiVars.SomeDataErr
-			if err != apiVars.SomeDataErr {
+			e = &apivars.SomeDataErr
+			if err != apivars.SomeDataErr {
 				return
 			}
 		}

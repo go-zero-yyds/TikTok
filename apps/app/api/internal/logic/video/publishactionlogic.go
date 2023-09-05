@@ -1,7 +1,7 @@
 package video
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -48,7 +48,7 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 
 	if !strings.HasPrefix(mime.String(), "video/") {
 		return &types.PublishActionResponse{
-			RespStatus: types.RespStatus(apiVars.DataNotVideo),
+			RespStatus: types.RespStatus(apivars.DataNotVideo),
 		}, nil
 	}
 
@@ -70,7 +70,7 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 	}
 
 	return &types.PublishActionResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 	}, nil
 }
 

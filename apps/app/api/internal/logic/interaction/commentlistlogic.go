@@ -1,7 +1,7 @@
 package interaction
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
@@ -51,7 +51,7 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 	if list.CommentList == nil {
 		list.CommentList = make([]*interaction.Comment, 0)
 	}
-	e := apiVars.Success
+	e := apivars.Success
 	size := len(list.CommentList)
 	commentList, err := mr.MapReduce(func(source chan<- idxComment) {
 		for i, bv := range list.CommentList {
@@ -63,8 +63,8 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 	}, func(item idxComment, writer mr.Writer[idxApiComment], cancel func(error)) {
 		videoInfo, err := GetCommentInfo(item.Comment, tokenID, l.svcCtx, l.ctx)
 		if err != nil {
-			e = apiVars.SomeDataErr
-			if err != apiVars.SomeDataErr {
+			e = apivars.SomeDataErr
+			if err != apivars.SomeDataErr {
 				return
 			}
 		}

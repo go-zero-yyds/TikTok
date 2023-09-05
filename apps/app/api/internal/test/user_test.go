@@ -1,7 +1,7 @@
 package test
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	apiUser "TikTok/apps/app/api/internal/logic/user"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/test/mock"
@@ -120,7 +120,7 @@ func TestUserDetailNotVideoList(t *testing.T) {
 	})
 	assert.NoError(t, err, "Error detail")
 	assert.Equal(t, &types.UserResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		User: types.User{
 			ID:              114,
 			Name:            "i_ku_yo",
@@ -199,7 +199,7 @@ func TestUserDetail(t *testing.T) {
 	})
 	assert.NoError(t, err, "Error detail")
 	assert.Equal(t, &types.UserResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		User: types.User{
 			ID:              114,
 			Name:            "i_ku_yo",

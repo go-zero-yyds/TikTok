@@ -1,7 +1,7 @@
 package video
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"net/http"
 
 	"TikTok/apps/app/api/internal/logic/video"
@@ -22,7 +22,7 @@ func FeedHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		resp, err := l.Feed(&req)
 		if err != nil {
 			//httpx.ErrorCtx(r.Context(), w, err)
-			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apiVars.InternalError))
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.InternalError))
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}

@@ -1,7 +1,7 @@
 package user
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
 	"context"
@@ -34,11 +34,11 @@ func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginRe
 	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]{1,32}$", req.Username) //是否符合用户名格式
 	if matched == false {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apiVars.UsernameRuleError),
+			RespStatus: types.RespStatus(apivars.UsernameRuleError),
 		}, nil
 	} else if len(req.Password) < 5 || len(req.Password) > 32 {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apiVars.PasswordRuleError),
+			RespStatus: types.RespStatus(apivars.PasswordRuleError),
 		}, nil
 	}
 
@@ -48,12 +48,12 @@ func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginRe
 	})
 	if errors.Is(err, model.UserValidation) {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apiVars.UserValidation),
+			RespStatus: types.RespStatus(apivars.UserValidation),
 		}, nil
 	}
 	if errors.Is(err, model.UserNotFound) {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apiVars.UserNotFound),
+			RespStatus: types.RespStatus(apivars.UserNotFound),
 		}, nil
 	}
 	if err != nil {
@@ -64,7 +64,7 @@ func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginRe
 		return nil, err
 	}
 	return &types.UserLoginResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 		UserID:     userID.UserId,
 		Token:      token,
 	}, nil

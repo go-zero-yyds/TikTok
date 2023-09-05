@@ -1,6 +1,4 @@
-
 package interactiontest
-
 
 import (
 	"TikTok/apps/interaction/rpc/interaction"
@@ -9,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
-
-
 
 func TestGetFavoriteCountByUserId(t *testing.T) {
 	//添加测试用例

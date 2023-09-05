@@ -4,7 +4,7 @@ import (
 	"TikTok/apps/user/rpc/internal/svc"
 	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
-	"TikTok/pkg/tool"
+	"TikTok/pkg/passbcrypt"
 	"context"
 	"errors"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -35,7 +35,7 @@ func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
 	}
 
 	// 验证密码
-	isCorrect := tool.ComparePasswords(res.Password, in.Password)
+	isCorrect := passbcrypt.ComparePasswords(res.Password, in.Password)
 	if !isCorrect {
 		return nil, model.UserValidation
 	}

@@ -1,7 +1,7 @@
 package interaction
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -33,7 +33,7 @@ func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (
 	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
 	if errors.Is(err, model.ErrVideoNotFound) {
 		return &types.FavoriteActionResponse{
-			RespStatus: types.RespStatus(apiVars.VideoNotFound),
+			RespStatus: types.RespStatus(apivars.VideoNotFound),
 		}, nil
 	}
 	r, err := l.svcCtx.InteractionRPC.SendFavoriteAction(l.ctx, &interaction.FavoriteActionReq{
@@ -47,15 +47,15 @@ func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (
 	if !r.IsSucceed {
 		if req.ActionType == 1 {
 			return &types.FavoriteActionResponse{
-				RespStatus: types.RespStatus(apiVars.AlreadyLiked),
+				RespStatus: types.RespStatus(apivars.AlreadyLiked),
 			}, nil
 		} else {
 			return &types.FavoriteActionResponse{
-				RespStatus: types.RespStatus(apiVars.AlreadyUnLiked),
+				RespStatus: types.RespStatus(apivars.AlreadyUnLiked),
 			}, nil
 		}
 	}
 	return &types.FavoriteActionResponse{
-		RespStatus: types.RespStatus(apiVars.Success),
+		RespStatus: types.RespStatus(apivars.Success),
 	}, nil
 }

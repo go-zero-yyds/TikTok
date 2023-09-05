@@ -1,7 +1,7 @@
 package interaction
 
 import (
-	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/apivars"
 	videoApi "TikTok/apps/app/api/internal/logic/video"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
@@ -49,7 +49,7 @@ func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *
 	if list.VideoList == nil {
 		list.VideoList = make([]int64, 0)
 	}
-	e := apiVars.Success
+	e := apivars.Success
 	videoList, err := mr.MapReduce(func(source chan<- int64) {
 		for _, bv := range list.VideoList {
 			source <- bv
@@ -63,8 +63,8 @@ func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *
 
 		videoInfo, err := videoApi.TryGetVideoInfo(&tokenID, detail.Video, l.svcCtx, l.ctx)
 		if err != nil {
-			e = apiVars.SomeDataErr
-			if err != apiVars.SomeDataErr {
+			e = apivars.SomeDataErr
+			if err != apivars.SomeDataErr {
 				return
 			}
 		}

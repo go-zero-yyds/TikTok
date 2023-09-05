@@ -59,5 +59,5 @@ FS:
 
 
 IP:
-  DbFilePath: ./utils/IPattribution/data/dbip-city-lite.mmdb
-  JsonSubdivisionsPath: ./utils/IPattribution/data/subdivisions.json
+  DbFilePath: ./utils/ipattribution/data/dbip-city-lite.mmdb
+  JsonSubdivisionsPath: ./utils/ipattribution/data/subdivisions.json
