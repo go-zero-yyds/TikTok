@@ -1,6 +1,7 @@
 package video
 
 import (
+	"TikTok/apps/app/api/apiVars"
 	"net/http"
 
 	"TikTok/apps/app/api/internal/logic/video"
@@ -20,7 +21,8 @@ func PublishListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := video.NewPublishListLogic(r.Context(), svcCtx)
 		resp, err := l.PublishList(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			//httpx.ErrorCtx(r.Context(), w, err)
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apiVars.InternalError))
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}

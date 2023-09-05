@@ -1,6 +1,7 @@
 package interaction
 
 import (
+	"TikTok/apps/app/api/apiVars"
 	"net/http"
 
 	"TikTok/apps/app/api/internal/logic/interaction"
@@ -20,7 +21,8 @@ func FavoriteListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := interaction.NewFavoriteListLogic(r.Context(), svcCtx)
 		resp, err := l.FavoriteList(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			//httpx.ErrorCtx(r.Context(), w, err)
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apiVars.InternalError))
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}

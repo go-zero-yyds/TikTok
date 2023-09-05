@@ -3,11 +3,13 @@ package social
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/middleware"
-	"TikTok/apps/social/rpc/social"
-	"context"
-
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
+	sm "TikTok/apps/social/rpc/model"
+	"TikTok/apps/social/rpc/social"
+	"TikTok/apps/user/rpc/model"
+	"context"
+	"errors"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,13 +29,31 @@ func NewRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Re
 }
 
 func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (resp *types.RelationActionResponse, err error) {
+	if errors.Is(err, model.UserNotFound) {
+		return &types.RelationActionResponse{
+			RespStatus: types.RespStatus(apiVars.UserNotFound),
+		}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
+	if tokenID == req.ToUserID {
+		return &types.RelationActionResponse{
+			RespStatus: types.RespStatus(apiVars.NoFollowMyself),
+		}, nil
+	}
 	_, err = l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{
 		UserId:     tokenID,
 		ToUserId:   req.ToUserID,
 		ActionType: req.ActionType,
 	})
-
+	if errors.Is(err, sm.ErrNotFriend) {
+		return &types.RelationActionResponse{
+			RespStatus: types.RespStatus(apiVars.ErrNotFriend),
+		}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

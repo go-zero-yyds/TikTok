@@ -2,14 +2,12 @@ package video
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/video/rpc/video"
 	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
-
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
-
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -28,6 +26,7 @@ func NewPublishListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Publi
 }
 
 func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *types.PublishListResponse, err error) {
+
 	tokenID := int64(-1)
 
 	if req.Token != "" {

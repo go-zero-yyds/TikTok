@@ -1,10 +1,10 @@
 package logic
 
 import (
-	"context"
-
 	"TikTok/apps/user/rpc/internal/svc"
+	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -23,8 +23,19 @@ func NewSetBackgroundImageLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
-func (l *SetBackgroundImageLogic) SetBackgroundImage(in *user.BackgroundImageReq) (*user.BackgroundImageResp, error) {
-	// todo: add your logic here and delete this line
+func (l *SetBackgroundImageLogic) SetBackgroundImage(in *user.SetBackgroundImageReq) (*user.SetBackgroundImageResp, error) {
+	isSucceed := true
+	err := l.svcCtx.UserModel.UpdateByUserId(l.ctx, &model.User{
+		UserId:          in.UserId,
+		BackgroundImage: in.Url,
+	}, "backgroundImage")
 
-	return &user.BackgroundImageResp{}, nil
+	if err != nil {
+		isSucceed = false
+	}
+
+	return &user.SetBackgroundImageResp{
+		IsSucceed: isSucceed,
+	}, err
+
 }

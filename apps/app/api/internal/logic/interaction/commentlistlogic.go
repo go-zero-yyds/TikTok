@@ -2,14 +2,13 @@ package interaction
 
 import (
 	"TikTok/apps/app/api/apiVars"
+	"TikTok/apps/app/api/internal/svc"
+	"TikTok/apps/app/api/internal/types"
 	"TikTok/apps/interaction/rpc/interaction"
 	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/zeromicro/go-zero/core/mr"
-
-	"TikTok/apps/app/api/internal/svc"
-	"TikTok/apps/app/api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -29,6 +28,7 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 }
 
 func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *types.CommentListResponse, err error) {
+
 	tokenID := int64(-1)
 	if req.Token != "" {
 		tokenID, err = l.svcCtx.JwtAuth.ParseToken(req.Token)

@@ -3,15 +3,17 @@ package svc
 import (
 	"TikTok/apps/user/rpc/internal/config"
 	"TikTok/apps/user/rpc/model"
+	"github.com/zeromicro/go-queue/kq"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 type ServiceContext struct {
-	Config    config.Config
-	UserModel model.UserModel
-	Snowflake *snowflake.Node
+	Config         config.Config
+	UserModel      model.UserModel
+	Snowflake      *snowflake.Node
+	KqPusherClient *kq.Pusher
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -22,8 +24,9 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	}
 	conn := sqlx.NewMysql(c.DBSource)
 	return &ServiceContext{
-		Config:    c,
-		UserModel: model.NewUserModel(conn, c.Cache),
-		Snowflake: node,
+		Config:         c,
+		UserModel:      model.NewUserModel(conn, c.Cache),
+		Snowflake:      node,
+		KqPusherClient: kq.NewPusher(c.KqPusherConf.Brokers, c.KqPusherConf.Topic),
 	}, nil
 }

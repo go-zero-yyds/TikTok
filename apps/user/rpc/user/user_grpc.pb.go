@@ -26,7 +26,8 @@ type UserClient interface {
 	Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error)
 	Detail(ctx context.Context, in *BasicUserInfoReq, opts ...grpc.CallOption) (*BasicUserInfoResp, error)
 	SetAvatar(ctx context.Context, in *SetAvatarReq, opts ...grpc.CallOption) (*SetAvatarResp, error)
-	SetBackgroundImage(ctx context.Context, in *BackgroundImageReq, opts ...grpc.CallOption) (*BackgroundImageResp, error)
+	SetBackgroundImage(ctx context.Context, in *SetBackgroundImageReq, opts ...grpc.CallOption) (*SetBackgroundImageResp, error)
+	SetSignature(ctx context.Context, in *SetSignatureReq, opts ...grpc.CallOption) (*SetSignatureResp, error)
 }
 
 type userClient struct {
@@ -73,9 +74,18 @@ func (c *userClient) SetAvatar(ctx context.Context, in *SetAvatarReq, opts ...gr
 	return out, nil
 }
 
-func (c *userClient) SetBackgroundImage(ctx context.Context, in *BackgroundImageReq, opts ...grpc.CallOption) (*BackgroundImageResp, error) {
-	out := new(BackgroundImageResp)
+func (c *userClient) SetBackgroundImage(ctx context.Context, in *SetBackgroundImageReq, opts ...grpc.CallOption) (*SetBackgroundImageResp, error) {
+	out := new(SetBackgroundImageResp)
 	err := c.cc.Invoke(ctx, "/user.User/SetBackgroundImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userClient) SetSignature(ctx context.Context, in *SetSignatureReq, opts ...grpc.CallOption) (*SetSignatureResp, error) {
+	out := new(SetSignatureResp)
+	err := c.cc.Invoke(ctx, "/user.User/SetSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +100,8 @@ type UserServer interface {
 	Login(context.Context, *LoginReq) (*LoginResp, error)
 	Detail(context.Context, *BasicUserInfoReq) (*BasicUserInfoResp, error)
 	SetAvatar(context.Context, *SetAvatarReq) (*SetAvatarResp, error)
-	SetBackgroundImage(context.Context, *BackgroundImageReq) (*BackgroundImageResp, error)
+	SetBackgroundImage(context.Context, *SetBackgroundImageReq) (*SetBackgroundImageResp, error)
+	SetSignature(context.Context, *SetSignatureReq) (*SetSignatureResp, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -110,8 +121,11 @@ func (UnimplementedUserServer) Detail(context.Context, *BasicUserInfoReq) (*Basi
 func (UnimplementedUserServer) SetAvatar(context.Context, *SetAvatarReq) (*SetAvatarResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAvatar not implemented")
 }
-func (UnimplementedUserServer) SetBackgroundImage(context.Context, *BackgroundImageReq) (*BackgroundImageResp, error) {
+func (UnimplementedUserServer) SetBackgroundImage(context.Context, *SetBackgroundImageReq) (*SetBackgroundImageResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetBackgroundImage not implemented")
+}
+func (UnimplementedUserServer) SetSignature(context.Context, *SetSignatureReq) (*SetSignatureResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetSignature not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 
@@ -199,7 +213,7 @@ func _User_SetAvatar_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 func _User_SetBackgroundImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BackgroundImageReq)
+	in := new(SetBackgroundImageReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -211,7 +225,25 @@ func _User_SetBackgroundImage_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/user.User/SetBackgroundImage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServer).SetBackgroundImage(ctx, req.(*BackgroundImageReq))
+		return srv.(UserServer).SetBackgroundImage(ctx, req.(*SetBackgroundImageReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _User_SetSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetSignatureReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).SetSignature(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.User/SetSignature",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).SetSignature(ctx, req.(*SetSignatureReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -242,6 +274,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetBackgroundImage",
 			Handler:    _User_SetBackgroundImage_Handler,
+		},
+		{
+			MethodName: "SetSignature",
+			Handler:    _User_SetSignature_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

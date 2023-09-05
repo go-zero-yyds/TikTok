@@ -1,6 +1,7 @@
 package user
 
 import (
+	"TikTok/apps/app/api/apiVars"
 	"net/http"
 
 	"TikTok/apps/app/api/internal/logic/user"
@@ -20,7 +21,8 @@ func RegisterHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := user.NewRegisterLogic(r.Context(), svcCtx)
 		resp, err := l.Register(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			//httpx.ErrorCtx(r.Context(), w, err)
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apiVars.InternalError))
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}

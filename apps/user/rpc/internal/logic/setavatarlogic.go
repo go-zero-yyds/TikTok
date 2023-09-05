@@ -1,10 +1,10 @@
 package logic
 
 import (
-	"context"
-
 	"TikTok/apps/user/rpc/internal/svc"
+	"TikTok/apps/user/rpc/model"
 	"TikTok/apps/user/rpc/user"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -24,7 +24,17 @@ func NewSetAvatarLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SetAvat
 }
 
 func (l *SetAvatarLogic) SetAvatar(in *user.SetAvatarReq) (*user.SetAvatarResp, error) {
-	// todo: add your logic here and delete this line
+	isSucceed := true
+	err := l.svcCtx.UserModel.UpdateByUserId(l.ctx, &model.User{
+		UserId: in.UserId,
+		Avatar: in.Url,
+	}, "avatar")
 
-	return &user.SetAvatarResp{}, nil
+	if err != nil {
+		isSucceed = false
+	}
+
+	return &user.SetAvatarResp{
+		IsSucceed: isSucceed,
+	}, err
 }

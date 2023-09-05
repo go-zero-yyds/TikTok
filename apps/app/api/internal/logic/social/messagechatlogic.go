@@ -3,12 +3,10 @@ package social
 import (
 	"TikTok/apps/app/api/apiVars"
 	"TikTok/apps/app/api/internal/middleware"
-	"TikTok/apps/social/rpc/social"
-	"context"
-
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
-
+	"TikTok/apps/social/rpc/social"
+	"context"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -27,8 +25,8 @@ func NewMessageChatLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Messa
 }
 
 func (l *MessageChatLogic) MessageChat(req *types.MessageChatRequest) (resp *types.MessageChatResponse, err error) {
-	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 
+	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	messages, err := l.svcCtx.SocialRPC.GetMessages(l.ctx, &social.MessageChatReq{
 		UserId:     tokenID,
 		ToUserId:   req.ToUserID,
