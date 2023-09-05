@@ -140,7 +140,7 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 
 	threading.GoSafeCtx(ctx, func() {
 		defer wg.Done()
-		ID := int64(0)
+		ID := int64(-1)
 		if tokenID != nil {
 			ID = *tokenID
 		}

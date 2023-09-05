@@ -84,7 +84,7 @@ func (m *defaultFollowModel) TranInsert(ctx context.Context, s sqlx.Session, dat
 	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, data.Id)
 	followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, data.UserId, data.ToUserId)
 	followListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, data.UserId)
-	followerListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, data.ToUserId)
+	followerListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowerPrefix, data.ToUserId)
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, followRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.UserId, data.ToUserId, data.Behavior, data.Attribute)
 	if err != nil {
@@ -103,7 +103,7 @@ func (m *defaultFollowModel) TranUpdate(ctx context.Context, s sqlx.Session, new
 	followIdKey := fmt.Sprintf("%s%v", cacheFollowIdPrefix, newData.Id)
 	//followUserIdToUserIdKey := fmt.Sprintf("%s%v:%v", cacheFollowUserIdToUserIdPrefix, newData.UserId, newData.ToUserId)
 	followListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, newData.UserId)
-	followerListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowPrefix, newData.ToUserId)
+	followerListKey := fmt.Sprintf("%s%v", cacheFollowUserIdFollowerPrefix, newData.ToUserId)
 	query := fmt.Sprintf("update %s set %s where `user_id` = ? and to_user_id = ?", m.table, followRowsWithPlaceHolder)
 	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.ToUserId, newData.Behavior, newData.Attribute, newData.UserId, newData.ToUserId)
 	*keys = append(*keys, followIdKey, followListKey, followerListKey)

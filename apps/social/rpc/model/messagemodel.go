@@ -110,8 +110,10 @@ func (m *defaultMessageModel) FindMessageList(ctx context.Context, userId int64,
 	t := time.UnixMilli(preTime)
 	var resp []Message
 	key := m.GetNowMessageListCacheKey(userId, toUserId)
-	if err := m.CachedConn.GetCache(key, &resp); err == nil {
-		return resp, nil
+	if preTime == 0 {
+		if err := m.CachedConn.GetCache(key, &resp); err == nil {
+			return resp, nil
+		}
 	}
 
 	query := fmt.Sprintf(`
@@ -128,7 +130,9 @@ func (m *defaultMessageModel) FindMessageList(ctx context.Context, userId int64,
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId, toUserId, t, toUserId, userId, t)
 	switch {
 	case err == nil:
-		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
+		if preTime == 0 {
+			_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
+		}
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return resp, ErrNotFound
