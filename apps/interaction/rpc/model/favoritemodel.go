@@ -5,13 +5,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 var (
-	_ FavoriteModel = (*customFavoriteModel)(nil)
+	_                               FavoriteModel = (*customFavoriteModel)(nil)
+	cacheFavoriteUserIdVideosPrefix               = "cache:userLikes:userId:videos:"
 )
 
 // 定义关注类型常量
@@ -45,11 +47,17 @@ func NewFavoriteModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option
 
 // FindVideos 查看用户点赞视频id列表, 因为没分页，限制1000条。
 func (m *defaultFavoriteModel) FindVideos(ctx context.Context, userId int64) ([]int64, error) {
-	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '%s' limit 1000", m.table, FavoriteTypeFollowing)
 	var resp []int64
+	key := fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, userId)
+	if err := m.CachedConn.GetCache(key, &resp); err == nil {
+		return resp, nil
+	}
+
+	query := fmt.Sprintf("select video_id from %s where `user_id` = ? and behavior = '%s' limit 1000", m.table, FavoriteTypeFollowing)
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch {
 	case err == nil:
+		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return nil, ErrNotFound
@@ -68,6 +76,7 @@ func (m *defaultFavoriteModel) FlushAndClean(ctx context.Context) error {
 
 // TranInsertOrUpdate 插入一条关注记录或者更新关注记录
 func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Session, data *Favorite, keys *[]string) (sql.Result, error) {
+	listKey := fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, data.UserId)
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, data.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, data.UserId, data.VideoId)
 	query := fmt.Sprintf(`
@@ -76,16 +85,17 @@ func (m *customFavoriteModel) TranInsertOrUpdate(ctx context.Context, s sqlx.Ses
 			ON DUPLICATE KEY UPDATE behavior = ?;
 		`, m.table, favoriteRowsExpectAutoSet)
 	ret, err := s.ExecCtx(ctx, query, data.UserId, data.VideoId, data.Behavior, data.Behavior)
-	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
+	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, listKey)
 	return ret, err
 }
 
 // TranEmptyOrUpdate 更新关注记录没有则不操作
 func (m *defaultFavoriteModel) TranEmptyOrUpdate(ctx context.Context, s sqlx.Session, newData *Favorite, keys *[]string) (result sql.Result, err error) {
+	listKey := fmt.Sprintf("%s%v", cacheFavoriteUserIdVideosPrefix, newData.UserId)
 	favoriteFavoriteIdKey := fmt.Sprintf("%s%v", cacheFavoriteFavoriteIdPrefix, newData.FavoriteId)
 	favoriteUserIdVideoIdKey := fmt.Sprintf("%s%v:%v", cacheFavoriteUserIdVideoIdPrefix, newData.UserId, newData.VideoId)
 	query := fmt.Sprintf("update %s set %s where `user_id` = ? and video_id = ?", m.table, favoriteRowsWithPlaceHolder)
 	ret, err := s.ExecCtx(ctx, query, newData.UserId, newData.VideoId, newData.Behavior, newData.UserId, newData.VideoId)
-	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey)
+	*keys = append(*keys, favoriteFavoriteIdKey, favoriteUserIdVideoIdKey, listKey)
 	return ret, err
 }

@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
-	"time"
 )
 
 var (
-	cacheMessageUserIdToUserIdPrefix = "cache:message:id:userId:toUserId:"
+	_                                    MessageModel = (*customMessageModel)(nil)
+	cacheMessageUserIdToUserIdPrefix                  = "cache:message:id:userId:toUserId:"
+	cacheMessageUserIdToUserIdListPrefix              = "cache:message:id:userId:toUserId:list"
 )
-
-var _ MessageModel = (*customMessageModel)(nil)
 
 type (
 	// MessageModel is an interface to be customized, add more methods here,
@@ -24,6 +25,7 @@ type (
 		FindNowMessage(ctx context.Context, userId int64, toUserId int64) (*Message, error)
 		FindMessageList(ctx context.Context, userId int64, toUserId, preTime int64) ([]Message, error)
 		GetNowMessageCacheKey(userId int64, toUserId int64) string
+		GetNowMessageListCacheKey(userId int64, toUserId int64) string
 	}
 
 	customMessageModel struct {
@@ -69,6 +71,14 @@ func (m *defaultMessageModel) GetNowMessageCacheKey(userId int64, toUserId int64
 	}
 	return fmt.Sprintf("%s%v:%v", cacheMessageUserIdToUserIdPrefix, userId, toUserId)
 }
+func (m *defaultMessageModel) GetNowMessageListCacheKey(userId int64, toUserId int64) string {
+	if userId > toUserId {
+		userId = userId ^ toUserId
+		toUserId = userId ^ toUserId
+		userId = userId ^ toUserId
+	}
+	return fmt.Sprintf("%s%v:%v", cacheMessageUserIdToUserIdListPrefix, userId, toUserId)
+}
 func (m *defaultMessageModel) FindNowMessage(ctx context.Context, userId int64, toUserId int64) (*Message, error) {
 	messageUserIdToUserIdKey := m.GetNowMessageCacheKey(userId, toUserId)
 	var resp Message
@@ -98,17 +108,27 @@ func (m *defaultMessageModel) FindNowMessage(ctx context.Context, userId int64, 
 
 func (m *defaultMessageModel) FindMessageList(ctx context.Context, userId int64, toUserId, preTime int64) ([]Message, error) {
 	t := time.UnixMilli(preTime)
+	var resp []Message
+	key := m.GetNowMessageListCacheKey(userId, toUserId)
+	if err := m.CachedConn.GetCache(key, &resp); err == nil {
+		return resp, nil
+	}
+
 	query := fmt.Sprintf(`
 		SELECT %s
-		FROM %s m
-		WHERE (m.from_user_id = ? AND m.to_user_id = ? AND m.create_time > ?)
-		   OR (m.from_user_id = ? AND m.to_user_id = ? AND m.create_time > ?)
-		ORDER BY m.create_time ASC LIMIT 1000;
-	`, messageRows, m.table)
-	var resp []Message
+		FROM (
+				SELECT %s
+				FROM %s m
+				WHERE (m.from_user_id = ? AND m.to_user_id = ? AND m.create_time > ?)
+				   OR (m.from_user_id = ? AND m.to_user_id = ? AND m.create_time > ?)
+				ORDER BY m.create_time DESC LIMIT 1000
+		) AS latest_messages
+		ORDER BY create_time ASC;
+	`, messageRows, messageRows, m.table)
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId, toUserId, t, toUserId, userId, t)
 	switch {
 	case err == nil:
+		_ = m.CachedConn.SetCacheCtx(ctx, key, &resp)
 		return resp, nil
 	case errors.Is(err, sqlc.ErrNotFound):
 		return resp, ErrNotFound

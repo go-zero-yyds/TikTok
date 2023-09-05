@@ -76,7 +76,9 @@ func (d *DBAction) DoFollow(ctx context.Context, userId, toUserId int64) (bool, 
 			}
 		}
 		user.Attribute, toUser.Attribute = d.follow.StateMachine(oldUserStatus, FollowTypeFollowing)
-
+		if (user.Attribute == StatusFriend || oldUserStatus == StatusFriend) && user.Attribute != oldUserStatus {
+			d.follow.AddFriendKey(userId, toUserId, &keys)
+		}
 		// 创建或修改记录
 		if len(follows) == 0 {
 			err = nil
@@ -153,7 +155,9 @@ func (d *DBAction) UnFollow(ctx context.Context, userId, toUserId int64) (bool, 
 			}
 		}
 		user.Attribute, toUser.Attribute = d.follow.StateMachine(oldUserStatus, FollowTypeNotFollowing)
-
+		if (user.Attribute == StatusFriend || oldUserStatus == StatusFriend) && user.Attribute != oldUserStatus {
+			d.follow.AddFriendKey(userId, toUserId, &keys)
+		}
 		// 修改记录
 
 		_, err = d.follow.TranUpdate(ctx, session, user, &keys)
@@ -312,6 +316,7 @@ func (d *DBAction) SendMessage(ctx context.Context, userId, toUserId int64, cont
 	if err != nil {
 		return err
 	}
-	_ = d.conn.DelCacheCtx(ctx, d.message.GetNowMessageCacheKey(userId, toUserId))
+	_ = d.conn.DelCacheCtx(ctx, d.message.GetNowMessageCacheKey(userId, toUserId),
+		d.message.GetNowMessageListCacheKey(userId, toUserId))
 	return nil
 }
