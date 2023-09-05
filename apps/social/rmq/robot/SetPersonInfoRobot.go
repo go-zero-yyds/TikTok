@@ -54,7 +54,7 @@ type SetPersonInfoRobot struct {
 
 func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher) (int64, *SetPersonInfoRobot) {
 	message := make(map[int64][]string)
-	message[0] = []string{"username", "🤖抖音1号"}
+	message[1] = []string{"username", "🤖抖音1号"}
 	data, err := json.Marshal(message)
 	if err != nil {
 		panic("robots start error")
@@ -70,8 +70,8 @@ func NewSetPersonInfoRobot(KqPusherClient *kq.Pusher) (int64, *SetPersonInfoRobo
 	clnt := oauth2.NewClient(context.TODO(), ts)
 	unpas := unsplash.New(clnt)
 
-	return 0, &SetPersonInfoRobot{
-		prologue: "你好呀,我是一个可以修改头像、背景大图、个性签名的机器人呀,请输入help查看命令。",
+	return 1, &SetPersonInfoRobot{
+		prologue: "滴滴...我是一个能修改头像、背景大图、个性签名的机器人, 请输入help查看命令, 我会尽力为您服务...",
 		client:   clnt,
 		unsplash: unpas,
 	}

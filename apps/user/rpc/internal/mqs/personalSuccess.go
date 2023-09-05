@@ -86,9 +86,12 @@ func (l *PersonalSuccess) ToRegisterBot(userId int64, username string) error {
 		}
 
 		_, errInsert := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
-			UserId:   userId,
-			Username: username,
-			Password: pwdHash,
+			UserId:          userId,
+			Username:        username,
+			Password:        pwdHash,
+			Avatar:          "avatar/bot",
+			BackgroundImage: "backgroundImage/bot",
+			Signature:       "滴滴...抱歉，我...不是很擅长说话...会尽力服务...",
 		})
 
 		if errInsert != nil {

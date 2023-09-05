@@ -52,7 +52,7 @@ JwtAuth:
 FS:
   Prefix: /tk/tk
   AwsS3:
-    Endpoint: http://192.168.1.12:9000
+    Endpoint: http://10.200.200.2:9000
     AccessKeyID: pCiDSegbNrJXS2ZtfTTB
     AccessKeySecret: T1FHa8aejWtk4CVHywr16DeJhf9YK7MoHIWGcGFx
     Bucket: tiktok
