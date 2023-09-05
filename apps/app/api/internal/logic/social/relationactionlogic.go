@@ -31,7 +31,7 @@ func NewRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Re
 func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (resp *types.RelationActionResponse, err error) {
 	if errors.Is(err, model.UserNotFound) {
 		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apivars.UserNotFound),
+			RespStatus: types.RespStatus(apivars.ErrUserNotFound),
 		}, nil
 	}
 	if err != nil {
@@ -41,7 +41,7 @@ func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	if tokenID == req.ToUserID {
 		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apivars.NoFollowMyself),
+			RespStatus: types.RespStatus(apivars.ErrNoFollowMyself),
 		}, nil
 	}
 	_, err = l.svcCtx.SocialRPC.SendRelationAction(l.ctx, &social.RelationActionReq{

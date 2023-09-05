@@ -28,12 +28,12 @@ func (m *AuthMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
 			token = r.PostFormValue("token")
 		}
 		if token == "" {
-			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.NotLogged))
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.ErrNotLogged))
 			return
 		}
 		tokenID, err := m.JwtAuth.ParseToken(token)
 		if err != nil {
-			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.TokenSignatureInvalid))
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.ErrTokenSignatureInvalid))
 			return
 		}
 		reqCtx := r.Context()

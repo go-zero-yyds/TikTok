@@ -37,7 +37,7 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	// 参数检查
 	if req.ActionType == 1 && (req.CommentText == "" || len(req.CommentText) > 500) { //如为评论则校验评论是否规范
 		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apivars.TextRuleError),
+			RespStatus: types.RespStatus(apivars.ErrTextRuleError),
 		}, nil
 	}
 
@@ -46,7 +46,7 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
 	if errors.Is(err, model.ErrVideoNotFound) {
 		return &types.CommentActionResponse{
-			RespStatus: types.RespStatus(apivars.VideoNotFound),
+			RespStatus: types.RespStatus(apivars.ErrVideoNotFound),
 		}, nil
 	}
 
@@ -78,14 +78,14 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 	if req.CommentID == 0 {
 		commentInfo, err = GetCommentInfo(sendCommentAction.Comment, tokenID, l.svcCtx, l.ctx)
 
-		if err == apivars.SomeDataErr {
+		if err == apivars.ErrSomeData {
 			return &types.CommentActionResponse{
 				RespStatus: types.RespStatus(apiResp),
 				Comment:    *commentInfo,
 			}, nil
 		}
 
-		if err != nil && err != apivars.SomeDataErr {
+		if err != nil && err != apivars.ErrSomeData {
 			return nil, err
 		}
 
@@ -111,12 +111,12 @@ func GetCommentInfo(comment *interactionclient.Comment, tokenID int64, svcCtx *s
 	res.ID = comment.Id
 	res.Content = comment.Content
 	userInfo, err := user.TryGetUserInfo(tokenID, comment.UserId, svcCtx, ctx)
-	if err != nil && err != apivars.SomeDataErr {
+	if err != nil && err != apivars.ErrSomeData {
 		return nil, err
 	}
 	res.User = *userInfo
-	if err == apivars.SomeDataErr {
-		return res, apivars.SomeDataErr
+	if err == apivars.ErrSomeData {
+		return res, apivars.ErrSomeData
 	}
 
 	return res, nil

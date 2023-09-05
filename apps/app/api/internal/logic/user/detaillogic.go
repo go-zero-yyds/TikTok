@@ -38,7 +38,7 @@ func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, 
 	// 参数检查
 	if req.Token == "" {
 		return &types.UserResponse{
-			RespStatus: types.RespStatus(apivars.NotLogged),
+			RespStatus: types.RespStatus(apivars.ErrNotLogged),
 		}, nil
 	}
 
@@ -47,12 +47,12 @@ func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, 
 	userInfo, err := TryGetUserInfo(tokenID, req.UserID, l.svcCtx, l.ctx)
 	if errors.Is(err, model.UserNotFound) {
 		return &types.UserResponse{
-			RespStatus: types.RespStatus(apivars.UserNotFound),
+			RespStatus: types.RespStatus(apivars.ErrUserNotFound),
 		}, nil
 	}
-	if err == apivars.SomeDataErr {
+	if err == apivars.ErrSomeData {
 		return &types.UserResponse{
-			RespStatus: types.RespStatus(apivars.SomeDataErr),
+			RespStatus: types.RespStatus(apivars.ErrSomeData),
 			User:       *userInfo,
 		}, nil
 	}
@@ -67,14 +67,14 @@ func (l *DetailLogic) Detail(req *types.UserRequest) (resp *types.UserResponse, 
 }
 
 // TryGetUserInfo 尝试获取全部用户信息
-// 部分非必要信息未获取到时，返回 apivars.SomeDataErr
+// 部分非必要信息未获取到时，返回 apivars.ErrSomeData
 func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx context.Context) (resp *types.User, err error) {
 	res, err := GetBasicUserInfo(svcCtx, ctx, toUserId)
 	if err != nil {
 		return nil, err
 	}
 
-	var e *apivars.RespErr
+	var e *apivars.RespVar
 
 	// 启动goroutines并发调用五个函数
 	var wg sync.WaitGroup
@@ -86,7 +86,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 			// 错误降级, 不影响获取user的基本信息。
 			isFollow, err := GetIsFollow(svcCtx, ctx, tokenID, toUserId)
 			if err != nil {
-				e = &apivars.SomeDataErr
+				e = &apivars.ErrSomeData
 				return
 			}
 			res.IsFollow = isFollow
@@ -99,7 +99,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		followCount, err := GetFollowCount(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.FollowCount = followCount
@@ -110,7 +110,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		followerCount, err := GetFollowerCount(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.FollowerCount = followerCount
@@ -120,7 +120,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		favoriteCount, err := GetFavoriteCount(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.FavoriteCount = favoriteCount
@@ -130,7 +130,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 		defer wg.Done()
 		videoList, err := GetPublishList(svcCtx, ctx, toUserId)
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.WorkCount = int64(len(videoList))
@@ -142,7 +142,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 			videoFavoriteCount, err := svcCtx.InteractionRPC.GetFavoriteCountByVideoId(
 				ctx, &interaction.FavoriteCountByVideoIdReq{VideoId: item})
 			if err != nil {
-				e = &apivars.SomeDataErr
+				e = &apivars.ErrSomeData
 				logc.Errorf(ctx, "获取视频点赞数失败: %v", err)
 				cancel(err)
 				return
@@ -156,7 +156,7 @@ func TryGetUserInfo(tokenID, toUserId int64, svcCtx *svc.ServiceContext, ctx con
 			writer.Write(sum)
 		})
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.TotalFavorited = totalFavorited

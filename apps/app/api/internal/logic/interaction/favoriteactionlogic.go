@@ -33,7 +33,7 @@ func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (
 	_, err = l.svcCtx.VideoRPC.Detail(l.ctx, &video.BasicVideoInfoReq{VideoId: req.VideoID})
 	if errors.Is(err, model.ErrVideoNotFound) {
 		return &types.FavoriteActionResponse{
-			RespStatus: types.RespStatus(apivars.VideoNotFound),
+			RespStatus: types.RespStatus(apivars.ErrVideoNotFound),
 		}, nil
 	}
 	r, err := l.svcCtx.InteractionRPC.SendFavoriteAction(l.ctx, &interaction.FavoriteActionReq{
@@ -47,11 +47,11 @@ func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (
 	if !r.IsSucceed {
 		if req.ActionType == 1 {
 			return &types.FavoriteActionResponse{
-				RespStatus: types.RespStatus(apivars.AlreadyLiked),
+				RespStatus: types.RespStatus(apivars.ErrAlreadyLiked),
 			}, nil
 		} else {
 			return &types.FavoriteActionResponse{
-				RespStatus: types.RespStatus(apivars.AlreadyUnLiked),
+				RespStatus: types.RespStatus(apivars.ErrAlreadyUnLiked),
 			}, nil
 		}
 	}

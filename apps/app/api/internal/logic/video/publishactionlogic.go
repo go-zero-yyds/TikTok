@@ -48,7 +48,7 @@ func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *h
 
 	if !strings.HasPrefix(mime.String(), "video/") {
 		return &types.PublishActionResponse{
-			RespStatus: types.RespStatus(apivars.DataNotVideo),
+			RespStatus: types.RespStatus(apivars.ErrDataNotVideo),
 		}, nil
 	}
 

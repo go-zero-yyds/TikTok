@@ -44,9 +44,9 @@ func (l *PublishListLogic) PublishList(req *types.PublishListRequest) (resp *typ
 
 	videoInfoList, err := GetVideoInfoList(publishList.VideoList, &tokenID, l.svcCtx, l.ctx)
 
-	if err == apivars.SomeDataErr {
+	if err == apivars.ErrSomeData {
 		return &types.PublishListResponse{
-			RespStatus: types.RespStatus(apivars.SomeDataErr),
+			RespStatus: types.RespStatus(apivars.ErrSomeData),
 			VideoList:  videoInfoList,
 		}, nil
 	}

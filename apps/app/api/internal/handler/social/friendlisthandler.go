@@ -22,7 +22,7 @@ func FriendListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		resp, err := l.FriendList(&req)
 		if err != nil {
 			//httpx.ErrorCtx(r.Context(), w, err)
-			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.InternalError))
+			httpx.OkJsonCtx(r.Context(), w, types.RespStatus(apivars.ErrInternal))
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}

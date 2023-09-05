@@ -63,8 +63,8 @@ func (l *CommentListLogic) CommentList(req *types.CommentListRequest) (resp *typ
 	}, func(item idxComment, writer mr.Writer[idxApiComment], cancel func(error)) {
 		videoInfo, err := GetCommentInfo(item.Comment, tokenID, l.svcCtx, l.ctx)
 		if err != nil {
-			e = apivars.SomeDataErr
-			if err != apivars.SomeDataErr {
+			e = apivars.ErrSomeData
+			if err != apivars.ErrSomeData {
 				return
 			}
 		}

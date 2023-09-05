@@ -34,11 +34,11 @@ func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginRe
 	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]{1,32}$", req.Username) //是否符合用户名格式
 	if matched == false {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apivars.UsernameRuleError),
+			RespStatus: types.RespStatus(apivars.ErrUsernameRule),
 		}, nil
 	} else if len(req.Password) < 5 || len(req.Password) > 32 {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apivars.PasswordRuleError),
+			RespStatus: types.RespStatus(apivars.ErrPasswordRule),
 		}, nil
 	}
 
@@ -48,12 +48,12 @@ func (l *LoginLogic) Login(req *types.UserLoginRequest) (resp *types.UserLoginRe
 	})
 	if errors.Is(err, model.UserValidation) {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apivars.UserValidation),
+			RespStatus: types.RespStatus(apivars.ErrUserValidation),
 		}, nil
 	}
 	if errors.Is(err, model.UserNotFound) {
 		return &types.UserLoginResponse{
-			RespStatus: types.RespStatus(apivars.UserNotFound),
+			RespStatus: types.RespStatus(apivars.ErrUserNotFound),
 		}, nil
 	}
 	if err != nil {

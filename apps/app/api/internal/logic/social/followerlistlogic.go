@@ -52,7 +52,7 @@ func GetUserInfoList(userList []int64,
 	if userList == nil {
 		return make([]types.User, 0), nil
 	}
-	var e *apivars.RespErr
+	var e *apivars.RespVar
 
 	userInfoList, err := mr.MapReduce(func(source chan<- int64) {
 		for _, bv := range userList {
@@ -61,8 +61,8 @@ func GetUserInfoList(userList []int64,
 	}, func(item int64, writer mr.Writer[*types.User], cancel func(error)) {
 		userInfo, err := user.TryGetUserInfo(userID, item, svcCtx, ctx)
 		if err != nil {
-			e = &apivars.SomeDataErr
-			if err != apivars.SomeDataErr {
+			e = &apivars.ErrSomeData
+			if err != apivars.ErrSomeData {
 				return
 			}
 		}

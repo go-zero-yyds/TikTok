@@ -33,11 +33,11 @@ func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.Us
 	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]{1,32}$", req.Username) //是否符合用户名格式
 	if matched == false {
 		return &types.UserRegisterResponse{
-			RespStatus: types.RespStatus(apivars.UsernameRuleError),
+			RespStatus: types.RespStatus(apivars.ErrUsernameRule),
 		}, nil
 	} else if len(req.Password) < 5 || len(req.Password) > 32 {
 		return &types.UserRegisterResponse{
-			RespStatus: types.RespStatus(apivars.PasswordRuleError),
+			RespStatus: types.RespStatus(apivars.ErrPasswordRule),
 		}, nil
 	}
 
@@ -47,7 +47,7 @@ func (l *RegisterLogic) Register(req *types.UserRegisterRequest) (resp *types.Us
 	})
 	if errors.Is(err, model.DuplicateUsername) {
 		return &types.UserRegisterResponse{
-			RespStatus: types.RespStatus(apivars.DuplicateUsername),
+			RespStatus: types.RespStatus(apivars.ErrDuplicateUsername),
 		}, nil
 	}
 	if err != nil {

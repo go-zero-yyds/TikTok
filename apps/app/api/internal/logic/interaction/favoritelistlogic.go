@@ -63,8 +63,8 @@ func (l *FavoriteListLogic) FavoriteList(req *types.FavoriteListRequest) (resp *
 
 		videoInfo, err := videoApi.TryGetVideoInfo(&tokenID, detail.Video, l.svcCtx, l.ctx)
 		if err != nil {
-			e = apivars.SomeDataErr
-			if err != apivars.SomeDataErr {
+			e = apivars.ErrSomeData
+			if err != apivars.ErrSomeData {
 				return
 			}
 		}

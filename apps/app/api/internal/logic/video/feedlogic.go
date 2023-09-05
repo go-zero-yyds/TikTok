@@ -49,9 +49,9 @@ func (l *FeedLogic) Feed(req *types.FeedRequest) (resp *types.FeedResponse, err 
 
 	feedList, err := GetVideoInfoList(feedBasicList.VideoList, feedReq.UserId, l.svcCtx, l.ctx)
 
-	if err == apivars.SomeDataErr {
+	if err == apivars.ErrSomeData {
 		return &types.FeedResponse{
-			RespStatus: types.RespStatus(apivars.SomeDataErr),
+			RespStatus: types.RespStatus(apivars.ErrSomeData),
 			VideoList:  feedList,
 			NextTime:   feedBasicList.GetNextTime(),
 		}, nil
@@ -75,7 +75,7 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 	if feedBasicList == nil {
 		return make([]types.Video, 0), nil
 	}
-	var e *apivars.RespErr
+	var e *apivars.RespVar
 	size := len(feedBasicList)
 	feedList, err := mr.MapReduce(func(source chan<- IdxVideo) {
 		for i, bv := range feedBasicList {
@@ -87,8 +87,8 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 	}, func(item IdxVideo, writer mr.Writer[IdxApiVideo], cancel func(error)) {
 		videoInfo, err := TryGetVideoInfo(tokenID, item.BasicVideoInfo, svcCtx, ctx)
 		if err != nil {
-			e = &apivars.SomeDataErr
-			if err != apivars.SomeDataErr {
+			e = &apivars.ErrSomeData
+			if err != apivars.ErrSomeData {
 				return
 			}
 		}
@@ -118,7 +118,7 @@ func GetVideoInfoList(feedBasicList []*video.BasicVideoInfo,
 // TryGetVideoInfo 补充 video.BasicVideoInfo 的信息，转换为 types.Video
 func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *svc.ServiceContext, ctx context.Context) (resp *types.Video, err error) {
 	if basicVideo == nil {
-		return nil, apivars.InternalError
+		return nil, apivars.ErrInternal
 	}
 
 	res := types.Video{
@@ -132,7 +132,7 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		Title:         basicVideo.Title,
 	}
 
-	var e *apivars.RespErr
+	var e *apivars.RespVar
 
 	// 启动goroutines并发调用四个函数
 	var wg sync.WaitGroup
@@ -147,7 +147,7 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		author, err := user.TryGetUserInfo(ID, basicVideo.UserId, svcCtx, ctx)
 		res.Author = *author
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 	})
@@ -156,7 +156,7 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		defer wg.Done()
 		favoriteCount, err := GetFavoriteCount(svcCtx, ctx, basicVideo.Id)
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.FavoriteCount = favoriteCount
@@ -166,7 +166,7 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		defer wg.Done()
 		commentCount, err := GetCommentCount(svcCtx, ctx, basicVideo.Id)
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.CommentCount = commentCount
@@ -179,7 +179,7 @@ func TryGetVideoInfo(tokenID *int64, basicVideo *video.BasicVideoInfo, svcCtx *s
 		}
 		isFavorite, err := GetIsFavorite(svcCtx, ctx, *tokenID, basicVideo.Id)
 		if err != nil {
-			e = &apivars.SomeDataErr
+			e = &apivars.ErrSomeData
 			return
 		}
 		res.IsFavorite = isFavorite

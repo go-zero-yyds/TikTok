@@ -30,7 +30,7 @@ func (l *MessageActionLogic) MessageAction(req *types.MessageActionRequest) (res
 	// 参数检查
 	if len(req.Content) > 15000 { //内容是否为符合规范
 		return &types.MessageActionResponse{
-			RespStatus: types.RespStatus(apivars.TextRuleError),
+			RespStatus: types.RespStatus(apivars.ErrTextRuleError),
 		}, nil
 	}
 

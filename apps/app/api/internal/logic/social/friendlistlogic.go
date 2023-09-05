@@ -33,7 +33,7 @@ func (l *FriendListLogic) FriendList(req *types.RelationFriendListRequest) (resp
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
 	if tokenID != req.UserID {
 		return &types.RelationFriendListResponse{
-			RespStatus: types.RespStatus(apivars.IllegalArgument),
+			RespStatus: types.RespStatus(apivars.ErrIllegalArgument),
 		}, nil
 	}
 	list, err := l.svcCtx.SocialRPC.GetRelationFriendList(l.ctx, &social.RelationFriendListReq{UserId: tokenID})
@@ -55,9 +55,9 @@ func GetFriendInfoList(userList []*social.FriendUser,
 	userID int64, svcCtx *svc.ServiceContext, ctx context.Context) ([]types.FriendUser, error) {
 
 	if userList == nil {
-		return nil, apivars.InternalError
+		return nil, apivars.ErrInternal
 	}
-	var e *apivars.RespErr
+	var e *apivars.RespVar
 
 	userInfoList, err := mr.MapReduce(func(source chan<- *social.FriendUser) {
 		for _, bv := range userList {
@@ -66,8 +66,8 @@ func GetFriendInfoList(userList []*social.FriendUser,
 	}, func(item *social.FriendUser, writer mr.Writer[*types.FriendUser], cancel func(error)) {
 		userInfo, err := user.TryGetUserInfo(userID, item.UserId, svcCtx, ctx)
 		if err != nil {
-			e = &apivars.SomeDataErr
-			if err != apivars.SomeDataErr {
+			e = &apivars.ErrSomeData
+			if err != apivars.ErrSomeData {
 				return
 			}
 		}
