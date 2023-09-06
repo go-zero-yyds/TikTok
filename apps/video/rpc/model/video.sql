@@ -11,7 +11,7 @@ CREATE TABLE `video` (
                          `play_url` varchar(256) NOT NULL COMMENT '视频播放地址, key',
                          `cover_url` varchar(256) NOT NULL COMMENT '视频封面地址, key',
                          `title` varchar(256) NOT NULL COMMENT '视频标题',
-                         `create_time` timestamp NOT NULL DEFAULT current_timestamp() COMMENT '创建时间',
+                         `create_time` datetime(3) NOT NULL DEFAULT current_timestamp(3) COMMENT '创建时间',
                          PRIMARY KEY (`video_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_as_ci COMMENT='TikTok视频表';
 

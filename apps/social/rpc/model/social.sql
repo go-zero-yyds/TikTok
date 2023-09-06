@@ -21,7 +21,7 @@ CREATE TABLE `message` (
                            `from_user_id` bigint(20) unsigned NOT NULL COMMENT '消息发生者ID',
                            `to_user_id` bigint(20) unsigned NOT NULL COMMENT '消息接收者ID',
                            `content` varchar(255) NOT NULL COMMENT '消息内容',
-                           `create_time` datetime NOT NULL DEFAULT current_timestamp() COMMENT '消息创建时间',
+                           `create_time` datetime(3) NOT NULL DEFAULT current_timestamp(3) COMMENT '消息创建时间',
                            PRIMARY KEY (`id`) USING BTREE,
                            KEY `idx_from_user_to_user` (`from_user_id`,`to_user_id`) COMMENT '联合索引,联查聊天记录使用'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_as_ci;

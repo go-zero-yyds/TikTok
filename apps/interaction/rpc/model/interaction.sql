@@ -46,7 +46,7 @@ CREATE TABLE `comment` (
                            `content` text NOT NULL COMMENT '用户评论内容',
                            `ip_address` varchar(16) NOT NULL COMMENT '用户IP地址',
                            `location` varchar(64) NOT NULL COMMENT 'IP地址归属地',
-                           `create_time` datetime NOT NULL DEFAULT current_timestamp() COMMENT '创建日期',
+                           `create_time` datetime(3) NOT NULL DEFAULT current_timestamp(3) COMMENT '创建日期',
                            `is_deleted` enum('0','1') NOT NULL DEFAULT '0' COMMENT '0:未删除 1:已删除',
                            PRIMARY KEY (`comment_id`),
                            KEY `idx_video` (`video_id`) COMMENT '查询视频评论列表'
