@@ -76,13 +76,13 @@ var (
 		StatusCode: 402,
 		StatusMsg:  "不能关注自己",
 	}
-	ErrTextRuleError = RespVar{
-		StatusCode: 2400,
-		StatusMsg:  "内容格式不符合规范",
-	}
 	// ErrInternal 内部异常造成的错误 兜底用
 	ErrInternal = RespVar{
 		StatusCode: 500,
 		StatusMsg:  "内部错误",
+	}
+	ErrTextRuleError = RespVar{
+		StatusCode: 6234,
+		StatusMsg:  "内容格式不符合规范",
 	}
 )

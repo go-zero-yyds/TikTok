@@ -39,7 +39,11 @@ func NewPublishActionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pub
 func (l *PublishActionLogic) PublishAction(req *types.PublishActionRequest, r *http.Request) (resp *types.PublishActionResponse, err error) {
 
 	tokenID := l.ctx.Value(middleware.TokenIDKey).(int64)
-
+	if len(req.Title) > 50 {
+		return &types.PublishActionResponse{
+			RespStatus: types.RespStatus(apivars.ErrTextRuleError),
+		}, nil
+	}
 	file, err := l.Upload(r, "data")
 	if err != nil {
 		return nil, err
