@@ -81,6 +81,7 @@ var (
 		StatusCode: 500,
 		StatusMsg:  "内部错误",
 	}
+
 	ErrTextRuleError = RespVar{
 		StatusCode: 6234,
 		StatusMsg:  "内容格式不符合规范",

@@ -5,7 +5,6 @@ import (
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
-	sm "TikTok/apps/social/rpc/model"
 	"TikTok/apps/social/rpc/social"
 	"TikTok/apps/user/rpc/model"
 	"context"
@@ -49,11 +48,6 @@ func (l *RelationActionLogic) RelationAction(req *types.RelationActionRequest) (
 		ToUserId:   req.ToUserID,
 		ActionType: req.ActionType,
 	})
-	if errors.Is(err, sm.ErrNotFriend) {
-		return &types.RelationActionResponse{
-			RespStatus: types.RespStatus(apivars.ErrNotFriend),
-		}, nil
-	}
 	if err != nil {
 		return nil, err
 	}

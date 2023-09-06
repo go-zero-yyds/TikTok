@@ -302,6 +302,9 @@ func (d *DBAction) MessageList(ctx context.Context, userId, toUserId, preTime in
 
 func (d *DBAction) SendMessage(ctx context.Context, userId, toUserId int64, content string) error {
 	follow, err := d.follow.FindOneByUserIdToUserId(ctx, userId, toUserId)
+	if errors.Is(err, sqlx.ErrNotFound) {
+		return ErrNotFriend
+	}
 	if err != nil {
 		return err
 	}

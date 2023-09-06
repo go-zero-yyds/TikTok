@@ -49,7 +49,9 @@ func (l *CommentActionLogic) CommentAction(req *types.CommentActionRequest) (res
 			RespStatus: types.RespStatus(apivars.ErrVideoNotFound),
 		}, nil
 	}
-
+	if err != nil {
+		return nil, err
+	}
 	rpcReq := &interaction.CommentActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,

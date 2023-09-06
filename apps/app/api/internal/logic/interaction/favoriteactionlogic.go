@@ -36,6 +36,9 @@ func (l *FavoriteActionLogic) FavoriteAction(req *types.FavoriteActionRequest) (
 			RespStatus: types.RespStatus(apivars.ErrVideoNotFound),
 		}, nil
 	}
+	if err != nil {
+		return nil, err
+	}
 	r, err := l.svcCtx.InteractionRPC.SendFavoriteAction(l.ctx, &interaction.FavoriteActionReq{
 		UserId:     tokenID,
 		VideoId:    req.VideoID,

@@ -1,9 +1,9 @@
 package model
 
 import (
-	"errors"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"google.golang.org/grpc/status"
 )
 
 var ErrNotFound = sqlx.ErrNotFound
-var ErrNotFriend = errors.New("not friend")
+var ErrNotFriend = status.Error(100, "not friend")

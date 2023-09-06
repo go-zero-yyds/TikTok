@@ -5,9 +5,10 @@ import (
 	"TikTok/apps/app/api/internal/middleware"
 	"TikTok/apps/app/api/internal/svc"
 	"TikTok/apps/app/api/internal/types"
+	"TikTok/apps/social/rpc/model"
 	"TikTok/apps/social/rpc/social"
 	"context"
-
+	"errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -42,6 +43,11 @@ func (l *MessageActionLogic) MessageAction(req *types.MessageActionRequest) (res
 		ActionType: req.ActionType,
 		Content:    req.Content,
 	})
+	if errors.Is(err, model.ErrNotFriend) {
+		return &types.MessageActionResponse{
+			RespStatus: types.RespStatus(apivars.ErrNotFriend),
+		}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

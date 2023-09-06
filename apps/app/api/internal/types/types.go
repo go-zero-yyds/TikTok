@@ -96,7 +96,7 @@ type PublishListResponse struct {
 type FavoriteActionRequest struct {
 	Token      string `form:"token"`
 	VideoID    int64  `form:"video_id,range=[0:]"`
-	ActionType int32  `form:"action_type"`
+	ActionType int32  `form:"action_type,options=[1,2]"`
 }
 
 type FavoriteActionResponse struct {
