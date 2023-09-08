@@ -32,8 +32,9 @@ var (
 	ErrorKqPusher  = errors.New("not KqPusher type")
 	ErrorGetAvatar = errors.New("get qq avatar error from http")
 
-	ErrorFileOss = errors.New("oss error")
-	ErrorParam   = errors.New("param error")
+	ErrorFileOss  = errors.New("oss error")
+	ErrorParam    = errors.New("param error")
+	ErrorUnsplash = errors.New("get img error")
 )
 
 const token = "Client-ID x_q4MjED1PCQY4mcHgiFZ1pxSxl7nP_fk3UICVGa01s"
@@ -195,6 +196,7 @@ func (t *SetPersonInfoRobot) ToSetBackgroundImage(ctx context.Context, userId in
 	photos, _, err := t.unsplash.Photos.Random(nil)
 	if photos == nil || len(*photos) != 1 {
 		logc.Error(ctx, err)
+		return ErrorUnsplash
 	}
 	photo := (*photos)[0]
 	url := photo.Links.Download.String()
