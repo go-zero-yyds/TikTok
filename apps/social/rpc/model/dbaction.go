@@ -106,13 +106,15 @@ func (d *DBAction) DoFollow(ctx context.Context, userId, toUserId int64) (bool, 
 			return err
 		}
 		res = true
-		_ = d.conn.DelCacheCtx(ctx, keys...)
+
 		return nil
 	})
 	if err != nil {
 		return false, err
 	}
-
+	if res {
+		_ = d.conn.DelCacheCtx(ctx, keys...)
+	}
 	return res, nil
 }
 
@@ -175,13 +177,15 @@ func (d *DBAction) UnFollow(ctx context.Context, userId, toUserId int64) (bool, 
 			return err
 		}
 		res = true
-		_ = d.conn.DelCacheCtx(ctx, keys...)
+
 		return nil
 	})
 	if err != nil {
 		return false, err
 	}
-
+	if res {
+		_ = d.conn.DelCacheCtx(ctx, keys...)
+	}
 	return res, nil
 }
 

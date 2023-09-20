@@ -85,7 +85,7 @@ func (d *DBAction) CommentCountByVideoId(ctx context.Context, videoId int64) (in
 // FavoriteAction 调用favorite对数据库查询用户是否点赞过
 // 并对数据库actionType操作
 // 如果取消操作，则更新Behavior 后续等待特定时间再删除记录
-// 只有出现未知错误是false否则都是true
+// 点赞有变动返回true
 func (d *DBAction) FavoriteAction(ctx context.Context, userId, videoId int64, actionType string) (bool, error) {
 	data := &Favorite{
 		UserId:  userId,
